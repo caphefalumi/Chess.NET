@@ -20,18 +20,23 @@ namespace Chess
             int startX = (window.Width - boardSize) / 2;
             int startY = (window.Height - boardSize) / 2;
 
-            Board.Create(squareSize, 0, 0, lightColor, darkColor);
+            Board board = Board.GetInstance(squareSize, 0, 0, lightColor, darkColor);
 
 
             while (!window.CloseRequested)
             {
                 SplashKit.ProcessEvents();
                 SplashKit.ClearScreen(Color.White);
-                Board.DrawBoard();
-                Board.DrawPieces();
-                whiteKing.Draw();
+
+                // Handle selection and movement of pieces
+                BoardEvent.HandleEvents();
+
+                // Draw the board and pieces
+                board.Draw();
+
                 SplashKit.RefreshScreen();
             }
+
 
         }
     }

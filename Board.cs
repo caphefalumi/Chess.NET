@@ -1,80 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using Chess;
+﻿using System.Collections.Generic;
 using SplashKitSDK;
 
-public static class Board
+namespace Chess
 {
-    private static int _squareSize;
-    private static int _startX;
-    private static int _startY;
-    private static Color _lightColor;
-    private static Color _darkColor;
-    private static char[,] ChessBoard;
-
-    public static void Create(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
+    public class Board
     {
-        _squareSize = squareSize;
-        _startX = startX;
-        _startY = startY;
-        _lightColor = lightColor;
-        _darkColor = darkColor;
-        ChessBoard = InitializeBoard();
-    }
+        private static Board _instance; // Singleton instance
+        private static IPiece _selectedPiece; // Track the selected piece
+        public static HashSet<IPiece> Pieces;
 
-    private static char[,] InitializeBoard()
-    {
-        return new char[8, 8]
+        private Board(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
-            { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' },
-            { 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P' },
-            { '.', '.', '.', '.', '.', '.', '.', '.' },
-            { '.', '.', '.', '.', '.', '.', '.', '.' },
-            { '.', '.', '.', '.', '.', '.', '.', '.' },
-            { '.', '.', '.', '.', '.', '.', '.', '.' },
-            { 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p' },
-            { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r' }
-        };
-    }
-    public Piece[,] Pieces
-    {
+            BoardDrawer.Initialize(squareSize, startX, startY, lightColor, darkColor);
+            Pieces = PieceFactory.CreatePieces();
+        }
 
-    }
-    public static Piece[,] InitializePieces()
-    {
-        Piece[,] pieces = new Piece[8, 8];
-
-        for (int rank = 0; rank < 8; rank++)
+        public static Board GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
-            for (int file = 0; file < 8; file++)
+            if (_instance == null)
             {
-                char pieceChar = ChessBoard[rank, file];
-                pieces[rank, file] = GetPiece(pieceChar, rank, file);
+                _instance = new Board(squareSize, startX, startY, lightColor, darkColor);
+            }
+            return _instance;
+        }
+
+        public void Draw()
+        {
+            BoardDrawer.DrawBoard();
+
+            foreach (IPiece piece in Pieces)
+            {
+                piece.Draw();
             }
         }
-        return pieces;
-    }
-    public static void DrawPieces()
-    {
 
-    }
-
-    private static Piece GetPiece(char pieceChar, int rank, int file)
-    {
-        if (pieceChar == '.') return null; // Empty square
-
-        string color = char.IsUpper(pieceChar) ? "White" : "Black";
-        Position position = new Position(rank * 80, file * 80);
-
-        switch (char.ToUpper(pieceChar))
-        {
-            case 'P': return new Pawn("Pawn", color, position);
-            case 'R': return new Rook("Rook", color, position);
-            case 'N': return new Knight("Knight", color, position);
-            case 'B': return new Bishop("Bishop", color, position);
-            case 'Q': return new Queen("Queen", color, position);
-            case 'K': return new King("King", color, position);
-            default: return null;
-        }
     }
 }

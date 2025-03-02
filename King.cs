@@ -1,5 +1,4 @@
-﻿using SplashKitSDK;
-namespace Chess
+﻿namespace Chess
 {
     class King : Piece
     {

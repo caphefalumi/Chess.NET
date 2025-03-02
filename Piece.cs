@@ -2,7 +2,7 @@
 
 namespace Chess
 {
-    public abstract class Piece
+    public abstract class Piece : IPiece
     {
         public string Name { get; }
         public string Color { get; }
@@ -14,24 +14,25 @@ namespace Chess
         public Piece(string type, string color, Position position)
         {
             Color = color;
-            Position = position; 
-
+            Position = position;
+            Type = type;
             Name = Color + Type;
 
             // Load image based on type and side
             string imageName = $"{Color[0].ToString().ToLower()}{Type[0].ToString().ToLower()}.png";
-            Console.WriteLine(imageName);
-
-            PieceImage = SplashKit.LoadBitmap(Name, $"pieces\\{imageName}");
+            PieceImage = new Bitmap(Name, $"pieces\\{imageName}");
         }
 
         public void Draw()
         {
-            int x = Position.File * 80 - 40;
-            int y = Position.Rank * 80 - 40;
+            int x = Position.File * 80 - 35;
+            int y = Position.Rank * 80 - 35;
 
-            // Scale the image to 80x80 while drawing
+            // Draw the piece image scaled to 80x80
             SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
         }
+
+
+        //public abstract bool IsValidMove(Position newPosition);
     }
 }
