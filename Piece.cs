@@ -7,11 +7,11 @@ namespace Chess
         public string Name { get; }
         public string Color { get; }
         public Position Position { get; set; }
-        public abstract string Type { get; }
+        public string Type { get; }
 
         public Bitmap PieceImage { get; }
 
-        public Piece(string color, Position position)
+        public Piece(string type, string color, Position position)
         {
             Color = color;
             Position = position; 
@@ -19,7 +19,7 @@ namespace Chess
             Name = Color + Type;
 
             // Load image based on type and side
-            string imageName = $"{Side[0].ToString().ToLower()}{Type[0].ToString().ToLower()}.png";
+            string imageName = $"{Color[0].ToString().ToLower()}{Type[0].ToString().ToLower()}.png";
             Console.WriteLine(imageName);
 
             PieceImage = SplashKit.LoadBitmap(Name, $"pieces\\{imageName}");

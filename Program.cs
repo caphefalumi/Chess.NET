@@ -22,7 +22,6 @@ namespace Chess
 
             Board.Create(squareSize, 0, 0, lightColor, darkColor);
 
-            King whiteKing = new King(Color.Violet, "White", new Position(0, 0));
 
             while (!window.CloseRequested)
             {

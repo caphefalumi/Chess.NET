@@ -6,7 +6,11 @@ using System.Threading.Tasks;
 
 namespace Chess
 {
-    class Knight
+    class Knight : Piece
     {
+        public Knight(string type, string color, Position position) : base(type, color, position)
+        {
+
+        }
     }
 }
