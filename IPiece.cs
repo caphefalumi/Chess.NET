@@ -9,6 +9,8 @@ namespace Chess
         Position Position { get; set; }
         string Type { get; }
         void Draw();
+
+        HashSet<Position> GetLegalMoves();
         //bool IsValidMove(Position newPosition);
     }
 }

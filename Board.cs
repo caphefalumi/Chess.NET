@@ -7,12 +7,14 @@ namespace Chess
     {
         private static Board _instance; // Singleton instance
         private static IPiece _selectedPiece; // Track the selected piece
+        BoardDrawer _boardDrawer;
+
         public static HashSet<IPiece> Pieces;
 
         private Board(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
-            BoardDrawer.Initialize(squareSize, startX, startY, lightColor, darkColor);
             Pieces = PieceFactory.CreatePieces();
+            _boardDrawer = BoardDrawer.GetInstance(squareSize, startX, startY, lightColor, darkColor);
         }
 
         public static Board GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
@@ -24,15 +26,20 @@ namespace Chess
             return _instance;
         }
 
-        public void Draw()
-        {
-            BoardDrawer.DrawBoard();
 
-            foreach (IPiece piece in Pieces)
+        public static Piece FindPieceAt(Position pos)
+        {
+            foreach (Piece piece in Pieces)
             {
-                piece.Draw();
+                if (piece.Position == pos)
+                {
+                    return piece;
+                }
             }
+            return null;
         }
+
+
 
     }
 }

@@ -2,9 +2,22 @@
 {
     class Queen : Piece
     {
-        public Queen(string type, string color, Position position) : base(type, color, position)
+        // Directions the Queen can move (combining Rook & Bishop _moves)
+        private static readonly (int, int)[] directions =
         {
+            (-1, -1), (-1, 0), (-1, 1),  // Diagonal up-left, up, up-right
+            ( 0, -1),          ( 0, 1),  // Left, Right
+            ( 1, -1), ( 1, 0), ( 1, 1)   // Diagonal down-left, down, down-right
+        };
 
+        public Queen(string color, Position position) : base("Queen", color, position) { }
+
+        public override HashSet<Position> GetLegalMoves()
+        {
+            HashSet<Position> _moves = new HashSet<Position>();
+            AddLegalMoves(directions, _moves); // Uses inherited method
+
+            return _moves;
         }
     }
 }

@@ -2,15 +2,17 @@
 
 namespace Chess
 {
-    public static class BoardDrawer
+    public class BoardDrawer
     {
-        private static int _squareSize;
-        private static int _startX;
-        private static int _startY;
-        private static Color _lightColor;
-        private static Color _darkColor;
+        private int _squareSize;
+        private int _startX;
+        private int _startY;
+        private Color _lightColor;
+        private Color _darkColor;
+        private HashSet<Shape> _shapes;
+        private static BoardDrawer? _instance;
 
-        public static void Initialize(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
+        private BoardDrawer(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
             _squareSize = squareSize;
             _startX = startX;
@@ -19,7 +21,16 @@ namespace Chess
             _darkColor = darkColor;
         }
 
-        public static void DrawBoard()
+        public static BoardDrawer GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
+        {
+            if (_instance == null)
+            {
+                _instance = new BoardDrawer(squareSize, startX, startY, lightColor, darkColor);
+            }
+            return _instance;
+        }
+
+        private void DrawBoard()
         {
             for (int rank = 0; rank < 8; rank++)
             {
@@ -33,6 +44,30 @@ namespace Chess
 
                     SplashKit.FillRectangle(squareColor, x, y, _squareSize, _squareSize);
                 }
+            }
+        }
+
+
+        public void Draw()
+        {
+            DrawBoard();
+            foreach (IPiece piece in Board.Pieces)
+            {
+                piece.Draw();
+            }
+        }
+
+        public void Draw(HashSet<Shape> shapes)
+        {
+            
+            DrawBoard();
+            foreach (Shape shape in shapes)
+            {
+                shape.Draw();
+            }
+            foreach (IPiece piece in Board.Pieces)
+            {
+                piece.Draw();
             }
         }
     }

@@ -8,7 +8,6 @@ namespace Chess
         public string Color { get; }
         public Position Position { get; set; }
         public string Type { get; }
-
         public Bitmap PieceImage { get; }
 
         public Piece(string type, string color, Position position)
@@ -23,6 +22,67 @@ namespace Chess
             PieceImage = new Bitmap(Name, $"pieces\\{imageName}");
         }
 
+        protected virtual void AddLegalMoves((int, int)[] directions, HashSet<Position> moves, bool isSlidingPiece = false)
+        {
+            if (isSlidingPiece)
+            {
+                AddSlidingMoves(directions, moves);
+            }
+            else
+            {
+                foreach ((int dx, int dy) in directions) // Deconstruct tuple
+                {
+                    int newFile = Position.File + dx;
+                    int newRank = Position.Rank + dy;
+                    AddMoveIfLegal(newFile, newRank, moves);
+                }
+            }
+        }
+
+        protected void AddMoveIfLegal(int file, int rank, HashSet<Position> moves)
+        {
+            if (IsWithinBounds(file, rank) && Board.FindPieceAt(new Position(file, rank)) == null) // Check empty square
+            {
+                moves.Add(new Position(file, rank));
+            }
+        }
+
+        protected void AddSlidingMoves((int, int)[] directions, HashSet<Position> moves)
+        {
+            foreach ((int dx, int dy) in directions)
+            {
+                int newFile = Position.File;
+                int newRank = Position.Rank;
+
+                while (true)
+                {
+                    newFile += dx;
+                    newRank += dy;
+
+                    if (!IsWithinBounds(newFile, newRank)) break;
+
+                    IPiece pieceAtNewPos = Board.FindPieceAt(new Position(newFile, newRank));
+
+                    if (pieceAtNewPos != null)
+                    {
+                        // Stop if friendly piece is encountered
+                        if (pieceAtNewPos.Color == this.Color) break;
+
+                        // Capture enemy piece
+                        moves.Add(new Position(newFile, newRank));
+                        break;
+                    }
+
+                    moves.Add(new Position(newFile, newRank));
+                }
+            }
+        }
+
+        private bool IsWithinBounds(int file, int rank)
+        {
+            return file >= 0 && file < 8 && rank >= 0 && rank < 8;
+        }
+
         public void Draw()
         {
             int x = Position.File * 80 - 35;
@@ -32,7 +92,6 @@ namespace Chess
             SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
         }
 
-
-        //public abstract bool IsValidMove(Position newPosition);
+        public abstract HashSet<Position> GetLegalMoves();
     }
 }

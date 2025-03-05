@@ -32,7 +32,7 @@ namespace Chess
                 BoardEvent.HandleEvents();
 
                 // Draw the board and pieces
-                board.Draw();
+                //Board.Draw();
 
                 SplashKit.RefreshScreen();
             }

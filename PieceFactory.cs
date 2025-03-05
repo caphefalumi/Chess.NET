@@ -34,6 +34,7 @@ namespace Chess
                     }
                 }
             }
+
             return pieces;
         }
 
@@ -51,12 +52,12 @@ namespace Chess
 
             switch (char.ToUpper(pieceChar))
             {
-                case 'P': return new Pawn("Pawn", color, position);
-                case 'R': return new Rook("Rook", color, position);
-                case 'N': return new Knight("Night", color, position);
-                case 'B': return new Bishop("Bishop", color, position);
-                case 'Q': return new Queen("Queen", color, position);
-                case 'K': return new King("King", color, position);
+                case 'P': return new Pawn(color, position);
+                case 'R': return new Rook(color, position);
+                case 'N': return new Knight(color, position);
+                case 'B': return new Bishop(color, position);
+                case 'Q': return new Queen(color, position);
+                case 'K': return new King(color, position);
                 default: return null;
             }
         }
