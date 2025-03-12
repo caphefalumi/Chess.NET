@@ -90,15 +90,24 @@ namespace Chess
 
         public void Draw()
         {
-            int x = Position.File * 80 - 35;
-            int y = Position.Rank * 80 - 35;
+            int x = Position.File * 80;
+            int y = Position.Rank * 80;
 
             // Draw the piece image scaled to 80x80
-            SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
+            DrawAt(x, y);
         }
 
 
+        public void DrawAt(float x, float y)
+        {
+            // Draw the piece centered at the given coordinates
+            // You'll need to adjust based on how you're currently drawing pieces
 
+            // If using bitmap images:
+            SplashKit.DrawBitmap(PieceImage, x - PieceImage.Width / 4.3, y - PieceImage.Height / 4.3, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
+
+            // Or if using shapes/vectors, center them at (x,y)
+        }
         public abstract HashSet<Position> GetLegalMoves();
     }
 }

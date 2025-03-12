@@ -7,6 +7,9 @@ namespace Chess
         private static IPiece? _selectedPiece = null; // Currently selected piece
         private static HashSet<Position> _legalMoves = new HashSet<Position>(); // Store legal moves
         private static Board _board = Board.GetInstance();
+        private static bool _isDragging = false; // Track if we're dragging a piece
+        private static float _dragOffsetX = 0; // X offset from mouse to piece center
+        private static float _dragOffsetY = 0; // Y offset from mouse to piece center
 
         public static void SelectPiece()
         {
@@ -25,6 +28,12 @@ namespace Chess
                     {
                         _selectedPiece = piece;
                         _legalMoves = _selectedPiece.GetLegalMoves(); // Get the legal moves
+
+                        // Calculate offset for smooth dragging (from center of piece)
+                        _dragOffsetX = (x + 40) - mouseX;
+                        _dragOffsetY = (y + 40) - mouseY;
+
+                        _isDragging = true;
                         Console.WriteLine($"Selected: {_selectedPiece.Name}");
                         return;
                     }
@@ -32,9 +41,29 @@ namespace Chess
             }
         }
 
-        public static void MovePiece()
+        public static void DragPiece()
         {
-            if (_selectedPiece != null && SplashKit.MouseClicked(MouseButton.LeftButton))
+            if (_selectedPiece != null && _isDragging)
+            {
+                // This will be handled in the Draw method to visually move the piece with the cursor
+            }
+        }
+
+        public static void DrawDraggedPiece()
+        {
+            if (_selectedPiece != null && _isDragging)
+            {
+                float mouseX = SplashKit.MouseX();
+                float mouseY = SplashKit.MouseY();
+
+                // Draw the piece at the mouse position, considering the offset
+                _selectedPiece.DrawAt(mouseX + _dragOffsetX, mouseY + _dragOffsetY);
+            }
+        }
+
+        public static void ReleasePiece()
+        {
+            if (_selectedPiece != null && _isDragging && SplashKit.MouseUp(MouseButton.LeftButton))
             {
                 float mouseX = SplashKit.MouseX();
                 float mouseY = SplashKit.MouseY();
@@ -50,7 +79,8 @@ namespace Chess
                 if (!_legalMoves.Contains(newPosition))
                 {
                     Console.WriteLine("Invalid move: Not a legal move!");
-                    _selectedPiece = null; // Deselect after moving
+                    _isDragging = false;
+                    _selectedPiece = null; // Deselect after invalid move
 
                     // Flash red square if invalid move
                     FlashSquare(newFile, newRank, Color.Red, 300);
@@ -87,7 +117,8 @@ namespace Chess
 
                             // Flash red light on the occupied square
                             FlashSquare(newFile, newRank, Color.Red, 300);
-                            _selectedPiece = null; // Deselect after moving
+                            _isDragging = false;
+                            _selectedPiece = null; // Deselect after invalid move
 
                             return;
                         }
@@ -110,7 +141,8 @@ namespace Chess
                 // Print FEN after move
                 Console.WriteLine($"FEN: {_board.GetFEN()}");
 
-                _selectedPiece = null; // Deselect after moving
+                _isDragging = false;
+                _selectedPiece = null;
                 Board.Shapes.Clear();
                 _legalMoves.Clear(); // Clear highlighted moves
             }
@@ -168,16 +200,20 @@ namespace Chess
 
         public static void HandleMouseEvents()
         {
-            if (SplashKit.MouseClicked(MouseButton.LeftButton))
+            if (_selectedPiece == null && SplashKit.MouseClicked(MouseButton.LeftButton))
             {
-                if (_selectedPiece is null)
+                SelectPiece();
+                if (_selectedPiece != null)
                 {
-                    SelectPiece();
                     DrawLegalMoves();
                 }
-                else
+            }
+            else if (_selectedPiece != null && _isDragging)
+            {
+                DragPiece();
+                if (SplashKit.MouseUp(MouseButton.LeftButton))
                 {
-                    MovePiece();
+                    ReleasePiece();
                 }
             }
         }

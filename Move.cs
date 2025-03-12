@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Chess
+﻿namespace Chess
 {
     public class Move
     {
@@ -16,7 +14,6 @@ namespace Chess
             From = from;
             To = to;
             CapturedPiece = capturedPiece;
-            Timestamp = DateTime.Now;
         }
 
         public bool IsEnPassantMove()

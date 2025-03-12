@@ -3,13 +3,14 @@
     class Pawn : Piece, IPiece
     {
         private HashSet<Position> _moves;
-        public bool CanBeEnPassantCaptured { get; set; } = false;
+        public bool CanBeEnPassantCaptured { get; set; }
 
         private static readonly (int, int)[] _captureDirections = { (-1, 1), (1, 1) };
 
         public Pawn(string color, Position position) : base("Pawn", color, position)
         {
             _moves = new HashSet<Position>();
+            CanBeEnPassantCaptured = false;
         }
 
         public override HashSet<Position> GetLegalMoves()

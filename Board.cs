@@ -14,8 +14,9 @@ namespace Chess
         public static HashSet<IShape> Shapes;
 
         // Add move history tracking
-        public static List<Move> MoveHistory { get; private set; }
+        public static List<Move> MoveHistory { get; private set; } = new List<Move>();
         public static Move LastMove => MoveHistory.Count > 0 ? MoveHistory[MoveHistory.Count - 1] : null;
+
 
         private Board(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
@@ -27,7 +28,7 @@ namespace Chess
 
         public static Board GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
-            if (_instance == null)
+            if (_instance is null)
             {
                 _instance = new Board(squareSize, startX, startY, lightColor, darkColor);
             }
@@ -36,7 +37,7 @@ namespace Chess
 
         public static Board GetInstance()
         {
-            if (_instance == null)
+            if (_instance is null)
             {
                 _instance = new Board(32, 0, 0, Color.LightGray, Color.DarkGray);
             }
@@ -59,7 +60,6 @@ namespace Chess
         {
             _boardDrawer.Draw();
             _boardDrawer.Draw(Shapes);
-            Console.WriteLine(Shapes.Count);
             _boardDrawer.Draw(Pieces);
         }
 
@@ -69,14 +69,6 @@ namespace Chess
             Move move = new Move(piece, from, to, capturedPiece);
             MoveHistory.Add(move);
 
-            // Reset en passant flags for all pawns
-            foreach (IPiece p in Pieces)
-            {
-                if (p is Pawn pawn)
-                {
-                    pawn.CanBeEnPassantCaptured = false;
-                }
-            }
 
             // Check if this is a pawn moving two squares
             if (piece is Pawn pawn && Math.Abs(from.Rank - to.Rank) == 2)

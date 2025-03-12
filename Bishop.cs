@@ -6,8 +6,8 @@
         HashSet<Position> moves;
         private static readonly (int, int)[] directions =
         {
-            (-1, -1), (-1, 1),  // Diagonal up-left, up, up-right
-            ( 1, -1), ( 1, 1)   // Diagonal down-left, down, down-right
+            (-1, -1), (-1, 1),
+            ( 1, -1), ( 1, 1)
         };
 
         public Bishop(string color, Position position) : base("Bishop", color, position)

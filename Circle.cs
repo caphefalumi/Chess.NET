@@ -30,6 +30,22 @@ namespace Chess
         {
             SplashKit.FillCircle(Color, X, Y, _radius);
         }
+        public void Draw(int thickness)
+        {
+            Color backgroundColor;
+            // Draw a filled circle as the "border"
+            SplashKit.FillCircle(Color, X, Y, _radius);
+            if (((int)X + (int)Y) % 2 != 0)
+            {
+                backgroundColor = SplashKit.RGBColor(255, 206, 158);
+            }
+            else
+            {
+                backgroundColor = SplashKit.RGBColor(209, 139, 71);
+            }
+            // Draw a smaller filled circle with background color to create the effect of thickness
+            SplashKit.FillCircle(backgroundColor, X, Y, _radius - thickness);
+        }
 
     }
 }

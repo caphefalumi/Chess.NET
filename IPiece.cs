@@ -6,11 +6,8 @@
         string Color { get; }
         Position Position { get; set; }
         bool HasMoved { get; set; }
-        string Type { get; }
-        void Draw();
-
         HashSet<Position> GetLegalMoves();
-
-        //bool IsValidMove(Position newPosition);
+        void Draw();
+        void DrawAt(float x, float y);
     }
 }
