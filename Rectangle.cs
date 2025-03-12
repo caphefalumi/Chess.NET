@@ -4,7 +4,7 @@ using SplashKitSDK;
 namespace Chess
 {
 
-    public class MyRectangle : Shape
+    public class MyRectangle : Shape, IShape
     {
         int _width;
         int _height;
@@ -17,10 +17,6 @@ namespace Chess
             _width = width;
             _height = height;
 
-        }
-
-        public MyRectangle() : this(Color.Red, 0, 0, 100 + 2, 100 + 2)
-        {
         }
 
         public override void Draw()

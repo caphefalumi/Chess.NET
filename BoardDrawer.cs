@@ -9,7 +9,8 @@ namespace Chess
         private int _startY;
         private Color _lightColor;
         private Color _darkColor;
-        private HashSet<Shape> _shapes;
+        private HashSet<IShape> _shapes = new HashSet<IShape>();
+
         private static BoardDrawer? _instance;
 
         private BoardDrawer(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
@@ -48,27 +49,29 @@ namespace Chess
         }
 
 
+
         public void Draw()
         {
             DrawBoard();
-            foreach (IPiece piece in Board.Pieces)
+        }
+
+
+        public void Draw(HashSet<IShape> shapes)
+        {
+
+            foreach (IShape shape in shapes)
+            {
+                shape.Draw();
+            }
+        }
+
+        public void Draw(HashSet<IPiece> pieces)
+        {
+            foreach (IPiece piece in pieces)
             {
                 piece.Draw();
             }
         }
 
-        public void Draw(HashSet<Shape> shapes)
-        {
-            
-            DrawBoard();
-            foreach (Shape shape in shapes)
-            {
-                shape.Draw();
-            }
-            foreach (IPiece piece in Board.Pieces)
-            {
-                piece.Draw();
-            }
-        }
     }
 }

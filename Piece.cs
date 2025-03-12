@@ -7,6 +7,7 @@ namespace Chess
         public string Name { get; }
         public string Color { get; }
         public Position Position { get; set; }
+        public bool HasMoved { get; set; }
         public string Type { get; }
         public Bitmap PieceImage { get; }
 
@@ -78,9 +79,13 @@ namespace Chess
             }
         }
 
-        private bool IsWithinBounds(int file, int rank)
+        public bool IsWithinBounds(int file, int rank)
         {
             return file >= 0 && file < 8 && rank >= 0 && rank < 8;
+        }
+        public bool IsWithinBounds(Position pos)
+        {
+            return pos.Rank >= 0 && pos.File < 8 && pos.Rank >= 0 && pos.Rank < 8;
         }
 
         public void Draw()
@@ -91,6 +96,8 @@ namespace Chess
             // Draw the piece image scaled to 80x80
             SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
         }
+
+
 
         public abstract HashSet<Position> GetLegalMoves();
     }

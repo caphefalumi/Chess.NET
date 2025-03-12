@@ -22,17 +22,17 @@ namespace Chess
 
             Board board = Board.GetInstance(squareSize, 0, 0, lightColor, darkColor);
 
-
             while (!window.CloseRequested)
             {
                 SplashKit.ProcessEvents();
                 SplashKit.ClearScreen(Color.White);
 
                 // Handle selection and movement of pieces
-                BoardEvent.HandleEvents();
+
+                BoardEvent.HandleMouseEvents();
 
                 // Draw the board and pieces
-                //Board.Draw();
+                board.Draw();
 
                 SplashKit.RefreshScreen();
             }

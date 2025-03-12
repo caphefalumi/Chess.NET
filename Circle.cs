@@ -3,16 +3,16 @@ using SplashKitSDK;
 
 namespace Chess
 {
-    public class MyCircle : Shape
+    public class Circle : Shape, IShape
     {
         int _radius;
-        public MyCircle()
+        public Circle()
         {
             Color = Color.Yellow;
             _radius = 50;
         }
 
-        public MyCircle(Color color, float x, float y, int radius)
+        public Circle(Color color, float x, float y, int radius)
         {
             Color = color;
             X = x;
