@@ -18,7 +18,7 @@
         public override HashSet<Position> GetLegalMoves()
         {
             HashSet<Position> _moves = new HashSet<Position>();
-            AddLegalMoves(directions, _moves); // Uses inherited method
+            AddLegalMoves(directions, _moves, true); // Uses inherited method
 
             return _moves;
         }

@@ -17,10 +17,10 @@ namespace Chess
             int boardSize = squareSize * 8;
 
             // Center the board in the window
-            int startX = (window.Width - boardSize) / 2;
-            int startY = (window.Height - boardSize) / 2;
+            int startX = 0;
+            int startY = 0;
 
-            Board board = Board.GetInstance(squareSize, 0, 0, lightColor, darkColor);
+            Board board = Board.GetInstance(squareSize, startX, startY, lightColor, darkColor);
 
             while (!window.CloseRequested)
             {
@@ -28,7 +28,6 @@ namespace Chess
                 SplashKit.ClearScreen(Color.White);
 
                 // Handle selection and movement of pieces
-
                 BoardEvent.HandleMouseEvents();
 
                 // Draw the board and pieces
@@ -36,8 +35,6 @@ namespace Chess
 
                 SplashKit.RefreshScreen();
             }
-
-
         }
     }
 }

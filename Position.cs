@@ -10,7 +10,14 @@
             File = file;
             Rank = rank;
         }
-
+        public bool IsLightSquare()
+        {
+            if ((File + Rank) % 2 == 0)
+            {
+                return true;
+            }
+            return false;
+        }
         public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())
@@ -22,26 +29,17 @@
 
         public override int GetHashCode()
         {
-            return File.GetHashCode() ^ Rank.GetHashCode();
+            return HashCode.Combine(File, Rank);
         }
 
-        public static bool operator ==(Position a, Position b)
+        public static bool operator ==(Position left, Position right)
         {
-            // If both are null, or both are same instance, return true
-            if (ReferenceEquals(a, b))
-                return true;
-
-            // If one is null, but not both, return false
-            if (((object)a == null) || ((object)b == null))
-                return false;
-
-            // Return true if the fields match
-            return a.File == b.File && a.Rank == b.Rank;
+            return EqualityComparer<Position>.Default.Equals(left, right);
         }
 
-        public static bool operator !=(Position a, Position b)
+        public static bool operator !=(Position left, Position right)
         {
-            return !(a == b);
+            return !(left == right);
         }
 
         public override string ToString()

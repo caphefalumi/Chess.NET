@@ -4,18 +4,16 @@ namespace Chess
 {
     public abstract class Piece : IPiece
     {
-        public string Name { get; }
-        public string Color { get; }
-        public Position Position { get; set; }
-        public bool HasMoved { get; set; }
-        public string Type { get; }
+        public abstract PieceType Type { get; }
+        public abstract Player Color { get; }
+        public bool HasMoved { get; set; } = false;
         public Bitmap PieceImage { get; }
+        public Position Position { get; set; }
 
         public Piece(string type, string color, Position position)
         {
             Color = color;
             Position = position;
-            Type = type;
             Name = Color + Type;
 
             // Load image based on type and side
@@ -63,7 +61,7 @@ namespace Chess
                     if (!IsWithinBounds(newFile, newRank)) break;
 
                     IPiece pieceAtNewPos = Board.FindPieceAt(new Position(newFile, newRank));
-
+                                     
                     if (pieceAtNewPos != null)
                     {
                         // Stop if friendly piece is encountered
@@ -93,21 +91,16 @@ namespace Chess
             int x = Position.File * 80;
             int y = Position.Rank * 80;
 
-            // Draw the piece image scaled to 80x80
-            DrawAt(x, y);
+            DrawAt(x - 35, y - 35);
         }
 
-
+        // Implement the DrawAt method required by IPiece interface
         public void DrawAt(float x, float y)
         {
-            // Draw the piece centered at the given coordinates
-            // You'll need to adjust based on how you're currently drawing pieces
-
-            // If using bitmap images:
-            SplashKit.DrawBitmap(PieceImage, x - PieceImage.Width / 4.3, y - PieceImage.Height / 4.3, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
-
-            // Or if using shapes/vectors, center them at (x,y)
+            // Draw the piece image scaled to 80x80 at the specified position
+            SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
         }
+
         public abstract HashSet<Position> GetLegalMoves();
     }
-}
+} 

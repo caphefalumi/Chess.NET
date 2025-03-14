@@ -4,12 +4,12 @@ using SplashKitSDK;
 namespace Chess
 {
 
-    public class MyRectangle : Shape, IShape
+    public class Rectangle : Shape, IShape
     {
         int _width;
         int _height;
 
-        public MyRectangle(Color color, float x, float y, int width, int height) : base(color)
+        public Rectangle(Color color, float x, float y, int width, int height) : base(color)
         {
             Color = color;
             X = x;

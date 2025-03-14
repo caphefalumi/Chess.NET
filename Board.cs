@@ -70,11 +70,7 @@ namespace Chess
             MoveHistory.Add(move);
 
 
-            // Check if this is a pawn moving two squares
-            if (piece is Pawn pawn && Math.Abs(from.Rank - to.Rank) == 2)
-            {
-                pawn.CanBeEnPassantCaptured = true;
-            }
+
         }
 
         // Add method to get current FEN position
