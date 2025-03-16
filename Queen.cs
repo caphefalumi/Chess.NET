@@ -1,23 +1,36 @@
-﻿namespace Chess
+﻿using SplashKitSDK;
+
+namespace Chess
 {
-    class Queen : Piece
+    public class Queen : Piece
     {
-        // Directions the Queen can move (combining Rook & Bishop _moves)
-        private static readonly (int, int)[] directions =
+        public override PieceType Type => PieceType.Queen;
+        public override Player Color { get; }
+        private static readonly Direction[] dirs = new Direction[]
         {
-            (-1, -1), (-1, 0), (-1, 1),  // Diagonal up-left, up, up-right
-            ( 0, -1),          ( 0, 1),  // Left, Right
-            ( 1, -1), ( 1, 0), ( 1, 1)   // Diagonal down-left, down, down-right
+            Direction.Up,
+            Direction.Right,
+            Direction.Left,
+            Direction.Down,
+            Direction.UpLeft,
+            Direction.UpRight,
+            Direction.DownLeft,
+            Direction.DownRight
         };
-
-        public Queen(string color, Position position) : base("Queen", color, position) { }
-
-        public override HashSet<Position> GetLegalMoves()
+        public Queen(Player color, Position pos, char pieceChar) : base(pieceChar)
         {
-            HashSet<Position> _moves = new HashSet<Position>();
-            AddLegalMoves(directions, _moves, true);
-
-            return _moves;
+            Color = color;
+            Position = pos;
+        }
+        public override Piece Copy()
+        {
+            Queen copy = new Queen(Color, Position, PieceChar);
+            copy.HasMoved = HasMoved;
+            return copy;
+        }
+        public override IEnumerable<Move> GetMoves(Position from, Board board)
+        {
+            return GenerateMoves(from, board, dirs).Select(to => new NormalMove(from, to));
         }
     }
 }

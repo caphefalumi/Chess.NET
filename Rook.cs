@@ -1,40 +1,32 @@
-﻿namespace Chess
+﻿using SplashKitSDK;
+
+namespace Chess
 {
-    class Rook : Piece
+    public class Rook : Piece
     {
-        private HashSet<Position> _moves;
-        private bool _hasMoved = false;
-
-        // Directions the Rook can move
-        private static readonly (int, int)[] directions =
+        public override PieceType Type => PieceType.Rook;
+        public override Player Color { get; }
+        private static readonly Direction[] dirs = new Direction[]
         {
-            (-1, 0), (1, 0),  // Left & Right
-            (0, -1), (0, 1)   // Up & Down
+            Direction.Up,
+            Direction.Right,
+            Direction.Left,
+            Direction.Down
         };
-
-        public Rook(string color, Position position) : base("Rook", color, position)
+        public Rook(Player color, Position pos, char pieceChar) : base(pieceChar)
         {
-            _moves = new HashSet<Position>();
+            Color = color;
+            Position = pos;
         }
-
-        public override HashSet<Position> GetLegalMoves()
+        public override Piece Copy()
         {
-            HashSet<Position> _moves = new HashSet<Position>();
-
-            // Rooks use sliding movement
-            AddLegalMoves(directions, _moves, true);
-
-            return _moves;
+            Rook copy = new Rook(Color, Position, PieceChar);
+            copy.HasMoved = HasMoved;
+            return copy;
         }
-
-        public bool HasMoved
+        public override IEnumerable<Move> GetMoves(Position from, Board board)
         {
-            get { return _hasMoved; }
-        }
-
-        public void SetHasMoved()
-        {
-            _hasMoved = true;
+            return GenerateMoves(from, board, dirs).Select(to => new NormalMove(from, to));
         }
     }
 }

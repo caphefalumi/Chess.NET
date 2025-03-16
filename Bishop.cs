@@ -1,26 +1,33 @@
-﻿namespace Chess
+﻿using SplashKitSDK;
+
+namespace Chess
 {
-    class Bishop : Piece
+    public class Bishop : Piece
     {
-
-        HashSet<Position> moves;
-        private static readonly (int, int)[] directions =
+        public override PieceType Type => PieceType.Bishop;
+        public override Player Color { get; }
+        private static readonly Direction[] dirs = new Direction[]
         {
-            (-1, -1), (-1, 1),
-            ( 1, -1), ( 1, 1)
+            Direction.UpLeft,
+            Direction.UpRight,
+            Direction.DownLeft,
+            Direction.DownRight
         };
-
-        public Bishop(string color, Position position) : base("Bishop", color, position)
+        public Bishop(Player color, Position pos, char pieceChar) : base(pieceChar)
         {
-            moves = new HashSet<Position>();
+            Color = color;
+            Position = pos;
+        }
+        public override Piece Copy()
+        {
+            Bishop copy = new Bishop(Color, Position, PieceChar);
+            copy.HasMoved = HasMoved;
+            return copy;
         }
 
-        public override HashSet<Position> GetLegalMoves()
+        public override IEnumerable<Move> GetMoves(Position from, Board board)
         {
-            HashSet<Position> _moves = new HashSet<Position>();
-            AddLegalMoves(directions, _moves, true); // Uses inherited method
-
-            return _moves;
+            return GenerateMoves(from, board, dirs).Select(to => new NormalMove(from, to));
         }
     }
 }

@@ -28,7 +28,6 @@ namespace Chess
                 SplashKit.ClearScreen(Color.White);
 
                 // Handle selection and movement of pieces
-                BoardEvent.HandleMouseEvents();
 
                 // Draw the board and pieces
                 board.Draw();

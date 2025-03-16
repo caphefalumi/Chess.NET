@@ -65,9 +65,9 @@ namespace Chess
             }
         }
 
-        public void Draw(HashSet<IPiece> pieces)
+        public void Draw(HashSet<Piece> pieces)
         {
-            foreach (IPiece piece in pieces)
+            foreach (Piece piece in pieces)
             {
                 piece.Draw();
             }

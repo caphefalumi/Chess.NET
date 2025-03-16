@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Chess
 {
-    class Direction
+    public class Direction
     {
         public readonly static Direction Up = new Direction(-1, 0);
         public readonly static Direction Down = new Direction(1, 0);
@@ -18,7 +18,7 @@ namespace Chess
         public readonly static Direction DownRight = Down + Right;
         public int RankOffset { get; }
         public int FileOffset { get; }
-        public Direction(int rankOffset, int fileOffset)
+        private Direction(int rankOffset, int fileOffset)
         {
             RankOffset = rankOffset;
             FileOffset = fileOffset;

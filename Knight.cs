@@ -1,30 +1,46 @@
-﻿namespace Chess
+﻿using SplashKitSDK;
+
+namespace Chess
 {
-    class Knight : Piece, IPiece
+    public class Knight : Piece
     {
-        private HashSet<Position> _moves;
-
-        // Possible L-shaped _moves for a knight
-        private static readonly (int, int)[] _directions =
+        public override PieceType Type => PieceType.Knight;
+        public override Player Color { get; }
+        public Knight(Player color, Position pos, char pieceChar) : base(pieceChar)
         {
-            (-2, -1), (-2, 1),
-            (-1, -2), (-1, 2),
-            ( 1, -2), ( 1, 2),
-            ( 2, -1), ( 2, 1)
-        };
-
-        public Knight(string color, Position position) : base("Night", color, position) 
+            Color = color;
+            Position = pos;
+        }
+        public override Piece Copy()
         {
-            _moves = new HashSet<Position>();
+            Knight copy = new Knight(Color, Position, PieceChar);
+            copy.HasMoved = HasMoved;
+            return copy;
         }
 
-        public override HashSet<Position> GetLegalMoves()
+        private IEnumerable<Position> LShapedMoves(Position from, Board board)
         {
-            
-            AddLegalMoves(_directions, _moves);
-            return _moves;
+            foreach (Direction file in new Direction[] { Direction.Up, Direction.Down })
+            {
+                foreach (Direction rank in new Direction[] { Direction.Left, Direction.Right })
+                {
+                    Position leftPos = from + 2 * file + rank;
+                    Position rightPos = from + 2 * rank + file;
+
+                    if (CanMoveTo(leftPos, board) && board[leftPos].Color != Color)
+                    {
+                        yield return leftPos;
+                    }
+                    if (CanMoveTo(rightPos, board))
+                    {
+                        yield return rightPos;
+                    }
+                }
+            }
         }
-
-
+        public override IEnumerable<Move> GetMoves(Position from, Board board)
+        {
+            return LShapedMoves(from, board).Select(to => new NormalMove(from, to));
+        }
     }
 }

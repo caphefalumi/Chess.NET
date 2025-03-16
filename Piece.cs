@@ -1,91 +1,56 @@
 ﻿using SplashKitSDK;
+using System.Xml.Linq;
 
 namespace Chess
 {
-    public abstract class Piece : IPiece
+    public abstract class Piece
     {
         public abstract PieceType Type { get; }
         public abstract Player Color { get; }
-        public bool HasMoved { get; set; } = false;
-        public Bitmap PieceImage { get; }
         public Position Position { get; set; }
+        public bool HasMoved { get; set; } = false;
+        public char PieceChar { get; }
+        public Bitmap PieceImage;
+        public abstract Piece Copy();
 
-        public Piece(string type, string color, Position position)
+        public Piece(char pieceChar)
         {
-            Color = color;
-            Position = position;
-            Name = Color + Type;
-
-            // Load image based on type and side
-            string imageName = $"{Color[0].ToString().ToLower()}{Type[0].ToString().ToLower()}.png";
-            PieceImage = new Bitmap(Name, $"pieces\\{imageName}");
+            PieceChar = pieceChar;
+            char pieceColor = char.IsUpper(pieceChar) ? 'w' : 'b';
+            PieceImage = new Bitmap(pieceColor.ToString() + PieceChar.ToString() , $"pieces\\{pieceColor.ToString() + PieceChar.ToString()}.png");
+            Console.WriteLine($"pieces\\{PieceChar + pieceColor}.png");
         }
 
-        protected virtual void AddLegalMoves((int, int)[] directions, HashSet<Position> moves, bool isSlidingPiece = false)
+        public abstract IEnumerable<Move> GetMoves(Position from, Board board);
+        protected bool CanMoveTo(Position pos, Board board)
         {
-            if (isSlidingPiece)
+            return Board.IsInside(pos) && (board.IsEmpty(pos) || board[pos].Color != Color);
+        }
+
+        protected IEnumerable<Position> GenerateMove(Position from, Board board, Direction dir)
+        {
+            for (Position pos = from + dir; Board.IsInside(pos); pos += dir)
             {
-                AddSlidingMoves(directions, moves);
-            }
-            else
-            {
-                foreach ((int dx, int dy) in directions) // Deconstruct tuple
+                if (board.IsEmpty(pos))
                 {
-                    int newFile = Position.File + dx;
-                    int newRank = Position.Rank + dy;
-                    AddMoveIfLegal(newFile, newRank, moves);
+                    yield return pos;
                 }
-            }
-        }
-
-        protected void AddMoveIfLegal(int file, int rank, HashSet<Position> moves)
-        {
-            if (IsWithinBounds(file, rank) && Board.FindPieceAt(new Position(file, rank)) == null) // Check empty square
-            {
-                moves.Add(new Position(file, rank));
-            }
-        }
-
-        protected void AddSlidingMoves((int, int)[] directions, HashSet<Position> moves)
-        {
-            foreach ((int dx, int dy) in directions)
-            {
-                int newFile = Position.File;
-                int newRank = Position.Rank;
-
-                while (true)
+                else
                 {
-                    newFile += dx;
-                    newRank += dy;
-
-                    if (!IsWithinBounds(newFile, newRank)) break;
-
-                    IPiece pieceAtNewPos = Board.FindPieceAt(new Position(newFile, newRank));
-                                     
-                    if (pieceAtNewPos != null)
+                    Piece otherPiece = board[pos];
+                    if (otherPiece.Color != Color)
                     {
-                        // Stop if friendly piece is encountered
-                        if (pieceAtNewPos.Color == this.Color) break;
-
-                        // Capture enemy piece
-                        moves.Add(new Position(newFile, newRank));
-                        break;
+                        yield return pos;
                     }
-
-                    moves.Add(new Position(newFile, newRank));
+                    yield break;
                 }
             }
         }
 
-        public bool IsWithinBounds(int file, int rank)
+        protected IEnumerable<Position> GenerateMoves(Position from, Board board, Direction[] dirs)
         {
-            return file >= 0 && file < 8 && rank >= 0 && rank < 8;
+            return dirs.SelectMany(dir => GenerateMove(from, board, dir));
         }
-        public bool IsWithinBounds(Position pos)
-        {
-            return pos.Rank >= 0 && pos.File < 8 && pos.Rank >= 0 && pos.Rank < 8;
-        }
-
         public void Draw()
         {
             int x = Position.File * 80;
@@ -101,6 +66,5 @@ namespace Chess
             SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
         }
 
-        public abstract HashSet<Position> GetLegalMoves();
     }
 } 

@@ -9,7 +9,7 @@
 
     public static class PlayerHelper
     {
-        public static Player GetOppositePlayer(Player player)
+        public static Player Opponent(this Player player)
         {
             switch (player)
             {
