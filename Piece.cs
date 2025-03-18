@@ -3,33 +3,33 @@ using System.Xml.Linq;
 
 namespace Chess
 {
-    public abstract class Piece
+    public abstract class Piece : IDrawable
     {
         public abstract PieceType Type { get; }
         public abstract Player Color { get; }
+        public abstract Piece Copy();
+
         public Position Position { get; set; }
         public bool HasMoved { get; set; } = false;
         public char PieceChar { get; }
         public Bitmap PieceImage;
-        public abstract Piece Copy();
 
         public Piece(char pieceChar)
         {
             PieceChar = pieceChar;
             char pieceColor = char.IsUpper(pieceChar) ? 'w' : 'b';
             PieceImage = new Bitmap(pieceColor.ToString() + PieceChar.ToString() , $"pieces\\{pieceColor.ToString() + PieceChar.ToString()}.png");
-            Console.WriteLine($"pieces\\{PieceChar + pieceColor}.png");
         }
 
-        public abstract IEnumerable<Move> GetMoves(Position from, Board board);
+        public abstract IEnumerable<Move> GetMoves(Board board);
         protected bool CanMoveTo(Position pos, Board board)
         {
-            return Board.IsInside(pos) && (board.IsEmpty(pos) || board[pos].Color != Color);
+            return Board.IsInside(pos) && (board.IsEmpty(pos) || board.GetPieceAt(pos).Color != Color);
         }
 
-        protected IEnumerable<Position> GenerateMove(Position from, Board board, Direction dir)
+        protected IEnumerable<Position> GenerateMove(Board board, Direction dir)
         {
-            for (Position pos = from + dir; Board.IsInside(pos); pos += dir)
+            for (Position pos = Position + dir; Board.IsInside(pos); pos += dir)
             {
                 if (board.IsEmpty(pos))
                 {
@@ -37,7 +37,7 @@ namespace Chess
                 }
                 else
                 {
-                    Piece otherPiece = board[pos];
+                    Piece otherPiece = board.GetPieceAt(pos);
                     if (otherPiece.Color != Color)
                     {
                         yield return pos;
@@ -47,9 +47,9 @@ namespace Chess
             }
         }
 
-        protected IEnumerable<Position> GenerateMoves(Position from, Board board, Direction[] dirs)
+        protected IEnumerable<Position> GenerateMoves(Board board, Direction[] dirs)
         {
-            return dirs.SelectMany(dir => GenerateMove(from, board, dir));
+            return dirs.SelectMany(dir => GenerateMove(board, dir));
         }
         public void Draw()
         {
@@ -66,5 +66,13 @@ namespace Chess
             SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
         }
 
+        public virtual bool CanCaptureOpponentKing(Board board)
+        {
+            return GetMoves(board).Any(move =>
+            {
+                Piece piece = board.GetPieceAt(move.To);
+                return piece != null && piece.Type == PieceType.King && piece.Color != Color;
+            });
+        }
     }
 } 

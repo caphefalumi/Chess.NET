@@ -9,9 +9,8 @@ namespace Chess
         private int _startY;
         private Color _lightColor;
         private Color _darkColor;
-        private HashSet<IShape> _shapes = new HashSet<IShape>();
 
-        private static BoardDrawer? _instance;
+        private static BoardDrawer _instance;
 
         private BoardDrawer(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
@@ -55,13 +54,14 @@ namespace Chess
             DrawBoard();
         }
 
-
-        public void Draw(HashSet<IShape> shapes)
+        public void Draw(Rectangle[] backgroundOverlays)
         {
-
-            foreach (IShape shape in shapes)
+            foreach (Rectangle backgroundOverlay in backgroundOverlays)
             {
-                shape.Draw();
+                if (backgroundOverlay is not null)
+                {
+                    backgroundOverlay.Draw();
+                }
             }
         }
 
@@ -70,6 +70,15 @@ namespace Chess
             foreach (Piece piece in pieces)
             {
                 piece.Draw();
+            }
+        }
+
+        public void Draw(HashSet<Circle> legalMoves)
+        {
+
+            foreach (Circle legalMove in legalMoves)
+            {
+                legalMove.Draw();
             }
         }
 

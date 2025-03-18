@@ -1,6 +1,4 @@
-﻿using Chess;
-
-public interface IDrawable
+﻿public interface IDrawable
 {
     void Draw();
 }

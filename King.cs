@@ -28,25 +28,33 @@ namespace Chess
             copy.HasMoved = HasMoved;
             return copy;
         }
-        private IEnumerable<Position> AdjacentMoves(Position from, Board board)
+        private IEnumerable<Position> AdjacentMoves(Board board)
         {
             foreach (Direction dir in dirs)
             {
-                Position to = from + dir;
+                Position to = Position + dir;
                 if (CanMoveTo(to, board))
                 {
                     yield return to;
                 }
             }
         }
-        public override IEnumerable<Move> GetMoves(Position from, Board board) 
+        public override IEnumerable<Move> GetMoves(Board board) 
         {
-            foreach (Position to in AdjacentMoves(from, board))
+            foreach (Position to in AdjacentMoves(board))
             {
-                yield return new NormalMove(from, to);
+                yield return new NormalMove(Position, to);
             }
         }
 
+        public override bool CanCaptureOpponentKing(Board board)
+        {
+            return AdjacentMoves(board).Any(move =>
+            {
+                Piece piece = board.GetPieceAt(move);
+                return piece != null && piece.Type == PieceType.King;
+            });
+        }
 
     }
 }

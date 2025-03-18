@@ -1,26 +1,14 @@
-using System;
-using System.Collections.Generic;
-
 namespace Chess
 {
-    public class GameManager
+    public class GameState
     {
         public Board Board { get; }
         public Player CurrentPlayer { get; private set; }
-        public GameManager(Player player, Board board)
+
+        public GameState(Board board, Player player)
         {
             CurrentPlayer = player;
             Board = board;
-        }
-
-        public IEnumerable<Move> LegalMoves(Position pos)
-        {
-            if (Board.IsEmpty(pos) || Board[pos].Color != CurrentPlayer)
-            {
-                return Enumerable.Empty<Move>();
-            }
-            Piece piece = Board[pos];
-            return piece.GetMoves(pos, Board);
         }
 
         public void MakeMove(Move move)

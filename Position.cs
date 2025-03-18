@@ -10,6 +10,16 @@
             File = file;
             Rank = rank;
         }
+
+        public int X
+        {
+            get => File * 80;
+        }
+        public int Y
+        {
+            get => Rank * 80;
+        }
+
         public bool IsLightSquare()
         {
             if ((File + Rank) % 2 == 0)

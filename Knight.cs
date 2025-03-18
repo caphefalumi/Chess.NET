@@ -18,16 +18,16 @@ namespace Chess
             return copy;
         }
 
-        private IEnumerable<Position> LShapedMoves(Position from, Board board)
+        private IEnumerable<Position> LShapedMoves(Board board)
         {
             foreach (Direction file in new Direction[] { Direction.Up, Direction.Down })
             {
                 foreach (Direction rank in new Direction[] { Direction.Left, Direction.Right })
                 {
-                    Position leftPos = from + 2 * file + rank;
-                    Position rightPos = from + 2 * rank + file;
+                    Position leftPos = Position + 2 * file + rank;
+                    Position rightPos = Position + 2 * rank + file;
 
-                    if (CanMoveTo(leftPos, board) && board[leftPos].Color != Color)
+                    if (CanMoveTo(leftPos, board))
                     {
                         yield return leftPos;
                     }
@@ -38,9 +38,9 @@ namespace Chess
                 }
             }
         }
-        public override IEnumerable<Move> GetMoves(Position from, Board board)
+        public override IEnumerable<Move> GetMoves(Board board)
         {
-            return LShapedMoves(from, board).Select(to => new NormalMove(from, to));
+            return LShapedMoves(board).Select(to => new NormalMove(Position, to));
         }
     }
 }

@@ -18,9 +18,13 @@ namespace Chess
         }
         public override void Execute(Board board)
         {
-            Piece piece = board[From];
-            board[To] = piece;
-            board[From] = piece;
+            Piece piece = board.GetPieceAt(From);
+            Piece capturedPiece = board.GetPieceAt(To);
+            if (capturedPiece != null)
+            {
+                board.Pieces.Remove(capturedPiece);
+            }
+            piece.Position = To;
             piece.HasMoved = true;
         }
     }

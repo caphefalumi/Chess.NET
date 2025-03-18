@@ -44,7 +44,7 @@ namespace Chess
         }
         protected bool CanCaptureAt(Position pos, Board board)
         {
-            if (!Board.IsInside(pos) || board.IsEmpty(pos) || board[pos].Color == Color)
+            if (!Board.IsInside(pos) || board.IsEmpty(pos) || board.GetPieceAt(pos).Color == Color)
             {
                 return false;
             }
@@ -63,11 +63,19 @@ namespace Chess
         }
 
 
-        public override IEnumerable<Move> GetMoves(Position from, Board board)
+        public override IEnumerable<Move> GetMoves(Board board)
         {
-            return ForwardMoves(from, board).Concat(CaptureMoves(from, board));
+            return ForwardMoves(Position, board).Concat(CaptureMoves(Position, board));
         }
 
+        public override bool CanCaptureOpponentKing(Board board)
+        {
+            return CaptureMoves(Position, board).Any(move =>
+            {
+                Piece piece = board.GetPieceAt(move.To);
+                return piece != null && piece.Type == PieceType.King;
+            });
+        }
 
     }
 }

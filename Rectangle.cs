@@ -19,11 +19,20 @@ namespace Chess
 
         }
 
+        public Rectangle(Color color, float x, float y, int squareSize) : base(color)
+        {
+            Color = color;
+            X = x;
+            Y = y;
+            _width = squareSize;
+            _height = squareSize;
+
+        }
         public override void Draw()
         {
             SplashKit.FillRectangle(Color, X, Y, _width, _height);
         }
-
+         
         public int Width
         {
             get { return _width; }

@@ -24,9 +24,9 @@ namespace Chess
             copy.HasMoved = HasMoved;
             return copy;
         }
-        public override IEnumerable<Move> GetMoves(Position from, Board board)
+        public override IEnumerable<Move> GetMoves(Board board)
         {
-            return GenerateMoves(from, board, dirs).Select(to => new NormalMove(from, to));
+            return GenerateMoves(board, dirs).Select(to => new NormalMove(Position, to));
         }
     }
 }
