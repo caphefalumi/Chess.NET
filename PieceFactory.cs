@@ -20,18 +20,17 @@ namespace Chess
                 { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' }
             };
 
-
             for (int rank = 0; rank < 8; rank++)
             {
                 for (int file = 0; file < 8; file++)
                 {
                     char pieceChar = boardSetup[rank, file];
-
                     if (pieceChar != '.')
                     {
                         Position position = new Position(file, rank);
-                        Piece piece = CreatePiece(pieceChar, position);
-                        pieces.Add(piece);
+                        Player color = char.IsUpper(pieceChar) ? Player.White : Player.Black;
+                        PieceType type = GetPieceType(pieceChar);
+                        pieces.Add(CreatePiece(type, color, position));
                     }
                 }
             }
@@ -39,27 +38,31 @@ namespace Chess
             return pieces;
         }
 
-        private static Piece CreatePiece(char pieceChar, Position position)
+        public static Piece CreatePiece(PieceType type, Player color, Position position)
         {
-            Player color;
-            if (char.IsUpper(pieceChar))
+            switch (type)
             {
-                color = Player.White;
+                case PieceType.Pawn: return new Pawn(color, position, 'p');
+                case PieceType.Rook: return new Rook(color, position, 'r');
+                case PieceType.Knight: return new Knight(color, position, 'n');
+                case PieceType.Bishop: return new Bishop(color, position, 'b');
+                case PieceType.Queen: return new Queen(color, position, 'q');
+                case PieceType.King: return new King(color, position, 'k');
+                default: throw new ArgumentException("Invalid PieceType" + type);
             }
-            else
-            {
-                color = Player.Black;
-            }
+        }
 
+        private static PieceType GetPieceType(char pieceChar)
+        {
             switch (char.ToUpper(pieceChar))
             {
-                case 'P': return new Pawn(color, position, pieceChar);
-                case 'R': return new Rook(color, position, pieceChar);
-                case 'N': return new Knight(color, position, pieceChar);
-                case 'B': return new Bishop(color, position, pieceChar);
-                case 'Q': return new Queen(color, position, pieceChar);
-                case 'K': return new King(color, position, pieceChar);
-                default: return null;
+                case 'P': return PieceType.Pawn;
+                case 'R': return PieceType.Rook;
+                case 'N': return PieceType.Knight;
+                case 'B': return PieceType.Bishop;
+                case 'Q': return PieceType.Queen;
+                case 'K': return PieceType.King;
+                default: throw new ArgumentException("Invalid piece character" + pieceChar);
             }
         }
     }

@@ -1,31 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Chess
+﻿namespace Chess
 {
     class NormalMove : Move
     {
         public override MoveType Type => MoveType.Normal;
         public override Position From { get; }
         public override Position To { get; }
+        private Piece _capturedPiece;  // Store captured piece
+
         public NormalMove(Position from, Position to)
         {
             From = from;
             To = to;
         }
+
         public override void Execute(Board board)
         {
+            Console.WriteLine($"{From.Rank} : {From.File}");
             Piece piece = board.GetPieceAt(From);
-            Piece capturedPiece = board.GetPieceAt(To);
-            if (capturedPiece != null)
+            _capturedPiece = board.GetPieceAt(To);  // Save captured piece (if any)
+
+            if (_capturedPiece != null)
             {
-                board.Pieces.Remove(capturedPiece);
+                board.Pieces.Remove(_capturedPiece);
             }
+
             piece.Position = To;
             piece.HasMoved = true;
+        }
+
+        public override void Undo(Board board)
+        {
+            Piece piece = board.GetPieceAt(To);
+            piece.Position = From;
+            piece.HasMoved = false;  // Optional: Reset HasMoved
+
+            if (_capturedPiece != null)
+            {
+                board.Pieces.Add(_capturedPiece);  // Restore captured piece
+            }
         }
     }
 }

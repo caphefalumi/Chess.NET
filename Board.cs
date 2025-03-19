@@ -8,7 +8,7 @@ namespace Chess
         private HashSet<Circle> _boardHighlights;
         private Rectangle[] _backgroundOverlays;
         private static Board _instance;
-        private static BoardDrawer _boardDrawer;
+        private BoardDrawer _boardDrawer;
         private int _squareSize;
         private Color _lightColor;
         private Color _darkColor;
@@ -42,6 +42,7 @@ namespace Chess
             get => _darkColor;
         }
 
+        public GameState GameState { get; set; }
 
         public Piece GetPieceAt(int rank, int file)
         {
@@ -97,20 +98,22 @@ namespace Chess
         {
             return pos.File >= 0 && pos.File < 8 && pos.Rank >= 0 && pos.Rank < 8;
         }
+
         public bool IsEmpty(Position pos)
         {
             return GetPieceAt(pos) is null;
         }
 
-        public IEnumerable<Position> PiecePositions()
+        public IEnumerable<Position> PiecePositions(Player player)
         {
             for (int rank = 0; rank < 8; rank++)
             {
                 for (int file = 0; file < 8; file++)
                 {
                     Position pos = new Position(rank ,file);
+                    Piece piece = GetPieceAt(pos);
 
-                    if (!IsEmpty(pos))
+                    if (piece is not null && piece.Color == player)
                     {
                         yield return pos;
                     }
@@ -122,15 +125,28 @@ namespace Chess
 
         public IEnumerable<Position> PiecePositionsFor(Player player)
         {
-            return PiecePositions().Where(pos => GetPieceAt(pos).Color == player);
+            return PiecePositions(player);
+        }
+        private Position FindKing(Player player)
+        {
+            foreach (Piece piece in Pieces)
+            {
+                if (piece.Type == PieceType.King && piece.Color == player)
+                {
+                    return piece.Position;
+                }
+            }
+            return null;
         }
 
         public bool IsInCheck(Player player)
         {
+            Position kingPos = FindKing(player.Opponent());  // Find the player's king
+
             return PiecePositionsFor(player.Opponent()).Any(pos =>
             {
                 Piece piece = GetPieceAt(pos);
-                return piece.CanCaptureOpponentKing(this);
+                return piece.GetMoves(this).Any(move => move.To == kingPos);
             });
         }
 

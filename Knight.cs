@@ -1,4 +1,6 @@
 ﻿using SplashKitSDK;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Chess
 {
@@ -6,11 +8,13 @@ namespace Chess
     {
         public override PieceType Type => PieceType.Knight;
         public override Player Color { get; }
-        public Knight(Player color, Position pos, char pieceChar) : base(pieceChar)
+
+        public Knight(Player color, Position pos, char pieceChar) : base(color, pieceChar)
         {
             Color = color;
             Position = pos;
         }
+
         public override Piece Copy()
         {
             Knight copy = new Knight(Color, Position, PieceChar);
@@ -18,8 +22,10 @@ namespace Chess
             return copy;
         }
 
-        private IEnumerable<Position> LShapedMoves(Board board)
+        private HashSet<Position> LShapedMoves(Board board)
         {
+            HashSet<Position> moves = new HashSet<Position>();
+
             foreach (Direction file in new Direction[] { Direction.Up, Direction.Down })
             {
                 foreach (Direction rank in new Direction[] { Direction.Left, Direction.Right })
@@ -29,18 +35,28 @@ namespace Chess
 
                     if (CanMoveTo(leftPos, board))
                     {
-                        yield return leftPos;
+                        moves.Add(leftPos);
                     }
                     if (CanMoveTo(rightPos, board))
                     {
-                        yield return rightPos;
+                        moves.Add(rightPos);
                     }
                 }
             }
+
+            return moves;
         }
-        public override IEnumerable<Move> GetMoves(Board board)
+
+        public override HashSet<Move> GetMoves(Board board)
         {
-            return LShapedMoves(board).Select(to => new NormalMove(Position, to));
+            HashSet<Move> moves = new HashSet<Move>();
+
+            foreach (Position to in LShapedMoves(board))
+            {
+                moves.Add(new NormalMove(Position, to));
+            }
+
+            return moves;
         }
     }
 }

@@ -22,15 +22,63 @@ namespace Chess
 
             if (_selectedPiece != null)
             {
-                BufferMoves(_selectedPiece.GetMoves(_board));
+                BufferMoves(_selectedPiece.GetLegalMoves(_board));
                 HighlightSelectedPiece();
                 HighlightLegalMoves();
             }
 
         }
 
+
+        public static void MakeMove(Position pos)
+        {
+            _board.BoardHighlights.Clear();
+            _board.BackgroundOverlays[0] = null;
+            _board.BackgroundOverlays[1] = null;
+            if (_moveBuffer.TryGetValue(pos, out Move move))
+            {
+                HighlightPreviousMove(move.From, move.To);
+                if (move.Type == MoveType.Promotion)
+                {
+                    HandlePromotion(move.From, move.To);
+                }
+                else
+                {
+                    HandleMove(move);
+                }
+            }
+            else
+            {
+                SelectPiece(pos);
+            }
+            _selectedPiece = null;
+        }
+        public static void HandleMove(Move move)
+        {
+            _gameState.MakeMove(move);
+        }
+        public static void HandleUndo()
+        {
+            _gameState.UnmakeMove();
+        }
+
+        private static void HandlePromotion(Position from, Position to)
+        {
+            Move proMove = new PromotionMove(from, to, PieceType.Queen);
+            HandleMove(proMove);
+        }
+
+        private static void BufferMoves(IEnumerable<Move> moves)
+        {
+            _moveBuffer.Clear();
+            foreach (Move move in moves)
+            {
+                _moveBuffer[move.To] = move;
+            }
+        }
+
         private static void HighlightSelectedPiece()
-        {   
+        {
             _board.BackgroundOverlays[2] = new Rectangle(SplashKit.RGBAColor(203, 163, 84, 204), _selectedPiece.Position.X, _selectedPiece.Position.Y, _board.SquareSize);
         }
         private static void HighlightLegalMoves()
@@ -58,32 +106,6 @@ namespace Chess
             }
         }
 
-        private static void MakeMove(Position pos)
-        {
-            _board.BoardHighlights.Clear();
-            _board.BackgroundOverlays[0] = null;
-            _board.BackgroundOverlays[1] = null;
-            if (_moveBuffer.TryGetValue(pos, out Move move))
-            {
-                HighlightPreviousMove(move.From, move.To);
-                _gameState.MakeMove(move);
-                Console.WriteLine(_board.IsInCheck(Player.White));
-            }
-            else
-            {
-                SelectPiece(pos);
-            }
-            _selectedPiece = null;
-        }
-
-        private static void BufferMoves(IEnumerable<Move> moves)
-        {
-            _moveBuffer.Clear();
-            foreach (Move move in moves)
-            {
-                _moveBuffer[move.To] = move;
-            }
-        }
         public static void HandleMouseEvents(Board board, GameState gameState)
         {
             _board = board;

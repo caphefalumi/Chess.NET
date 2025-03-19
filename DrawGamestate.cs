@@ -6,12 +6,7 @@ using System.Threading.Tasks;
 
 namespace Chess
 {
-    public enum MoveType
+    public class DrawGamestate
     {
-        Normal,
-        CastleKS,
-        CastleQS,
-        EnPassant,
-        Promotion
     }
 }

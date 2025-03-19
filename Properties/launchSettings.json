@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Chess": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

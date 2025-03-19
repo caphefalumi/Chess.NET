@@ -1,0 +1,62 @@
+Date : 2025-03-18 22:50:00
+Directory : c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess
+Total : 32 files,  1248 codes, 269 comments, 198 blanks, all 1715 lines
+
+Languages
++---------------+------------+------------+------------+------------+------------+
+| language      | files      | code       | comment    | blank      | total      |
++---------------+------------+------------+------------+------------+------------+
+| C#            |         29 |      1,155 |        224 |        173 |      1,552 |
+| YAML          |          1 |         53 |         45 |         18 |        116 |
+| Solution File |          1 |         21 |          0 |          2 |         23 |
+| XML           |          1 |         19 |          0 |          5 |         24 |
++---------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                                                     | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                                        |         32 |      1,248 |        269 |        198 |      1,715 |
+| . (Files)                                                                                                                                                |         31 |      1,195 |        224 |        180 |      1,599 |
+| .github                                                                                                                                                  |          1 |         53 |         45 |         18 |        116 |
+| .github\workflows                                                                                                                                        |          1 |         53 |         45 |         18 |        116 |
++----------------------------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------------------------------------------------------------------------------------------------+---------------+------------+------------+------------+------------+
+| filename                                                                                                                                                 | language      | code       | comment    | blank      | total      |
++----------------------------------------------------------------------------------------------------------------------------------------------------------+---------------+------------+------------+------------+------------+
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\.github\workflows\dotnet-desktop.yml | YAML          |         53 |         45 |         18 |        116 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Bishop.cs                            | C#            |         31 |          0 |          2 |         33 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Board.cs                             | C#            |        128 |          0 |         15 |        143 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\BoardDrawer.cs                       | C#            |         71 |          0 |         16 |         87 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\BoardEvent.cs                        | C#            |         95 |          0 |         11 |        106 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Chess.csproj                         | XML           |         19 |          0 |          5 |         24 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Chess.sln                            | Solution File |         21 |          0 |          2 |         23 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\ChessBot.cs                          | C#            |          0 |        212 |         31 |        243 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Circle.cs                            | C#            |         44 |          2 |          6 |         52 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Direction.cs                         | C#            |         38 |          0 |          3 |         41 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\GameState.cs                         | C#            |         26 |          2 |          7 |         35 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\IDrawable.cs                         | C#            |          4 |          0 |          1 |          5 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\IPiece.cs                            | C#            |         13 |          0 |          0 |         13 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\IShape.cs                            | C#            |         11 |          0 |          2 |         13 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\King.cs                              | C#            |         57 |          0 |          3 |         60 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Knight.cs                            | C#            |         43 |          0 |          3 |         46 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Move.cs                              | C#            |         18 |          0 |          1 |         19 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\MoveIndicators.cs                    | C#            |         37 |          0 |          4 |         41 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\NormalMove.cs                        | C#            |         30 |          0 |          2 |         32 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Pawn.cs                              | C#            |         77 |          0 |          7 |         84 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Piece.cs                             | C#            |         67 |          2 |          9 |         78 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\PieceFactory.cs                      | C#            |         63 |          0 |          7 |         70 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\PieceType.cs                         | C#            |         17 |          0 |          2 |         19 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Player.cs                            | C#            |         24 |          0 |          2 |         26 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Position.cs                          | C#            |         53 |          0 |          8 |         61 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Program.cs                           | C#            |         31 |          6 |          5 |         42 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\PromotionMove.cs                     | C#            |         28 |          0 |          4 |         32 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Queen.cs                             | C#            |         35 |          0 |          1 |         36 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Rectangle.cs                         | C#            |         40 |          0 |          9 |         49 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Rook.cs                              | C#            |         31 |          0 |          1 |         32 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Shape.cs                             | C#            |         36 |          0 |         10 |         46 |
+| c:\Users\Toan\OneDrive - Swinburne University\Documents\Swinburne_Course\COS20007-Object Oriented Programming\Chess\Sounds.cs                            | C#            |          7 |          0 |          1 |          8 |
+| Total                                                                                                                                                    |               |      1,248 |        269 |        198 |      1,715 |
++----------------------------------------------------------------------------------------------------------------------------------------------------------+---------------+------------+------------+------------+------------+
