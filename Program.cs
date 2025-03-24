@@ -22,8 +22,7 @@ namespace Chess
             int startY = 0;
 
             Board board = Board.GetInstance(squareSize, startX, startY, lightColor, darkColor);
-            GameState gameState = new GameState(board, Player.White);
-
+            GameState gameState = GameState.GetInstance(board, Player.White);
             while (!window.CloseRequested)
             {
                 SplashKit.ProcessEvents();
@@ -33,7 +32,8 @@ namespace Chess
                 BoardEvent.HandleMouseEvents(board, gameState);
                 if (SplashKit.KeyTyped(KeyCode.RKey))
                 {
-                    board.Pieces = PieceFactory.CreatePieces();
+                    board.Pieces = PieceFactory.CreatePieces(board);
+                    board.BoardHighlights.Clear();
                 }
                 else if (SplashKit.KeyTyped(KeyCode.ZKey))
                 {

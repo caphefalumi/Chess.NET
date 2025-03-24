@@ -4,36 +4,24 @@ using System.Linq;
 
 namespace Chess
 {
-    public class Bishop : Piece
+    public class Bishop : SlidingPiece
     {
         public override PieceType Type => PieceType.Bishop;
         public override Player Color { get; }
-
-        private static readonly Direction[] dirs = new Direction[]
+        private static readonly Direction[] dirs =
         {
             Direction.UpLeft, Direction.UpRight, Direction.DownLeft, Direction.DownRight
         };
 
-        public Bishop(Player color, Position pos, char pieceChar) : base(color, pieceChar)
+        public Bishop(Player color, Position pos, char pieceChar, Board board) : base(color, pieceChar, board)
         {
             Color = color;
             Position = pos;
         }
-
-        public override Piece Copy()
+        
+        public override HashSet<Move> GetMoves()
         {
-            Bishop copy = new Bishop(Color, Position, PieceChar);
-            copy.HasMoved = HasMoved;
-            return copy;
-        }
-        public override HashSet<Move> GetMoves(Board board)
-        {
-            HashSet<Move> moves = new HashSet<Move>();
-            foreach (Position to in GenerateMoves(board, dirs))
-            {
-                moves.Add(new NormalMove(Position, to));
-            }
-            return moves;
+            return GetSlidingMoves(dirs);
         }
     }
 }

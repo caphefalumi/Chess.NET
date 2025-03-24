@@ -1,4 +1,5 @@
 ﻿using SplashKitSDK;
+using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
 namespace Chess
 {
@@ -12,6 +13,7 @@ namespace Chess
         private int _squareSize;
         private Color _lightColor;
         private Color _darkColor;
+        public Sound CurrentSound { get; set; }
 
         public HashSet<Piece> Pieces
         {
@@ -26,21 +28,18 @@ namespace Chess
         public Rectangle[] BackgroundOverlays
         {
             get => _backgroundOverlays;
+            set => _backgroundOverlays = value;
         }
         public int SquareSize
         {
             get => _squareSize;
         }
-
-        public Color LightColor
+        public int PieceCounts
         {
-            get => _lightColor;
+            get => _pieces.Count;
         }
 
-        public Color DarkColor
-        {
-            get => _darkColor;
-        }
+        public ulong Occupancy { get; set; }
 
         public GameState GameState { get; set; }
 
@@ -71,7 +70,7 @@ namespace Chess
             _squareSize = squareSize;
             _lightColor = lightColor;
             _darkColor = darkColor;
-            _pieces = PieceFactory.CreatePieces();
+            _pieces = PieceFactory.CreatePieces(this);
             _boardHighlights = new HashSet<Circle>();
             _backgroundOverlays = new Rectangle[3];
             _boardDrawer = BoardDrawer.GetInstance(squareSize, startX, startY, lightColor, darkColor);
@@ -106,54 +105,68 @@ namespace Chess
 
         public IEnumerable<Position> PiecePositions(Player player)
         {
-            for (int rank = 0; rank < 8; rank++)
-            {
-                for (int file = 0; file < 8; file++)
-                {
-                    Position pos = new Position(rank ,file);
-                    Piece piece = GetPieceAt(pos);
-
-                    if (piece is not null && piece.Color == player)
-                    {
-                        yield return pos;
-                    }
-                }
-            }
+            return _pieces.Where(piece => piece.Color == player).Select(piece => piece.Position);
         }
 
-
-
-        public IEnumerable<Position> PiecePositionsFor(Player player)
-        {
-            return PiecePositions(player);
-        }
         private Position FindKing(Player player)
         {
-            foreach (Piece piece in Pieces)
-            {
-                if (piece.Type == PieceType.King && piece.Color == player)
-                {
-                    return piece.Position;
-                }
-            }
-            return null;
+            return _pieces.FirstOrDefault(piece => piece.Type == PieceType.King && piece.Color == player)?.Position;
         }
 
+        public King GetKing()
+        {
+            return _pieces.OfType<King>().FirstOrDefault(king => king.Color == GameState.CurrentPlayer);
+        }
         public bool IsInCheck(Player player)
         {
-            Position kingPos = FindKing(player.Opponent());  // Find the player's king
-
-            return PiecePositionsFor(player.Opponent()).Any(pos =>
-            {
-                Piece piece = GetPieceAt(pos);
-                return piece.GetMoves(this).Any(move => move.To == kingPos);
-            });
+            Position kingPos = FindKing(player);
+            if (kingPos is null) return false; // Safety check in case king isn't found
+            Console.WriteLine("CHECK");
+            return _pieces
+                .Where(piece => piece.Color == player.Opponent())
+                .SelectMany(piece => piece.GetAttackedSquares())
+                .Any(move => move.To == kingPos);
         }
 
-        public Board Copy()
+        public IEnumerable<Move> Test(Player player)
         {
-            Board copy = (Board)MemberwiseClone();
-            return copy;
+            Position kingPos = FindKing(player);
+            //if (kingPos is null) return false; // Safety check in case king isn't found
+
+            return _pieces
+                .Where(piece => piece.Color == player.Opponent())
+                .SelectMany(piece => piece.GetAttackedSquares());
+            //.Any(move => move.To == kingPos);
         }
+
+
+        public ulong PositionToBit(Position pos)
+        {
+            int square = pos.Rank * 8 + pos.File;
+            return 1UL << square;
+        }
+
+        // Build a bitboard of all pieces for a given color.
+        public ulong GenerateColorBitboard(Player color)
+        {
+            ulong bitboard = 0;
+            foreach (var piece in Pieces.Where(p => p.Color == color))
+            {
+                bitboard |= PositionToBit(piece.Position);
+            }
+            return bitboard;
+        }
+
+        // Build a bitboard for all occupied squares.
+        public void GenerateOccupancy()
+        {
+            ulong occ = 0;
+            foreach (var piece in Pieces)
+            {
+                occ |= PositionToBit(piece.Position);
+            }
+            Occupancy = occ;
+        }
+
     }
 }

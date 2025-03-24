@@ -1,6 +1,6 @@
 ﻿namespace Chess
 {
-    public class PromotionMove : Move
+    public class PromotionMove : Move, IMove
     {
         public override MoveType Type => MoveType.Promotion;
         public override Position From { get; }
@@ -16,9 +16,9 @@
             _newType = newType;
         }
 
-        private Piece CreatePromotionPiece(Player player)
+        private Piece CreatePromotionPiece(Piece piece)
         {
-            return PieceFactory.CreatePiece(_newType, player, To);
+            return PieceFactory.CreatePiece(_newType, piece.Color, To, piece.MyBoard);
         }
 
         public override void Execute(Board board)
@@ -30,9 +30,10 @@
             {
                 board.Pieces.Remove(capturedPiece);
             }
-            _promotedPiece = CreatePromotionPiece(_originalPawn.Color);
+            _promotedPiece = CreatePromotionPiece(_originalPawn);
             _promotedPiece.Position = To;
             _promotedPiece.HasMoved = true;
+            board.CurrentSound = Sounds.Promote;
             board.Pieces.Add(_promotedPiece);
         }
 

@@ -10,18 +10,11 @@ namespace Chess
         public override Player Color { get; }
         private readonly Direction forward;
 
-        public Pawn(Player color, Position pos, char pieceChar) : base(color, pieceChar)
+        public Pawn(Player color, Position pos, char pieceChar, Board board) : base(color, pieceChar, board)
         {
             Color = color;
             Position = pos;
             forward = (Color == Player.White) ? Direction.Up : Direction.Down;
-        }
-
-        public override Piece Copy()
-        {
-            Pawn copy = new Pawn(Color, Position, PieceChar);
-            copy.HasMoved = HasMoved;
-            return copy;
         }
 
         private static HashSet<Move> PromotionMoves(Position from, Position to)
@@ -35,67 +28,69 @@ namespace Chess
             };
         }
 
-        private HashSet<Move> ForwardMoves(Position from, Board board)
+        private HashSet<Move> ForwardMoves()
         {
             HashSet<Move> moves = new HashSet<Move>();
 
-            Position singleMovePos = from + forward;
-            if (board.IsEmpty(singleMovePos))
+            Position singleMovePos = Position + forward;
+            if (MyBoard.IsEmpty(singleMovePos))
             {
                 if (singleMovePos.Rank == 0 || singleMovePos.Rank == 7)
                 {
-                    Console.WriteLine("PROMOTE");
-                    moves.UnionWith(PromotionMoves(from, singleMovePos));
+                    moves.UnionWith(PromotionMoves(Position, singleMovePos));
                 }
                 else
                 {
-                    moves.Add(new NormalMove(from, singleMovePos));
+                    moves.Add(new NormalMove(Position, singleMovePos));
                 }
 
                 Position doubleMovePos = singleMovePos + forward;
-                if (!HasMoved && CanMoveTo(doubleMovePos, board))
+                if (!HasMoved && CanMoveTo(doubleMovePos))
                 {
-                    moves.Add(new NormalMove(from, doubleMovePos));
+                    moves.Add(new NormalMove(Position, doubleMovePos));
                 }
             }
 
             return moves;
         }
 
-        protected bool CanCaptureAt(Position pos, Board board)
+        protected bool CanCaptureAt(Position pos)
         {
-            return Board.IsInside(pos) && !board.IsEmpty(pos) && board.GetPieceAt(pos).Color != Color;
+            return Board.IsInside(pos) && !MyBoard.IsEmpty(pos) && MyBoard.GetPieceAt(pos).Color != Color;
         }
 
-        private HashSet<Move> CaptureMoves(Position from, Board board)
+        private HashSet<Move> CaptureMoves()
         {
             HashSet<Move> moves = new HashSet<Move>();
 
             foreach (Direction dir in new Direction[] { Direction.Left, Direction.Right })
             {
-                Position to = from + forward + dir;
-                if (CanCaptureAt(to, board))
+                Position to = Position + forward + dir;
+                if (CanCaptureAt(to))
                 {
                     if (to.Rank == 0 || to.Rank == 7)
                     {
-                        Console.WriteLine("PROMOTE");
-                        moves.UnionWith(PromotionMoves(from, to));
+                        moves.UnionWith(PromotionMoves(Position, to));
                     }
                     else
                     {
-                        moves.Add(new NormalMove(from, to));
+                        moves.Add(new NormalMove(Position, to));
                     }
                 }
             }
 
             return moves;
         }
+        public override HashSet<Move> GetAttackedSquares()
+        {
+            return CaptureMoves();
+        }
 
-        public override HashSet<Move> GetMoves(Board board)
+        public override HashSet<Move> GetMoves()
         {
             HashSet<Move> moves = new HashSet<Move>();
-            moves.UnionWith(ForwardMoves(Position, board));
-            moves.UnionWith(CaptureMoves(Position, board));
+            moves.UnionWith(ForwardMoves());
+            moves.UnionWith(CaptureMoves());
             return moves;
         }
     }

@@ -36,5 +36,11 @@ namespace Chess
         {
             return new Position(pos.File + dir.FileOffset, pos.Rank + dir.RankOffset);
         }
+
+        public static Direction FromOffsets(int rankOffset, int fileOffset)
+        {
+            return new Direction(rankOffset, fileOffset);
+        }
+
     }
 }

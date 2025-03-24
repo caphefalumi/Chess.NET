@@ -4,7 +4,7 @@ namespace Chess
 {
     public static class PieceFactory
     {
-        public static HashSet<Piece> CreatePieces()
+        public static HashSet<Piece> CreatePieces(Board board)
         {
             HashSet<Piece> pieces = new HashSet<Piece>();
 
@@ -30,7 +30,7 @@ namespace Chess
                         Position position = new Position(file, rank);
                         Player color = char.IsUpper(pieceChar) ? Player.White : Player.Black;
                         PieceType type = GetPieceType(pieceChar);
-                        pieces.Add(CreatePiece(type, color, position));
+                        pieces.Add(CreatePiece(type, color, position, board));
                     }
                 }
             }
@@ -38,16 +38,16 @@ namespace Chess
             return pieces;
         }
 
-        public static Piece CreatePiece(PieceType type, Player color, Position position)
+        public static Piece CreatePiece(PieceType type, Player color, Position position, Board board)
         {
             switch (type)
             {
-                case PieceType.Pawn: return new Pawn(color, position, 'p');
-                case PieceType.Rook: return new Rook(color, position, 'r');
-                case PieceType.Knight: return new Knight(color, position, 'n');
-                case PieceType.Bishop: return new Bishop(color, position, 'b');
-                case PieceType.Queen: return new Queen(color, position, 'q');
-                case PieceType.King: return new King(color, position, 'k');
+                case PieceType.Pawn: return new Pawn(color, position, 'p', board);
+                case PieceType.Rook: return new Rook(color, position, 'r', board);
+                case PieceType.Knight: return new Knight(color, position, 'n', board);
+                case PieceType.Bishop: return new Bishop(color, position, 'b', board);
+                case PieceType.Queen: return new Queen(color, position, 'q', board);
+                case PieceType.King: return new King(color, position, 'k', board);
                 default: throw new ArgumentException("Invalid PieceType" + type);
             }
         }

@@ -1,6 +1,6 @@
 ﻿namespace Chess
 {
-    class NormalMove : Move
+    class NormalMove : Move, IMove
     {
         public override MoveType Type => MoveType.Normal;
         public override Position From { get; }
@@ -15,15 +15,18 @@
 
         public override void Execute(Board board)
         {
-            Console.WriteLine($"{From.Rank} : {From.File}");
             Piece piece = board.GetPieceAt(From);
             _capturedPiece = board.GetPieceAt(To);  // Save captured piece (if any)
 
             if (_capturedPiece != null)
             {
                 board.Pieces.Remove(_capturedPiece);
+                board.CurrentSound = Sounds.Capture;
             }
-
+            else
+            {
+                board.CurrentSound = Sounds.MoveSelf;
+            }
             piece.Position = To;
             piece.HasMoved = true;
         }

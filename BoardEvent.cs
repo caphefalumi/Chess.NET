@@ -22,19 +22,22 @@ namespace Chess
 
             if (_selectedPiece != null)
             {
-                BufferMoves(_selectedPiece.GetLegalMoves(_board));
+                //IEnumerable<Move> legalMoves = _selectedPiece.GetLegalMoves();
+                IEnumerable<Move> legalMoves = _selectedPiece.GetLegalMoves();
+
+                BufferMoves(legalMoves);
                 HighlightSelectedPiece();
                 HighlightLegalMoves();
             }
 
         }
 
-
         public static void MakeMove(Position pos)
         {
             _board.BoardHighlights.Clear();
             _board.BackgroundOverlays[0] = null;
             _board.BackgroundOverlays[1] = null;
+            _board.CurrentSound = null;
             if (_moveBuffer.TryGetValue(pos, out Move move))
             {
                 HighlightPreviousMove(move.From, move.To);
@@ -44,12 +47,25 @@ namespace Chess
                 }
                 else
                 {
+                    int pieceCount = _board.PieceCounts;
                     HandleMove(move);
+                    if (_board.IsInCheck(_gameState.CurrentPlayer))
+                    {
+                        _board.CurrentSound = Sounds.MoveCheck;
+                    }
                 }
+                _board.CurrentSound.Play();
+
+            }
+            else if (_board.GetPieceAt(pos)?.Color == _gameState.CurrentPlayer)
+            {
+                SelectPiece(pos);
             }
             else
             {
-                SelectPiece(pos);
+                _board.BackgroundOverlays[2] = null;
+                _board.CurrentSound = Sounds.Illegal;
+                _board.CurrentSound.Play();
             }
             _selectedPiece = null;
         }

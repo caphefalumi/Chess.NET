@@ -6,13 +6,8 @@ namespace Chess
     public class Circle : Shape, IShape
     {
         int _radius;
-        public Circle()
-        {
-            Color = Color.Yellow;
-            _radius = 50;
-        }
 
-        public Circle(Color color, float x, float y, int radius)
+        public Circle(Color color, float x, float y, int radius) : base(color)
         {
             Color = color;
             X = x;

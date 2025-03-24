@@ -1,7 +1,41 @@
-﻿using SplashKitSDK;
+﻿using System.Collections.Generic;
+using SplashKitSDK;
+
 namespace Chess
 {
-    class Sounds
+    public enum SoundType
     {
+        Capture,
+        Castle,
+        GameEnd,
+        GameStart,
+        Illegal,
+        MoveCheck,
+        MoveSelf,
+        Promote
+    }
+
+    public static class Sounds
+    {
+        private static readonly Dictionary<SoundType, Sound> _sounds = new()
+        {
+            { SoundType.Capture, new Sound("Sounds/capture.mp3") },
+            { SoundType.Castle, new Sound("Sounds/castle.mp3") },
+            { SoundType.GameEnd, new Sound("Sounds/game_end.mp3") },
+            { SoundType.GameStart, new Sound("Sounds/game_start.mp3") },
+            { SoundType.Illegal, new Sound("Sounds/illegal.mp3") },
+            { SoundType.MoveCheck, new Sound("Sounds/move_check.mp3") },
+            { SoundType.MoveSelf, new Sound("Sounds/move_self.mp3") },
+            { SoundType.Promote, new Sound("Sounds/promote.mp3") }
+        };
+
+        public static Sound Capture => _sounds[SoundType.Capture];
+        public static Sound Castle => _sounds[SoundType.Castle];
+        public static Sound GameEnd => _sounds[SoundType.GameEnd];
+        public static Sound GameStart => _sounds[SoundType.GameStart];
+        public static Sound Illegal => _sounds[SoundType.Illegal];
+        public static Sound MoveCheck => _sounds[SoundType.MoveCheck];
+        public static Sound MoveSelf => _sounds[SoundType.MoveSelf];
+        public static Sound Promote => _sounds[SoundType.Promote];
     }
 }

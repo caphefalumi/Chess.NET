@@ -20,14 +20,12 @@
             get => Rank * 80;
         }
 
-        public bool IsLightSquare()
+
+        public int ToIndex()
         {
-            if ((File + Rank) % 2 == 0)
-            {
-                return true;
-            }
-            return false;
+            return Rank * 8 + File;
         }
+
         public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())

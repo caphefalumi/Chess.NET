@@ -5,14 +5,35 @@ namespace Chess
         public Board Board { get; }
         public Player CurrentPlayer { get; private set; }
         private Stack<Move> _moveHistory;  // Store move history
+        private static GameState _instance;
 
-        public GameState(Board board, Player player)
+        private GameState(Board board, Player player)
         {
             CurrentPlayer = player;
             Board = board;
             _moveHistory = new Stack<Move>();  // Initialize move stack
             board.GameState = this;
+            Sounds.GameStart.Play();
         }
+
+        public static GameState GetInstance(Board board, Player player)
+        {
+            if (_instance is null)
+            {
+                _instance = new GameState(board, player);
+            }
+            return _instance;
+        }
+
+        public static GameState GetInstance()
+        {
+            if (_instance is not null)
+            {
+                return _instance;
+            }
+            return null;
+        }
+
 
         public void MakeMove(Move move)
         {
@@ -30,10 +51,10 @@ namespace Chess
                 CurrentPlayer = CurrentPlayer.Opponent();
             }
         }
-        public bool MoveResolvesCheck(Move move)
+        public bool MoveResolvesCheck(Move move, Player player)
         {
             MakeMove(move);  // Simulate move
-            bool stillInCheck = Board.IsInCheck(CurrentPlayer);
+            bool stillInCheck = Board.IsInCheck(player);
             UnmakeMove();  // Undo move
             return !stillInCheck;  // The move is legal only if it removes check
         }
