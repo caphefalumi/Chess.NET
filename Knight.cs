@@ -6,8 +6,6 @@ namespace Chess
 {
     public class Knight : Piece
     {
-        public override PieceType Type => PieceType.Knight;
-        public override Player Color { get; }
 
         private static readonly Direction[] dirs = 
         {
@@ -16,9 +14,8 @@ namespace Chess
             Direction.Left + Direction.UpLeft , Direction.Left + Direction.DownLeft,
             Direction.Right + Direction.UpRight, Direction.Right + Direction.DownRight
         };
-        public Knight(Player color, Position pos, char pieceChar, Board board) : base(color, pieceChar, board)
+        public Knight(char pieceChar, Position pos, Board board) : base(pieceChar, board)
         {
-            Color = color;
             Position = pos;
         }
 

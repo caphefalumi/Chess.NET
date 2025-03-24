@@ -9,8 +9,6 @@ namespace Chess
 {
     public class King : Piece
     {
-        public override PieceType Type => PieceType.King;
-        public override Player Color { get; }
         public bool Castled { get; set; }
 
 
@@ -20,9 +18,8 @@ namespace Chess
             Direction.UpLeft, Direction.UpRight, Direction.DownLeft, Direction.DownRight
         };
 
-        public King(Player color, Position pos, char pieceChar, Board board) : base(color, pieceChar, board)
+        public King(char pieceChar, Position pos, Board board) : base(pieceChar, board)
         {
-            Color = color;
             Position = pos;
         }
 
@@ -45,7 +42,7 @@ namespace Chess
 
         private static bool IsRookHasMoved(Piece rook, Board board)
         {
-            return rook is not null && rook.Type == PieceType.Rook && rook.HasMoved;
+            return rook is not null && rook is Rook && rook.HasMoved;
         }
         private static bool NoPiecesBetween(Position[] positions, Board board)
         {

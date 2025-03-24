@@ -20,12 +20,6 @@
             get => Rank * 80;
         }
 
-
-        public int ToIndex()
-        {
-            return Rank * 8 + File;
-        }
-
         public override bool Equals(object obj)
         {
             if (obj == null || GetType() != obj.GetType())

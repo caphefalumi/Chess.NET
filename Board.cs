@@ -1,6 +1,7 @@
 ﻿using SplashKitSDK;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
+using System.Text;
 namespace Chess
 {
     public class Board : IDrawable
@@ -110,63 +111,77 @@ namespace Chess
 
         private Position FindKing(Player player)
         {
-            return _pieces.FirstOrDefault(piece => piece.Type == PieceType.King && piece.Color == player)?.Position;
+            return _pieces.FirstOrDefault(piece => piece is King && piece.Color == player)?.Position;
         }
 
         public King GetKing()
         {
             return _pieces.OfType<King>().FirstOrDefault(king => king.Color == GameState.CurrentPlayer);
         }
+
         public bool IsInCheck(Player player)
         {
             Position kingPos = FindKing(player);
             if (kingPos is null) return false; // Safety check in case king isn't found
-            Console.WriteLine("CHECK");
             return _pieces
                 .Where(piece => piece.Color == player.Opponent())
                 .SelectMany(piece => piece.GetAttackedSquares())
                 .Any(move => move.To == kingPos);
         }
 
-        public IEnumerable<Move> Test(Player player)
+        public HashSet<Move> GetAllyMoves(Player player)
         {
-            Position kingPos = FindKing(player);
-            //if (kingPos is null) return false; // Safety check in case king isn't found
-
-            return _pieces
-                .Where(piece => piece.Color == player.Opponent())
-                .SelectMany(piece => piece.GetAttackedSquares());
-            //.Any(move => move.To == kingPos);
+            var piecesCopy = _pieces.ToHashSet(); // Create a copy of the collection
+            return piecesCopy
+                .Where(piece => piece.Color == player)
+                .SelectMany(piece => piece.GetLegalMoves())
+                .ToHashSet();
         }
-
-
-        public ulong PositionToBit(Position pos)
+        public string GetFen()
         {
-            int square = pos.Rank * 8 + pos.File;
-            return 1UL << square;
-        }
+            StringBuilder fen = new StringBuilder();
 
-        // Build a bitboard of all pieces for a given color.
-        public ulong GenerateColorBitboard(Player color)
-        {
-            ulong bitboard = 0;
-            foreach (var piece in Pieces.Where(p => p.Color == color))
+            // 1️⃣ Board Representation
+            for (int rank = 7; rank >= 0; rank--)
             {
-                bitboard |= PositionToBit(piece.Position);
-            }
-            return bitboard;
-        }
+                int emptyCount = 0;
+                for (int file = 0; file < 8; file++)
+                {
+                    Position pos = new Position(file, rank);
+                    Piece piece = GetPieceAt(pos); // Assuming Board has a method to get a piece at a position
 
-        // Build a bitboard for all occupied squares.
-        public void GenerateOccupancy()
-        {
-            ulong occ = 0;
-            foreach (var piece in Pieces)
-            {
-                occ |= PositionToBit(piece.Position);
+                    if (piece == null)
+                    {
+                        emptyCount++;
+                    }
+                    else
+                    {
+                        if (emptyCount > 0)
+                        {
+                            fen.Append(emptyCount);
+                            emptyCount = 0;
+                        }
+                        fen.Append(piece.PieceChar); // Implement ToFenChar() in Piece class
+                    }
+                }
+                if (emptyCount > 0) fen.Append(emptyCount);
+                if (rank > 0) fen.Append('/');
             }
-            Occupancy = occ;
-        }
 
+            fen.Append(" ").Append(GameState.CurrentPlayer == Player.White ? "w" : "b");
+
+            fen.Append(" ");
+            //string castling = GetCastlingRights(); // Implement GetCastlingRights()
+            //fen.Append(string.IsNullOrEmpty(castling) ? "-" : castling);
+
+            //fen.Append(" ").Append(GetEnPassantSquare()); // Implement GetEnPassantSquare()
+
+            //fen.Append(" ").Append(halfmoveClock); // Track in Board
+
+            //// 6️⃣ Fullmove Counter
+            //fen.Append(" ").Append(fullmoveCounter); // Track in Board
+
+            return fen.ToString();
+        }
     }
 }

@@ -4,9 +4,7 @@ namespace Chess
 {
     public abstract class SlidingPiece : Piece
     {
-        public override abstract PieceType Type { get; }
-        public override abstract Player Color { get; }
-        public SlidingPiece(Player color, char pieceChar, Board board) : base(color, pieceChar, board)
+        public SlidingPiece(char pieceChar, Board board) : base(pieceChar, board)
         {}
         protected HashSet<Move> GenerateMove(Direction[] dirs)
         {

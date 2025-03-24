@@ -6,16 +6,13 @@ namespace Chess
 {
     public class Bishop : SlidingPiece
     {
-        public override PieceType Type => PieceType.Bishop;
-        public override Player Color { get; }
         private static readonly Direction[] dirs =
         {
             Direction.UpLeft, Direction.UpRight, Direction.DownLeft, Direction.DownRight
         };
 
-        public Bishop(Player color, Position pos, char pieceChar, Board board) : base(color, pieceChar, board)
+        public Bishop(char pieceChar, Position pos, Board board) : base(pieceChar, board)
         {
-            Color = color;
             Position = pos;
         }
         

@@ -4,14 +4,14 @@ namespace Chess
     {
         public Board Board { get; }
         public Player CurrentPlayer { get; private set; }
-        private Stack<Move> _moveHistory;  // Store move history
+        public Stack<Move> MoveHistory { get; private set; }  // Store move history
         private static GameState _instance;
 
         private GameState(Board board, Player player)
         {
             CurrentPlayer = player;
             Board = board;
-            _moveHistory = new Stack<Move>();  // Initialize move stack
+            MoveHistory = new Stack<Move>();  // Initialize move stack
             board.GameState = this;
             Sounds.GameStart.Play();
         }
@@ -38,15 +38,15 @@ namespace Chess
         public void MakeMove(Move move)
         {
             move.Execute(Board);
-            _moveHistory.Push(move);  // Store the move for undoing
+            MoveHistory.Push(move);  // Store the move for undoing
             CurrentPlayer = CurrentPlayer.Opponent();
         }
 
         public void UnmakeMove()
         {
-            if (_moveHistory.Count > 0)
+            if (MoveHistory.Count > 0)
             {
-                Move lastMove = _moveHistory.Pop();  // Retrieve last move
+                Move lastMove = MoveHistory.Pop();  // Retrieve last move
                 lastMove.Undo(Board);  // Reverse the move
                 CurrentPlayer = CurrentPlayer.Opponent();
             }

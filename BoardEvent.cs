@@ -22,7 +22,6 @@ namespace Chess
 
             if (_selectedPiece != null)
             {
-                //IEnumerable<Move> legalMoves = _selectedPiece.GetLegalMoves();
                 IEnumerable<Move> legalMoves = _selectedPiece.GetLegalMoves();
 
                 BufferMoves(legalMoves);
@@ -41,15 +40,26 @@ namespace Chess
             if (_moveBuffer.TryGetValue(pos, out Move move))
             {
                 HighlightPreviousMove(move.From, move.To);
+
+
                 if (move.Type == MoveType.Promotion)
                 {
                     HandlePromotion(move.From, move.To);
                 }
                 else
                 {
-                    int pieceCount = _board.PieceCounts;
                     HandleMove(move);
-                    if (_board.IsInCheck(_gameState.CurrentPlayer))
+                }
+
+
+                if (_board.IsInCheck(_gameState.CurrentPlayer))
+                {
+                    if (_board.GetAllyMoves(_gameState.CurrentPlayer).Count == 0)
+                    {
+                        _board.CurrentSound = Sounds.GameEnd;
+                    }
+
+                    else
                     {
                         _board.CurrentSound = Sounds.MoveCheck;
                     }
@@ -71,6 +81,14 @@ namespace Chess
         }
         public static void HandleMove(Move move)
         {
+            if (_gameState.MoveHistory.TryPeek(out Move result))
+            {
+                if (result.Type == MoveType.DoublePawn)
+                {
+                    Pawn pawn = _board.GetPieceAt(result.To) as Pawn;
+                    pawn.CanBeEnpassant = false;
+                }
+            }
             _gameState.MakeMove(move);
         }
         public static void HandleUndo()

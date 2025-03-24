@@ -27,16 +27,15 @@ namespace Chess
         {
             return new Direction(dir1.RankOffset + dir2.RankOffset, dir1.FileOffset + dir2.FileOffset);
         }
-        public static Direction operator *(int scale, Direction dir)
-        {
-            return new Direction(scale * dir.RankOffset, scale * dir.FileOffset);
-        }
 
         public static Position operator +(Position pos, Direction dir)
         {
             return new Position(pos.File + dir.FileOffset, pos.Rank + dir.RankOffset);
         }
-
+        public static Position operator -(Position pos, Direction dir)
+        {
+            return new Position(pos.File - dir.FileOffset, pos.Rank - dir.RankOffset);
+        }
         public static Direction FromOffsets(int rankOffset, int fileOffset)
         {
             return new Direction(rankOffset, fileOffset);

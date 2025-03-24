@@ -6,7 +6,7 @@
         public override Position From { get; }
         public override Position To { get; }
         private readonly PieceType _newType;
-        private Piece _originalPawn;
+        private Pawn _originalPawn;
         private Piece _promotedPiece;
 
         public PromotionMove(Position from, Position to, PieceType newType)
@@ -16,14 +16,14 @@
             _newType = newType;
         }
 
-        private Piece CreatePromotionPiece(Piece piece)
+        private Piece CreatePromotionPiece(Pawn pawn)
         {
-            return PieceFactory.CreatePiece(_newType, piece.Color, To, piece.MyBoard);
+            return PieceFactory.CreatePiece(pawn.PieceChar, To, pawn.MyBoard);
         }
 
         public override void Execute(Board board)
         {
-            _originalPawn = board.GetPieceAt(From);
+            _originalPawn = board.GetPieceAt(From) as Pawn;
             board.Pieces.Remove(_originalPawn);
             Piece capturedPiece = board.GetPieceAt(To);
             if (capturedPiece != null)

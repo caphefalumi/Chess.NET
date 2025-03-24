@@ -5,6 +5,7 @@
         Normal,
         CastleKS,
         CastleQS,
+        DoublePawn,
         EnPassant,
         Promotion
     }

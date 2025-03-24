@@ -1,27 +1,25 @@
 ﻿using SplashKitSDK;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Chess
 {
     public abstract class Piece : IDrawable
     {
-        public abstract PieceType Type { get; }
-        public abstract Player Color { get; }
+        public Player Color { get; }
 
         public Position Position { get; set; }
         public bool HasMoved { get; set; }
         public char PieceChar { get; }
         public Bitmap PieceImage;
         public Board MyBoard { get; }
-        
+        public bool CanBeEnpassant { get; set; }
 
-        public Piece(Player color, char pieceChar, Board board)
+        public Piece(char pieceChar, Board board)
         {
-            HasMoved = false;
             PieceChar = pieceChar;
-            char pieceColor = (Player.White == color) ? 'w' : 'b';
+            Color = char.IsUpper(pieceChar) ? Player.White : Player.Black;
+            char pieceColor = (Player.White == Color) ? 'w' : 'b';
             PieceImage = new Bitmap(pieceColor.ToString() + PieceChar.ToString(), $"pieces\\{pieceColor.ToString() + PieceChar.ToString()}.png");
+            HasMoved = false;
             MyBoard = board;
         }
 
