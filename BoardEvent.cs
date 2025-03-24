@@ -5,7 +5,7 @@ namespace Chess
     public static class BoardEvent
     {
         private static readonly Dictionary<Position, Move> _moveBuffer = new Dictionary<Position, Move>();
-        private static GameState _gameState;
+        private static ChessGameState _gameState; // Changed from GameState to ChessGameState
         private static Piece _selectedPiece;
         private static Board _board;
 

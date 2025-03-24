@@ -42,7 +42,7 @@ namespace Chess
 
         public ulong Occupancy { get; set; }
 
-        public GameState GameState { get; set; }
+        public ChessGameState GameState { get; set; }
 
         public Piece GetPieceAt(int rank, int file)
         {
