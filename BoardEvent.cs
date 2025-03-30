@@ -5,14 +5,12 @@ namespace Chess
     public static class BoardEvent
     {
         private static readonly Dictionary<Position, Move> _moveBuffer = new Dictionary<Position, Move>();
-        private static ChessGameState _gameState; // Changed from GameState to ChessGameState
         private static Piece _selectedPiece;
         private static Board _board;
-
         private static Position GetClickedSquare()
         {
-            int file = (int) SplashKit.MouseX() / 80;
-            int rank = (int) SplashKit.MouseY() / 80;
+            int file = (int)SplashKit.MouseX() / 80;
+            int rank = (int)SplashKit.MouseY() / 80;
             return new Position(file, rank);
         }
 
@@ -23,12 +21,10 @@ namespace Chess
             if (_selectedPiece != null)
             {
                 IEnumerable<Move> legalMoves = _selectedPiece.GetLegalMoves();
-
                 BufferMoves(legalMoves);
                 HighlightSelectedPiece();
                 HighlightLegalMoves();
             }
-
         }
 
         public static void MakeMove(Position pos)
@@ -37,10 +33,10 @@ namespace Chess
             _board.BackgroundOverlays[0] = null;
             _board.BackgroundOverlays[1] = null;
             _board.CurrentSound = null;
+
             if (_moveBuffer.TryGetValue(pos, out Move move))
             {
                 HighlightPreviousMove(move.From, move.To);
-
 
                 if (move.Type == MoveType.Promotion)
                 {
@@ -50,24 +46,11 @@ namespace Chess
                 {
                     HandleMove(move);
                 }
-
-
-                if (_board.IsInCheck(_gameState.CurrentPlayer))
-                {
-                    if (_board.GetAllyMoves(_gameState.CurrentPlayer).Count == 0)
-                    {
-                        _board.CurrentSound = Sounds.GameEnd;
-                    }
-
-                    else
-                    {
-                        _board.CurrentSound = Sounds.MoveCheck;
-                    }
-                }
+                GameplayScreen.SwitchTurn();
+                CheckGameResult();
                 _board.CurrentSound.Play();
-
             }
-            else if (_board.GetPieceAt(pos)?.Color == _gameState.CurrentPlayer)
+            else if (_board.GetPieceAt(pos)?.Color == _board.MatchState.CurrentPlayer)
             {
                 SelectPiece(pos);
             }
@@ -79,21 +62,87 @@ namespace Chess
             }
             _selectedPiece = null;
         }
+
+        private static void CheckGameResult()
+        {
+            Player currentPlayer = _board.MatchState.CurrentPlayer;
+            int availableMoves = _board.GetAllyMoves(currentPlayer).Count;
+
+            if (_board.IsInCheck(currentPlayer))
+            {
+                if (availableMoves == 0)
+                {
+                    SetGameResult(GameResult.Checkmate, $"{currentPlayer.Opponent()} wins by checkmate!");
+                }
+                else
+                {
+                    _board.CurrentSound = Sounds.MoveCheck;
+                }
+            }
+            else if (availableMoves == 0)
+            {
+                SetGameResult(GameResult.Stalemate, "Game is a draw by stalemate!");
+            }
+            else if (IsThreefoldRepetition())
+            {
+                SetGameResult(GameResult.ThreefoldRepetition, "Game is a draw by threefold repetition!");
+            }
+            else if (IsInsufficientMaterial())
+            {
+                SetGameResult(GameResult.InsufficientMaterial, "Game is a draw due to insufficient material!");
+            }
+        }
+
+        private static void SetGameResult(GameResult result, string message)
+        {
+            GameplayScreen.DeclareGameOver(message);
+            _board.CurrentSound = Sounds.GameEnd;
+        }
+
+        private static bool IsThreefoldRepetition()
+        {
+            List<Move> history = _board.MatchState.MoveHistory.ToList();
+            return false;
+            
+        }
+
+        private static bool IsInsufficientMaterial()
+        {
+            HashSet<Piece> pieces = _board.Pieces.ToHashSet();
+            int whitePieceCount = pieces.Count(p => p.Color == Player.White);
+            int blackPieceCount = pieces.Count(p => p.Color == Player.Black);
+
+            // Both sides only have a king
+            if (whitePieceCount == 1 && blackPieceCount == 1) return true;
+
+            // King + Knight vs. King
+            if (pieces.Count(p => char.ToLower(p.PieceChar) == 'n') == 1 && whitePieceCount + blackPieceCount == 2) return true;
+
+            // King + Bishop vs. King
+            if (pieces.Count(p => char.ToLower(p.PieceChar) == 'b') == 1 && whitePieceCount + blackPieceCount == 2) return true;
+
+
+
+            return false;
+        }
+
         public static void HandleMove(Move move)
         {
-            if (_gameState.MoveHistory.TryPeek(out Move result))
+            if (_board.MatchState.MoveHistory.TryPeek(out Move result))
             {
                 if (result.Type == MoveType.DoublePawn)
                 {
-                    Pawn pawn = _board.GetPieceAt(result.To) as Pawn;
-                    pawn.CanBeEnpassant = false;
+                    Pawn pawn = (Pawn)_board.GetPieceAt(result.To);
+                    if (pawn != null)
+                        pawn.CanBeEnpassant = false;
                 }
             }
-            _gameState.MakeMove(move);
+            _board.MatchState.MakeMove(move);
         }
+
         public static void HandleUndo()
         {
-            _gameState.UnmakeMove();
+            _board.MatchState.UnmakeMove();
         }
 
         private static void HandlePromotion(Position from, Position to)
@@ -115,6 +164,7 @@ namespace Chess
         {
             _board.BackgroundOverlays[2] = new Rectangle(SplashKit.RGBAColor(203, 163, 84, 204), _selectedPiece.Position.X, _selectedPiece.Position.Y, _board.SquareSize);
         }
+
         private static void HighlightLegalMoves()
         {
             _board.BoardHighlights.Clear();
@@ -140,15 +190,15 @@ namespace Chess
             }
         }
 
-        public static void HandleMouseEvents(Board board, GameState gameState)
+        public static void HandleMouseEvents(Board board, MatchState gameState)
         {
             _board = board;
-            _gameState = gameState;
+            _board.MatchState = gameState;
             if (SplashKit.MouseClicked(MouseButton.LeftButton))
             {
                 Position pos = GetClickedSquare();
 
-                if (_selectedPiece is null)
+                if (_selectedPiece == null)
                 {
                     SelectPiece(pos);
                 }

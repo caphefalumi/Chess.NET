@@ -1,0 +1,49 @@
+namespace Chess
+{
+    public class MatchConfiguration
+    {
+        public Variant Mode { get; set; }
+        public TimeControl TimeControl { get; set; }
+        public bool UseIncrement { get; set; }
+        public int IncrementSeconds { get; set; }
+        
+        public MatchConfiguration()
+        {
+            Mode = Variant.TwoPlayer;
+            TimeControl = TimeControl.TenMinutes;
+            UseIncrement = false;
+            IncrementSeconds = 0;
+        }
+
+        public TimeSpan GetTimeSpan()
+        {
+            return TimeControl switch
+            {
+                TimeControl.Bullet1 => TimeSpan.FromMinutes(1),
+                TimeControl.Bullet3 => TimeSpan.FromMinutes(3),
+                TimeControl.Blitz5 => TimeSpan.FromMinutes(5),
+                TimeControl.TenMinutes => TimeSpan.FromMinutes(10),
+                TimeControl.FifteenMinutes => TimeSpan.FromMinutes(15),
+                TimeControl.ThirtyMinutes => TimeSpan.FromMinutes(30),
+                TimeControl.Unlimited => TimeSpan.FromHours(24), // Effectively unlimited
+                _ => TimeSpan.FromMinutes(10)
+            };
+        }
+
+        public TimeSpan GetIncrementSpan()
+        {
+            return UseIncrement ? TimeSpan.FromSeconds(IncrementSeconds) : TimeSpan.Zero;
+        }
+    }
+
+    public enum TimeControl
+    {
+        Bullet1,        // 1 minute
+        Bullet3,        // 3 minutes
+        Blitz5,         // 5 minutes
+        TenMinutes,     // 10 minutes
+        FifteenMinutes, // 15 minutes
+        ThirtyMinutes,  // 30 minutes
+        Unlimited       // No time limit
+    }
+}

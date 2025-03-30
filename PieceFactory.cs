@@ -8,7 +8,7 @@ namespace Chess
         {
             HashSet<Piece> pieces = new HashSet<Piece>();
 
-            char[,] boardSetup = new char[8, 8]
+            char[,] boardSetup =
             {
                 { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r' },
                 { 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p' },
@@ -48,6 +48,32 @@ namespace Chess
                 case 'K': return new King(pieceChar, position, board);
                 default: throw new ArgumentException("Invalid PieceType" + pieceChar);
             }
+        }
+
+        public static char GetPieceChar(PieceType type, Player color)
+        {
+            char c = type switch
+            {
+                PieceType.Pawn => 'p',
+                PieceType.Rook => 'r',
+                PieceType.Knight => 'n',
+                PieceType.Bishop => 'b',
+                PieceType.Queen => 'q',
+                PieceType.King => 'k',
+            };
+            return color == Player.White ? char.ToUpper(c) : c;
+        }
+        public static PieceType GetPieceType(char c)
+        {
+            return char.ToLower(c) switch
+            {
+                'p' => PieceType.Pawn,
+                'r' => PieceType.Rook,
+                'n' => PieceType.Knight,
+                'b' => PieceType.Bishop,
+                'q' => PieceType.Queen,
+                'k' => PieceType.King,
+            };
         }
 
     }

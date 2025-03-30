@@ -5,14 +5,16 @@
         public override MoveType Type => MoveType.Normal;
         public override Position From { get; }
         public override Position To { get; }
-        private Piece _capturedPiece;  // Store captured piece
+        public override Piece MovedPiece { get; }
+        private Piece _capturedPiece;
         
-        public EnPassantMove(Position from, Position to)
+        public EnPassantMove(Position from, Position to, Pawn pawn)
         {
             From = from;
             To = to;
+            MovedPiece = pawn;
         }
-        public override void Execute(Board board)
+        public override void Execute(Board board, bool isSimulation)
         {
             Pawn pawn = board.GetPieceAt(From) as Pawn;
             _capturedPiece = board.GetPieceAt(To - pawn.Dir);  // Save captured piece (if any)
@@ -22,10 +24,13 @@
             pawn.Position = To;
         }
 
-        public override void Undo(Board board)
+        public override void Undo(Board board, bool isSimulation)
         {
             Pawn pawn = board.GetPieceAt(To) as Pawn;
-            pawn.Position = From;
+            if (pawn is not null)
+            {
+                pawn.Position = From;
+            }
             board.Pieces.Add(_capturedPiece);  // Restore captured piece
         }
     }

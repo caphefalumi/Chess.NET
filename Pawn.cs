@@ -7,10 +7,12 @@ namespace Chess
     public class Pawn : Piece
     {
         public Direction Dir { get; }
-
+        public bool CanBeEnpassant { get; set; }
+        private Position _originalPosition;
         public Pawn(char pieceChar, Position pos, Board board) : base(pieceChar, board)
         {
             Position = pos;
+            _originalPosition = pos;
             Dir = (Color == Player.White) ? Direction.Up : Direction.Down;
             CanBeEnpassant = false;
         }
@@ -39,13 +41,13 @@ namespace Chess
                 }
                 else
                 {
-                    moves.Add(new NormalMove(Position, singleMovePos));
+                    moves.Add(new NormalMove(Position, singleMovePos, this));
                 }
 
                 Position doubleMovePos = singleMovePos + Dir;
-                if (!HasMoved && MyBoard.IsEmpty(doubleMovePos))
+                if (MyBoard.IsEmpty(doubleMovePos) && Position == _originalPosition)
                 {
-                    moves.Add(new DoublePawnMove(Position, doubleMovePos));
+                    moves.Add(new DoublePawnMove(Position, doubleMovePos, this));
                 }
             }
 
@@ -74,14 +76,14 @@ namespace Chess
                     }
                     else
                     {
-                        moves.Add(new NormalMove(Position, to));
+                        moves.Add(new NormalMove(Position, to, this));
                     }
                 }
                 Position enPassantCapture = Position + direction;
                 Pawn pawn = MyBoard.GetPieceAt(enPassantCapture) as Pawn;
-                if (pawn is not null && pawn.CanBeEnpassant)
+                if (pawn is not null && pawn.CanBeEnpassant && pawn.Color != Color && ((pawn.Color == Player.White && pawn.Position.Rank == 4) || (pawn.Color == Player.Black && pawn.Position.Rank == 3))) 
                 {
-                    moves.Add(new EnPassantMove(Position, enPassantCapture + Dir));
+                    moves.Add(new EnPassantMove(Position, enPassantCapture + Dir, this));
                 }
             }
 

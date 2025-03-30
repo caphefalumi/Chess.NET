@@ -5,18 +5,18 @@ namespace Chess
     public abstract class Piece : IDrawable
     {
         public Player Color { get; }
-
         public Position Position { get; set; }
         public bool HasMoved { get; set; }
         public char PieceChar { get; }
+        public PieceType Type { get; }
         public Bitmap PieceImage;
         public Board MyBoard { get; }
-        public bool CanBeEnpassant { get; set; }
 
         public Piece(char pieceChar, Board board)
         {
             PieceChar = pieceChar;
             Color = char.IsUpper(pieceChar) ? Player.White : Player.Black;
+            Type = PieceFactory.GetPieceType(PieceChar);
             char pieceColor = (Player.White == Color) ? 'w' : 'b';
             PieceImage = new Bitmap(pieceColor.ToString() + PieceChar.ToString(), $"pieces\\{pieceColor.ToString() + PieceChar.ToString()}.png");
             HasMoved = false;
@@ -27,7 +27,7 @@ namespace Chess
         {
             HashSet<Move> pseudoLegalMoves = GetMoves();
 
-            return pseudoLegalMoves.Where(move => MyBoard.GameState.MoveResolvesCheck(move, Color)).ToHashSet(); ;
+            return pseudoLegalMoves.Where(move => MyBoard.MatchState.MoveResolvesCheck(move, Color)).ToHashSet(); ;
         }
 
         public abstract HashSet<Move> GetMoves();

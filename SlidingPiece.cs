@@ -15,14 +15,14 @@ namespace Chess
                 {
                     if (MyBoard.IsEmpty(to))
                     {
-                        moves.Add(new NormalMove(Position, to));
+                        moves.Add(new NormalMove(Position, to, this));
                     }
                     else
                     {
                         Piece otherPiece = MyBoard.GetPieceAt(to);
                         if (otherPiece.Color != Color)
                         {
-                            moves.Add(new NormalMove(Position, to));
+                            moves.Add(new NormalMove(Position, to, this));
                         }
                         break; // Stop after capturing or encountering a piece
                     }

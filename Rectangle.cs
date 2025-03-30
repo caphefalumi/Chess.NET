@@ -32,7 +32,13 @@ namespace Chess
         {
             SplashKit.FillRectangle(Color, X, Y, _width, _height);
         }
-         
+        public override bool IsAt(Point2D pt)
+        {
+            SplashKitSDK.Rectangle rect = SplashKit.RectangleFrom(X, Y, _width,
+           _height);
+            return SplashKit.PointInRectangle(pt, rect);
+        }
+
         public int Width
         {
             get { return _width; }

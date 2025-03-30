@@ -1,7 +1,4 @@
-﻿using SplashKitSDK;
-using System.Collections.Generic;
-using System.Linq;
-
+﻿
 namespace Chess
 {
     public class Bishop : SlidingPiece

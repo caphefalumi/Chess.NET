@@ -35,5 +35,6 @@ public abstract class Shape
     }
 
     public abstract void Draw();
+    public abstract bool IsAt(Point2D pt);
 
 }

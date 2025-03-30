@@ -2,7 +2,7 @@
 
 namespace Chess
 {
-    public class BoardDrawer
+    public class BoardRenderer
     {
         private int _squareSize;
         private int _startX;
@@ -10,9 +10,9 @@ namespace Chess
         private Color _lightColor;
         private Color _darkColor;
 
-        private static BoardDrawer _instance;
+        private static BoardRenderer _instance;
 
-        private BoardDrawer(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
+        private BoardRenderer(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
             _squareSize = squareSize;
             _startX = startX;
@@ -21,11 +21,11 @@ namespace Chess
             _darkColor = darkColor;
         }
 
-        public static BoardDrawer GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
+        public static BoardRenderer GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
             if (_instance == null)
             {
-                _instance = new BoardDrawer(squareSize, startX, startY, lightColor, darkColor);
+                _instance = new BoardRenderer(squareSize, startX, startY, lightColor, darkColor);
             }
             return _instance;
         }

@@ -1,7 +1,8 @@
 ﻿using SplashKitSDK;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
+using System.Linq;
+
 namespace Chess
 {
     public class Board : IDrawable
@@ -10,10 +11,12 @@ namespace Chess
         private HashSet<Circle> _boardHighlights;
         private Rectangle[] _backgroundOverlays;
         private static Board _instance;
-        private BoardDrawer _boardDrawer;
+        private BoardRenderer _boardDrawer;
         private int _squareSize;
-        private Color _lightColor;
-        private Color _darkColor;
+        private King _whiteKing;
+        private King _blackKing;
+        
+        public bool IsGameOver { get; set; }
         public Sound CurrentSound { get; set; }
 
         public HashSet<Piece> Pieces
@@ -31,51 +34,20 @@ namespace Chess
             get => _backgroundOverlays;
             set => _backgroundOverlays = value;
         }
-        public int SquareSize
-        {
-            get => _squareSize;
-        }
-        public int PieceCounts
-        {
-            get => _pieces.Count;
-        }
+        public int SquareSize => _squareSize;
+        public GameResult GameResult { get; set; }
+        public MatchState MatchState { get; set; }
 
-        public ulong Occupancy { get; set; }
-
-        public ChessGameState GameState { get; set; }
-
-        public Piece GetPieceAt(int rank, int file)
-        {
-            foreach (Piece piece in Pieces)
-            {
-                if (piece.Position.Rank == rank && piece.Position.File == file)
-                {
-                    return piece;
-                }
-            }
-            return null;
-        }
-        public Piece GetPieceAt(Position pos)
-        {
-            foreach (Piece piece in Pieces)
-            {
-                if (piece.Position == pos)
-                {
-                    return piece;
-                }
-            }
-            return null;
-        }
         private Board(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
             _squareSize = squareSize;
-            _lightColor = lightColor;
-            _darkColor = darkColor;
             _pieces = PieceFactory.CreatePieces(this);
             _boardHighlights = new HashSet<Circle>();
             _backgroundOverlays = new Rectangle[3];
-            _boardDrawer = BoardDrawer.GetInstance(squareSize, startX, startY, lightColor, darkColor);
-        
+            _boardDrawer = BoardRenderer.GetInstance(squareSize, startX, startY, lightColor, darkColor);
+            _whiteKing = FindKing(Player.White);
+            _blackKing = FindKing(Player.Black);
+            GameResult = GameResult.Ongoing;
         }
         public static Board GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
@@ -94,6 +66,28 @@ namespace Chess
             _boardDrawer.Draw(_boardHighlights);
         }
 
+        public Piece GetPieceAt(int rank, int file)
+        {
+            foreach (Piece piece in Pieces)
+            {
+                if (piece.Position.Rank == rank && piece.Position.File == file)
+                {
+                    return piece;
+                }
+            }
+            return null;
+        }
+        public Piece GetPieceAt(Position pos)
+        {
+            foreach (Piece piece in Pieces)
+            {
+                if (piece.Position.Equals(pos))
+                {
+                    return piece;
+                }
+            }
+            return null;
+        }
         public static bool IsInside(Position pos)
         {
             return pos.File >= 0 && pos.File < 8 && pos.Rank >= 0 && pos.Rank < 8;
@@ -104,29 +98,18 @@ namespace Chess
             return GetPieceAt(pos) is null;
         }
 
-        public IEnumerable<Position> PiecePositions(Player player)
+        private King FindKing(Player player)
         {
-            return _pieces.Where(piece => piece.Color == player).Select(piece => piece.Position);
-        }
-
-        private Position FindKing(Player player)
-        {
-            return _pieces.FirstOrDefault(piece => piece is King && piece.Color == player)?.Position;
-        }
-
-        public King GetKing()
-        {
-            return _pieces.OfType<King>().FirstOrDefault(king => king.Color == GameState.CurrentPlayer);
+            return (King)_pieces.FirstOrDefault(piece => piece is King && piece.Color == player);
         }
 
         public bool IsInCheck(Player player)
         {
-            Position kingPos = FindKing(player);
-            if (kingPos is null) return false; // Safety check in case king isn't found
+            King king = player == Player.White ? _whiteKing : _blackKing;
             return _pieces
                 .Where(piece => piece.Color == player.Opponent())
                 .SelectMany(piece => piece.GetAttackedSquares())
-                .Any(move => move.To == kingPos);
+                .Any(move => move.To == king.Position);
         }
 
         public HashSet<Move> GetAllyMoves(Player player)
@@ -141,14 +124,14 @@ namespace Chess
         {
             StringBuilder fen = new StringBuilder();
 
-            // 1️⃣ Board Representation
+            // 1. Board Representation
             for (int rank = 7; rank >= 0; rank--)
             {
                 int emptyCount = 0;
                 for (int file = 0; file < 8; file++)
                 {
                     Position pos = new Position(file, rank);
-                    Piece piece = GetPieceAt(pos); // Assuming Board has a method to get a piece at a position
+                    Piece piece = GetPieceAt(pos);
 
                     if (piece == null)
                     {
@@ -161,25 +144,35 @@ namespace Chess
                             fen.Append(emptyCount);
                             emptyCount = 0;
                         }
-                        fen.Append(piece.PieceChar); // Implement ToFenChar() in Piece class
+                        fen.Append(piece.PieceChar);
                     }
                 }
                 if (emptyCount > 0) fen.Append(emptyCount);
                 if (rank > 0) fen.Append('/');
             }
 
-            fen.Append(" ").Append(GameState.CurrentPlayer == Player.White ? "w" : "b");
+            // 2. Active Color
+            fen.Append(" ").Append(MatchState.CurrentPlayer == Player.White ? "w" : "b");
 
-            fen.Append(" ");
-            //string castling = GetCastlingRights(); // Implement GetCastlingRights()
-            //fen.Append(string.IsNullOrEmpty(castling) ? "-" : castling);
+            // 3. Castling Availability
+            //StringBuilder castling = new StringBuilder();
+            //if (MatchState.CanWhiteCastleKingside) castling.Append('K');
+            //if (MatchState.CanWhiteCastleQueenside) castling.Append('Q');
+            //if (MatchState.CanBlackCastleKingside) castling.Append('k');
+            //if (MatchState.CanBlackCastleQueenside) castling.Append('q');
+            //fen.Append(" ").Append(castling.Length > 0 ? castling.ToString() : "-");
 
-            //fen.Append(" ").Append(GetEnPassantSquare()); // Implement GetEnPassantSquare()
+            // 4. En Passant Target Square
+            // You'll need to track the en passant square in your MatchState
+            fen.Append(" ").Append("-"); // Placeholder - implement actual en passant square tracking
 
-            //fen.Append(" ").Append(halfmoveClock); // Track in Board
+            // 5. Halfmove Clock (moves since last capture or pawn advance)
+            // You'll need to track this in your MatchState
+            fen.Append(" ").Append("0"); // Placeholder
 
-            //// 6️⃣ Fullmove Counter
-            //fen.Append(" ").Append(fullmoveCounter); // Track in Board
+            // 6. Fullmove Number
+            // You'll need to track this in your MatchState
+            fen.Append(" ").Append("1"); // Placeholder
 
             return fen.ToString();
         }

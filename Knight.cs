@@ -29,7 +29,7 @@ namespace Chess
                 Position to = Position + dir;
                 if (CanMoveTo(to))
                 {
-                    moves.Add(new NormalMove(Position, to));
+                    moves.Add(new NormalMove(Position, to, this));
                 }
             }
             return moves;

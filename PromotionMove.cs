@@ -5,10 +5,11 @@
         public override MoveType Type => MoveType.Promotion;
         public override Position From { get; }
         public override Position To { get; }
+        public override Piece MovedPiece { get; }
         private readonly PieceType _newType;
         private Pawn _originalPawn;
         private Piece _promotedPiece;
-
+        private Piece _capturedPiece;
         public PromotionMove(Position from, Position to, PieceType newType)
         {
             From = from;
@@ -21,14 +22,14 @@
             return PieceFactory.CreatePiece(pawn.PieceChar, To, pawn.MyBoard);
         }
 
-        public override void Execute(Board board)
+        public override void Execute(Board board, bool isSimulation)
         {
             _originalPawn = board.GetPieceAt(From) as Pawn;
             board.Pieces.Remove(_originalPawn);
-            Piece capturedPiece = board.GetPieceAt(To);
-            if (capturedPiece != null)
+            _capturedPiece = board.GetPieceAt(To);
+            if (_capturedPiece != null)
             {
-                board.Pieces.Remove(capturedPiece);
+                board.Pieces.Remove(_capturedPiece);
             }
             _promotedPiece = CreatePromotionPiece(_originalPawn);
             _promotedPiece.Position = To;
@@ -37,11 +38,12 @@
             board.Pieces.Add(_promotedPiece);
         }
 
-        public override void Undo(Board board)
+        public override void Undo(Board board, bool isSimulation)
         {
             board.Pieces.Remove(_promotedPiece);
             _originalPawn.Position = From;
             board.Pieces.Add(_originalPawn);
+            board.Pieces.Add(_capturedPiece);
         }
     }
 }

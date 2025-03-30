@@ -33,7 +33,7 @@ namespace Chess
                 Position to = Position + dir;
                 if (CanMoveTo(to))
                 {
-                    moves.Add(new NormalMove(Position, to));
+                    moves.Add(new NormalMove(Position, to, this));
                 }
             }
             return moves;
@@ -55,13 +55,6 @@ namespace Chess
            }
             return true;
         }
-        private bool AreSquaresControlledByOpponent(Position[] positions)
-        {
-            return MyBoard.Pieces
-                .Where(piece => piece.Color != this.Color) // Opponent pieces
-                .SelectMany(piece => piece.GetAttackedSquares()) // Get their moves
-                .Any(move => positions.Contains(move.To)); // Check if they attack these squares
-        }
 
         private bool CanCastle(int rookFile, Position[] betweenPositions)
         {
@@ -72,7 +65,6 @@ namespace Chess
 
             if (!NoPiecesBetween(betweenPositions, MyBoard)) return false;
 
-            if (AreSquaresControlledByOpponent(betweenPositions)) return false;
 
             return true;
         }
@@ -97,6 +89,7 @@ namespace Chess
 
             if (CanCastleKS())
             {
+                Console.WriteLine("OK");
                 moves.Add(new CastleMove(MoveType.CastleKS, Position));
             }
 

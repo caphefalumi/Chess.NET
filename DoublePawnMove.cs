@@ -1,37 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Chess
+﻿namespace Chess
 {
     public class DoublePawnMove : Move
     {
         public override MoveType Type => MoveType.DoublePawn;
         public override Position From { get; }
         public override Position To { get; }
-        public DoublePawnMove(Position from, Position to)
+        public override Piece MovedPiece { get; }
+        private Pawn _movedPawn { get; set; }
+        public DoublePawnMove(Position from, Position to, Pawn pawn)
         {
             From = from;
             To = to;
+            _movedPawn = pawn;
         }
 
-        public override void Execute(Board board)
+        public override void Execute(Board board, bool isSimulation)
         {
-            Piece piece = board.GetPieceAt(From);
-            if (piece is Pawn)
+            if (_movedPawn is Pawn)
             {
-                piece.CanBeEnpassant = true;
+                _movedPawn.CanBeEnpassant = true;
             }
 
             board.CurrentSound = Sounds.MoveSelf;
-            piece.Position = To;
-            piece.HasMoved = true;
+            _movedPawn.Position = To;
+            _movedPawn.HasMoved = true;
         }
-        public override void Undo(Board board)
+        public override void Undo(Board board, bool isSimulation)
         {
-            new NormalMove(From, To).Undo(board);
+            _movedPawn.Position = From;
+            _movedPawn.HasMoved = false;
+
         }
     }
 }

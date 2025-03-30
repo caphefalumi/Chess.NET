@@ -5,17 +5,18 @@
         public override MoveType Type => MoveType.Normal;
         public override Position From { get; }
         public override Position To { get; }
+        public override Piece MovedPiece { get; }
         private Piece _capturedPiece;  // Store captured piece
 
-        public NormalMove(Position from, Position to)
+        public NormalMove(Position from, Position to, Piece piece)
         {
             From = from;
             To = to;
+            MovedPiece = piece;
         }
 
-        public override void Execute(Board board)
+        public override void Execute(Board board, bool isSimulation)
         {
-            Piece piece = board.GetPieceAt(From);
             _capturedPiece = board.GetPieceAt(To);  // Save captured piece (if any)
 
             if (_capturedPiece != null)
@@ -27,17 +28,24 @@
             {
                 board.CurrentSound = Sounds.MoveSelf;
             }
-            piece.Position = To;
-            piece.HasMoved = true;
+            MovedPiece.Position = To;
+            if (!isSimulation)
+            {
+                MovedPiece.HasMoved = true;
+            }
         }
 
-        public override void Undo(Board board)
+        public override void Undo(Board board, bool isSimulation)
         {
-            Piece piece = board.GetPieceAt(To);
-            piece.Position = From;
-            piece.HasMoved = false;  // Optional: Reset HasMoved
-
-            if (_capturedPiece != null)
+            if (MovedPiece is not null)
+            {
+                MovedPiece.Position = From;
+                if (!isSimulation)
+                {
+                    MovedPiece.HasMoved = false;
+                }
+            }
+            if (_capturedPiece is not null)
             {
                 board.Pieces.Add(_capturedPiece);  // Restore captured piece
             }

@@ -2,27 +2,37 @@
 
 namespace Chess
 {
-    public enum GameMode
+    public enum Variant
     {
-        Standard,
-        Timed,
+        TwoPlayer,
+        Computer,
+        SpellChess,
         Custom
+    }
+    public enum GameResult
+    {
+        Ongoing,        // Game is still in progress
+        Checkmate,      // One player is checkmated
+        Stalemate,      // Stalemate (no legal moves, not in check)
+        Timeout,        // A player ran out of time
+        Resignation,    // A player resigned
+        DrawByAgreement, // Players agreed to a draw
+        ThreefoldRepetition, // Draw due to threefold repetition
+        FiftyMoveRule,  // Draw due to 50-move rule
+        InsufficientMaterial // Draw due to insufficient material
     }
 
     public class Game
     {
-        private GameState _currentState;
+        private ScreenState _currentState;
         private Board _board;
         private Window _window;
-
-        // Reference to your existing chess game state
-        private ChessGameState _chessGameState;
+        private MatchState _GameState;
 
         public Game(string title, int width, int height)
         {
             _window = SplashKit.OpenWindow(title, width, height);
 
-            // Initialize board the same way you do now
             int squareSize = 80;
             int startX = 0;
             int startY = 0;
@@ -30,18 +40,17 @@ namespace Chess
             Color darkColor = SplashKit.RGBColor(209, 139, 71);
 
             _board = Board.GetInstance(squareSize, startX, startY, lightColor, darkColor);
-            _chessGameState = ChessGameState.GetInstance(_board, Player.White);
+            _GameState = MatchState.GetInstance(_board, Player.White);
 
-            // Start with main menu state
             _currentState = new MainMenuState(this, _board);
         }
 
-        public ChessGameState GetChessGameState()
+        public MatchState GetGameState()
         {
-            return _chessGameState;
+            return _GameState;
         }
 
-        public void ChangeState(GameState newState)
+        public void ChangeState(ScreenState newState)
         {
             _currentState = newState;
         }
@@ -51,7 +60,6 @@ namespace Chess
             while (!_window.CloseRequested)
             {
                 SplashKit.ProcessEvents();
-
                 _currentState.HandleInput();
                 _currentState.Update();
                 _currentState.Render();

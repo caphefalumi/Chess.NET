@@ -2,7 +2,7 @@
 
 namespace Chess
 {
-    public class Button
+    public class Button : IDrawable
     {
         private string _text;
         private Rectangle _rect;
@@ -10,6 +10,8 @@ namespace Chess
         private Color _hoverColor;
         private Color _textColor;
         private bool _isHovered;
+
+        public Rectangle Rect => _rect;
 
         public Button(string text, int x, int y, int width, int height)
         {
@@ -21,6 +23,31 @@ namespace Chess
             _isHovered = false;
         }
 
-        // Implementation as in the previous response
+        public void Update()
+        {
+            _isHovered = _rect.IsAt(SplashKit.MousePosition());
+            _rect.Color = _isHovered ? _hoverColor : _normalColor;
+        }
+
+        public bool IsClicked()
+        {
+            return _isHovered && SplashKit.MouseClicked(MouseButton.LeftButton);
+        }
+
+        public void Draw()
+        {
+            _rect.Draw();
+
+            // Calculate text position for centering
+            Font font = SplashKit.LoadFont("Arial", "Arial.ttf");
+
+            int textWidth = SplashKit.TextWidth(_text, font, 16);
+            int textHeight = SplashKit.TextHeight(_text, font, 16);
+
+            float textX = _rect.X + (_rect.Width - textWidth) / 2;
+            float textY = _rect.Y + (_rect.Height - textHeight) / 2;
+
+            SplashKit.DrawText(_text, _textColor, font, 16, textX, textY);
+        }
     }
 }

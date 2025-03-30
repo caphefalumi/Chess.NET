@@ -20,6 +20,11 @@ namespace Chess
             get { return _radius; }
             set { _radius = value; }
         }
+        public override bool IsAt(Point2D pt)
+        {
+            SplashKitSDK.Circle circle = SplashKit.CircleAt(X, Y, _radius);
+            return SplashKit.PointInCircle(pt, circle);
+        }
 
         public override void Draw()
         {

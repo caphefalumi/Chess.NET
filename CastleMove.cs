@@ -7,7 +7,7 @@ namespace Chess
         public override MoveType Type { get; }
         public override Position From { get; }
         public override Position To { get; }
-
+        public override Piece MovedPiece { get; }
         private Position _rookFrom;
         private Position _rookTo;
         private readonly Direction _kingMoveDir;
@@ -33,40 +33,45 @@ namespace Chess
             }
         }
 
-        public override void Execute(Board board)
+        public override void Execute(Board board, bool isSimulation)
         {
             // Move the king
-            King king = board.GetKing();
-            Piece rook = board.GetPieceAt(_rookFrom);
-
-            if (king is King && rook != null)
+            King king = (King)board.GetPieceAt(From);
+            Rook rook = (Rook)board.GetPieceAt(_rookFrom);
+            // Move the king
+            king.Position = To;
+            board.CurrentSound = Sounds.Castle;
+            // Move the rook
+            rook.Position = _rookTo;
+            if (!isSimulation)
             {
-                // Move the king
-                king.Position = To;
                 king.HasMoved = true;
-                board.CurrentSound = Sounds.Castle;
-                // Move the rook
-                rook.Position = _rookTo;
                 rook.HasMoved = true;
             }
         }
 
-        public override void Undo(Board board)
+        public override void Undo(Board board, bool isSimulation)
         {
-            King king = board.GetKing();
-            Piece rook = board.GetPieceAt(_rookTo);
-            
+            King king = (King)board.GetPieceAt(To);
+            Rook rook = (Rook)board.GetPieceAt(_rookTo);
+
             if (king is not null)
             {
                 king.Position = From;
-                king.HasMoved = false;
+                if (!isSimulation)
+                {
+                    king.HasMoved = false;
+                }
                 king.Castled = true;
             }
             
             if (rook is not null)
             {
                 rook.Position = _rookFrom;
-                rook.HasMoved = false;
+                if (!isSimulation)
+                {
+                    rook.HasMoved = false;
+                }
             }
         }
     }
