@@ -8,52 +8,50 @@ namespace Chess
         public override Position From { get; }
         public override Position To { get; }
         public override Piece MovedPiece { get; }
+        public override Piece CapturedPiece { get; set; }
+        private Rook _rook;
         private Position _rookFrom;
         private Position _rookTo;
-        private readonly Direction _kingMoveDir;
 
-        public CastleMove(MoveType type, Position kingPos)
+        public CastleMove(MoveType type, Position kingPos, King king)
         {
             Type = type;
             From = kingPos;
 
             if (type == MoveType.CastleKS)
             {
-                _kingMoveDir = Direction.Right;
                 To = new Position(6, kingPos.Rank);
                 _rookFrom = new Position(7, kingPos.Rank);
                 _rookTo = new Position(5, kingPos.Rank);
             }
             else if (type == MoveType.CastleQS)
             {
-                _kingMoveDir = Direction.Left;
-                To = new Position(2, kingPos.Rank);
                 _rookFrom = new Position(0, kingPos.Rank);
                 _rookTo = new Position(3, kingPos.Rank);
             }
+            MovedPiece = king;
         }
 
         public override void Execute(Board board, bool isSimulation)
         {
+            King king = (King)MovedPiece;
             // Move the king
-            King king = (King)board.GetPieceAt(From);
-            Rook rook = (Rook)board.GetPieceAt(_rookFrom);
+            Rook _rook = (Rook)board.GetPieceAt(_rookFrom);
             // Move the king
-            king.Position = To;
+            MovedPiece.Position = To;
             board.CurrentSound = Sounds.Castle;
             // Move the rook
-            rook.Position = _rookTo;
+            _rook.Position = _rookTo;
             if (!isSimulation)
             {
                 king.HasMoved = true;
-                rook.HasMoved = true;
+                _rook.HasMoved = true;
             }
         }
 
         public override void Undo(Board board, bool isSimulation)
         {
-            King king = (King)board.GetPieceAt(To);
-            Rook rook = (Rook)board.GetPieceAt(_rookTo);
+            King king = (King)MovedPiece;
 
             if (king is not null)
             {
@@ -65,12 +63,12 @@ namespace Chess
                 king.Castled = true;
             }
             
-            if (rook is not null)
+            if (_rook is not null)
             {
-                rook.Position = _rookFrom;
+                _rook.Position = _rookFrom;
                 if (!isSimulation)
                 {
-                    rook.HasMoved = false;
+                    _rook.HasMoved = false;
                 }
             }
         }

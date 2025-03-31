@@ -11,15 +11,9 @@ namespace Chess
     }
     public enum GameResult
     {
-        Ongoing,        // Game is still in progress
-        Checkmate,      // One player is checkmated
-        Stalemate,      // Stalemate (no legal moves, not in check)
-        Timeout,        // A player ran out of time
-        Resignation,    // A player resigned
-        DrawByAgreement, // Players agreed to a draw
-        ThreefoldRepetition, // Draw due to threefold repetition
-        FiftyMoveRule,  // Draw due to 50-move rule
-        InsufficientMaterial // Draw due to insufficient material
+        Ongoing,
+        Win,
+        Draw
     }
 
     public class Game

@@ -124,7 +124,7 @@ namespace Chess
         {
             StringBuilder fen = new StringBuilder();
 
-            // 1. Board Representation
+            // 1. Board Representation (ranks 8 to 1, files a to h)
             for (int rank = 7; rank >= 0; rank--)
             {
                 int emptyCount = 0;
@@ -152,29 +152,38 @@ namespace Chess
             }
 
             // 2. Active Color
-            fen.Append(" ").Append(MatchState.CurrentPlayer == Player.White ? "w" : "b");
+            fen.Append(' ').Append(MatchState.CurrentPlayer == Player.White ? "w" : "b");
 
             // 3. Castling Availability
-            //StringBuilder castling = new StringBuilder();
-            //if (MatchState.CanWhiteCastleKingside) castling.Append('K');
-            //if (MatchState.CanWhiteCastleQueenside) castling.Append('Q');
-            //if (MatchState.CanBlackCastleKingside) castling.Append('k');
-            //if (MatchState.CanBlackCastleQueenside) castling.Append('q');
-            //fen.Append(" ").Append(castling.Length > 0 ? castling.ToString() : "-");
+            StringBuilder castling = new StringBuilder();
+            if (MatchState.CanWhiteCastleKingside) castling.Append('K');
+            if (MatchState.CanWhiteCastleQueenside) castling.Append('Q');
+            if (MatchState.CanBlackCastleKingside) castling.Append('k');
+            if (MatchState.CanBlackCastleQueenside) castling.Append('q');
+            fen.Append(' ').Append(castling.Length > 0 ? castling.ToString() : "-");
 
             // 4. En Passant Target Square
-            // You'll need to track the en passant square in your MatchState
-            fen.Append(" ").Append("-"); // Placeholder - implement actual en passant square tracking
+            fen.Append(' ');
+            if (MatchState.EnPassantTarget is not null)
+            {
+                // Convert to algebraic notation (e.g., "e3")
+                char file = (char)('a' + MatchState.EnPassantTarget.File);
+                int rank = MatchState.EnPassantTarget.Rank + 1; // +1 because rank is 0-indexed
+                fen.Append(file).Append(rank);
+            }
+            else
+            {
+                fen.Append('-');
+            }
 
             // 5. Halfmove Clock (moves since last capture or pawn advance)
-            // You'll need to track this in your MatchState
-            fen.Append(" ").Append("0"); // Placeholder
+            fen.Append(' ').Append(MatchState.HalfmoveClock);
 
             // 6. Fullmove Number
-            // You'll need to track this in your MatchState
-            fen.Append(" ").Append("1"); // Placeholder
+            fen.Append(' ').Append(MatchState.FullmoveNumber);
 
             return fen.ToString();
         }
+
     }
 }

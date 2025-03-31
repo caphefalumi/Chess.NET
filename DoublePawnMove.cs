@@ -7,10 +7,13 @@
         public override Position To { get; }
         public override Piece MovedPiece { get; }
         private Pawn _movedPawn { get; set; }
+        public override Piece CapturedPiece { get; set; }
+
         public DoublePawnMove(Position from, Position to, Pawn pawn)
         {
             From = from;
             To = to;
+            MovedPiece = pawn;
             _movedPawn = pawn;
         }
 
@@ -19,6 +22,7 @@
             if (_movedPawn is Pawn)
             {
                 _movedPawn.CanBeEnpassant = true;
+                board.MatchState.EnPassantTarget = To - _movedPawn.Dir;
             }
 
             board.CurrentSound = Sounds.MoveSelf;

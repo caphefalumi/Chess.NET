@@ -39,5 +39,6 @@ namespace Chess
         {
             return GetLShapedMoves();
         }
+
     }
 }

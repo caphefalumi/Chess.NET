@@ -1,8 +1,4 @@
-﻿using SplashKitSDK;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Chess
+﻿namespace Chess
 {
     public class Pawn : Piece
     {
@@ -101,5 +97,8 @@ namespace Chess
             moves.UnionWith(CaptureMoves());
             return moves;
         }
+
+
+
     }
 }

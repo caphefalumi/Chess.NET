@@ -63,7 +63,7 @@ namespace Chess
             _selectedPiece = null;
         }
 
-        private static void CheckGameResult()
+        public static void CheckGameResult()
         {
             Player currentPlayer = _board.MatchState.CurrentPlayer;
             int availableMoves = _board.GetAllyMoves(currentPlayer).Count;
@@ -72,7 +72,7 @@ namespace Chess
             {
                 if (availableMoves == 0)
                 {
-                    SetGameResult(GameResult.Checkmate, $"{currentPlayer.Opponent()} wins by checkmate!");
+                    SetGameResult(GameResult.Win, $"{currentPlayer.Opponent()} wins by checkmate!");
                 }
                 else
                 {
@@ -81,15 +81,19 @@ namespace Chess
             }
             else if (availableMoves == 0)
             {
-                SetGameResult(GameResult.Stalemate, "Game is a draw by stalemate!");
+                SetGameResult(GameResult.Draw, "Game is a draw by stalemate!");
+            }
+            else if (Is50MoveRule())
+            {
+                SetGameResult(GameResult.Draw, "Game is a draw by repetition!");
             }
             else if (IsThreefoldRepetition())
             {
-                SetGameResult(GameResult.ThreefoldRepetition, "Game is a draw by threefold repetition!");
+                SetGameResult(GameResult.Draw, "Game is a draw by threefold repetition!");
             }
             else if (IsInsufficientMaterial())
             {
-                SetGameResult(GameResult.InsufficientMaterial, "Game is a draw due to insufficient material!");
+                SetGameResult(GameResult.Draw, "Game is a draw due to insufficient material!");
             }
         }
 
@@ -99,16 +103,31 @@ namespace Chess
             _board.CurrentSound = Sounds.GameEnd;
         }
 
-        private static bool IsThreefoldRepetition()
+        public static bool IsThreefoldRepetition()
         {
-            List<Move> history = _board.MatchState.MoveHistory.ToList();
+            if (_board.MatchState.MoveHistory.Count < 6) return false;
+            string currentFen = _board.MatchState.MoveHistory.Peek().Value;
+            int count = 1;
+
+            foreach (var entry in _board.MatchState.MoveHistory.Reverse().Skip(1))
+            {
+                if (entry.Value == currentFen)
+                {
+                    count++;
+                    if (count >= 3) return true;
+                }
+            }
             return false;
-            
         }
 
+
+        private static bool Is50MoveRule()
+        {
+            return _board.MatchState.HalfmoveClock == 100;
+        }
         private static bool IsInsufficientMaterial()
         {
-            HashSet<Piece> pieces = _board.Pieces.ToHashSet();
+            HashSet<Piece> pieces = _board.Pieces;
             int whitePieceCount = pieces.Count(p => p.Color == Player.White);
             int blackPieceCount = pieces.Count(p => p.Color == Player.Black);
 
@@ -128,13 +147,17 @@ namespace Chess
 
         public static void HandleMove(Move move)
         {
-            if (_board.MatchState.MoveHistory.TryPeek(out Move result))
+            if (_board.MatchState.MoveHistory.TryPeek(out KeyValuePair<Move, string> result))
             {
-                if (result.Type == MoveType.DoublePawn)
+                if (result.Key.Type == MoveType.DoublePawn)
                 {
-                    Pawn pawn = (Pawn)_board.GetPieceAt(result.To);
+                    Pawn pawn = (Pawn)_board.GetPieceAt(result.Key.To);
                     if (pawn != null)
+                    {
                         pawn.CanBeEnpassant = false;
+                        _board.MatchState.EnPassantTarget = null;
+                    }
+
                 }
             }
             _board.MatchState.MakeMove(move);
@@ -147,8 +170,17 @@ namespace Chess
 
         private static void HandlePromotion(Position from, Position to)
         {
-            Move proMove = new PromotionMove(from, to, PieceType.Queen);
-            HandleMove(proMove);
+            GameplayScreen.PromotionFlag = true;
+            while (GameplayScreen.PromotionFlag)
+            {
+                // Wait for the player to select a promotion piece
+                PieceType selectedPiece = GameplayScreen.HandlePromotionSelection();
+                if (!GameplayScreen.PromotionFlag)
+                {
+                    Move proMove = new PromotionMove(from, to, selectedPiece);
+                    HandleMove(proMove);
+                }
+            }
         }
 
         private static void BufferMoves(IEnumerable<Move> moves)

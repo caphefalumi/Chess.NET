@@ -6,6 +6,8 @@
         public override Position From { get; }
         public override Position To { get; }
         public override Piece MovedPiece { get; }
+        public override Piece CapturedPiece { get; set; }
+
         private readonly PieceType _newType;
         private Pawn _originalPawn;
         private Piece _promotedPiece;

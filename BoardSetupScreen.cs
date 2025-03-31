@@ -9,7 +9,7 @@ namespace Chess
         private Button _startButton;
         private Button _backButton;
         private Button _clearButton;
-        private Button _timeSettingsButton;  // New button for time settings
+        private Button _timeSettingsButton;
         private PieceType _selectedPieceType = PieceType.Pawn;
         private Player _selectedPlayerColor = Player.White;
         private Button _whitePieceButton;

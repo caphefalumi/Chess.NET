@@ -1,4 +1,6 @@
 ﻿using SplashKitSDK;
+using System;
+using System.Diagnostics;
 
 namespace Chess
 {
@@ -16,7 +18,10 @@ namespace Chess
         private static bool _gameOver;
         private static string _gameOverMessage;
         private ChessBot _bot; // For computer mode
-
+        private Stopwatch _botThinkTimer; // Timer to control bot thinking
+        private bool _botIsThinking = false; // Flag to indicate bot is "thinking"
+        private Move _botSelectedMove = null; // The move the bot has selected
+        public static bool PromotionFlag;
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {
             _game = game;
@@ -41,6 +46,7 @@ namespace Chess
             if (config.Mode == Variant.Computer)
             {
                 _bot = new ChessBot(_board);
+                _botThinkTimer = new Stopwatch();
             }
 
             _clock.Start();
@@ -55,14 +61,13 @@ namespace Chess
             {
                 if (_gameOverNewGameButton.IsClicked())
                 {
-                    Console.WriteLine("ABSBSBSSBSBS");
                     ResetBoard();
                 }
                 return;
             }
 
-            // Handle human input
-            if (_config.Mode != Variant.Computer || _gameState.CurrentPlayer == Player.White)
+            // Handle human input - only if it's not the computer's turn or not in computer mode
+            if (!_botIsThinking && (_config.Mode != Variant.Computer || _gameState.CurrentPlayer == Player.White))
             {
                 BoardEvent.HandleMouseEvents(_board, _gameState);
             }
@@ -76,6 +81,12 @@ namespace Chess
             {
                 BoardEvent.HandleUndo();
                 _clock.CurrentTurn = _gameState.CurrentPlayer;
+
+                // If it's now computer's turn after undo, reset thinking state
+                if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black)
+                {
+                    _botIsThinking = false;
+                }
             }
             else if (_resetButton.IsClicked() || SplashKit.KeyTyped(KeyCode.RKey))
             {
@@ -98,25 +109,51 @@ namespace Chess
             // Computer Move Logic
             if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black)
             {
-                // Computer's turn - get remaining time
-                TimeSpan remainingTime = _clock.BlackTime;
-
-                // Adjust search depth based on remaining time
-                _bot.AdjustDepthForTime((int)remainingTime.TotalMilliseconds);
-
-                // Use 10% of remaining time for the move, with a minimum of 500ms and maximum of 3s
-                int thinkTime = Math.Min(3000, Math.Max(500, (int)(remainingTime.TotalMilliseconds * 0.1)));
-
-                // Get the best move
-                Move botMove = _bot.GetBestMove(thinkTime);
-
-                if (botMove != null)
+                // Handle computer move in stages for a better user experience
+                if (!_botIsThinking)
                 {
-                    // Make the move on the board
-                    _gameState.MakeMove(botMove);
+                    // Start thinking process
+                    _botIsThinking = true;
+                    _botThinkTimer.Restart();
 
-                    // Update the clock
+                    // Determine how much time the bot should "think"
+                    TimeSpan remainingTime = _clock.BlackTime;
+                    int thinkTime;
+
+                    // Adjust search strategy based on remaining time
+                    if (remainingTime.TotalSeconds < 10)
+                    {
+                        // Low time - make quick moves
+                        _bot.AdjustDepthForTime(500); // Very shallow search
+                        thinkTime = 300; // Appear to think for 300ms
+                    }
+                    else if (remainingTime.TotalSeconds < 30)
+                    {
+                        // Limited time - make reasonable moves quickly
+                        _bot.AdjustDepthForTime(1000);
+                        thinkTime = 500; // Think for 500ms
+                    }
+                    else
+                    {
+                        // Plenty of time - make strong moves
+                        _bot.AdjustDepthForTime((int)remainingTime.TotalMilliseconds);
+                        thinkTime = 1000; // Think for 1 second
+                    }
+
+                    // Calculate the move on a separate thread to avoid freezing UI
+                    Task.Run(() =>
+                    {
+                        _botSelectedMove = _bot.GetBestMove(thinkTime);
+                    });
+                }
+                else if (_botThinkTimer.ElapsedMilliseconds >= 500 && _botSelectedMove is not null)
+                {
+                    // Bot has finished "thinking" - make the move
+                    _gameState.MakeMove(_botSelectedMove);
                     _clock.SwitchTurn();
+                    BoardEvent.CheckGameResult(); // Check if the move resulted in game over
+                    _botIsThinking = false;
+                    _botSelectedMove = null;
                 }
             }
 
@@ -125,6 +162,27 @@ namespace Chess
             {
                 HandleSpellChessLogic();
             }
+        }
+        public static PieceType HandlePromotionSelection()
+        {
+            PieceType promotedPiece = PieceType.Pawn;
+            if (SplashKit.MouseClicked(MouseButton.LeftButton))
+            {
+                int x = 250, y = 200, width = 80, height = 80;
+                float mx = SplashKit.MouseX(), my = SplashKit.MouseY();
+
+                if (mx >= x && mx <= x + width)
+                {
+                    if (my >= y && my <= y + height * 4)
+                    {
+                        int choice = (int)((my - y) / height);
+                        PieceType[] choices = { PieceType.Queen, PieceType.Rook, PieceType.Bishop, PieceType.Knight };
+                        promotedPiece = choices[choice];
+                        PromotionFlag = false; // Reset the promotion flag
+                    }
+                }
+            }
+            return promotedPiece;
         }
 
         private void HandleSpellChessLogic()
@@ -144,6 +202,8 @@ namespace Chess
 
             _gameOver = false;
             _gameOverMessage = "";
+            _botIsThinking = false;
+            _botSelectedMove = null;
             _clock.Reset(_config.GetTimeSpan());
             _clock.Start();
         }
@@ -183,14 +243,22 @@ namespace Chess
                 SplashKit.DrawText($"Mode: {modeText}", Color.Black, "Arial", 16, 10, 610);
                 SplashKit.DrawText($"Current Player: {currentPlayer}", Color.Black, "Arial", 16, 10, 640);
 
+                // Show "thinking" indicator when bot is thinking
+                if (_botIsThinking)
+                {
+                    SplashKit.DrawText("Computer is thinking...", Color.Black, "Arial", 16, 10, 580);
+                }
+
                 // Draw increment info if using increment
                 if (_config.UseIncrement)
                 {
                     SplashKit.DrawText($"Increment: +{_config.IncrementSeconds}s", Color.Black, "Arial", 14, 10, 670);
                 }
             }
-
-            SplashKit.RefreshScreen();
+            if (!_botIsThinking)
+            {
+                SplashKit.RefreshScreen();
+            }
         }
 
         private void DrawTimeDisplay(Player player, string time, int x, int y)
@@ -224,10 +292,12 @@ namespace Chess
                 _ => "Standard"
             };
         }
+
         public static void SwitchTurn()
         {
             _clock.SwitchTurn();
         }
+
         public static void DeclareGameOver(string msg)
         {
             _gameOver = true;

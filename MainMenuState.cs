@@ -31,12 +31,7 @@ namespace Chess
             if (_newGameButton.IsClicked())
             {
                 // Create a MatchConfiguration object with TwoPlayer mode
-                MatchConfiguration config = new MatchConfiguration
-                {
-                    Mode = Variant.TwoPlayer,
-                    TimeControl = TimeControl.TenMinutes,
-                    UseIncrement = false
-                };
+                MatchConfiguration config = new MatchConfiguration();
 
                 // Pass the configuration to GameplayScreen
                 _game.ChangeState(new GameplayScreen(_game, _board, config));

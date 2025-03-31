@@ -1,5 +1,4 @@
-﻿// IVariantStrategy.cs
-namespace Chess
+﻿namespace Chess
 {
     public interface IVariantStrategy
     {

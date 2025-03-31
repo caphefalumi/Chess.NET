@@ -25,7 +25,7 @@ namespace Chess
                 TimeControl.TenMinutes => TimeSpan.FromMinutes(10),
                 TimeControl.FifteenMinutes => TimeSpan.FromMinutes(15),
                 TimeControl.ThirtyMinutes => TimeSpan.FromMinutes(30),
-                TimeControl.Unlimited => TimeSpan.FromHours(24), // Effectively unlimited
+                TimeControl.Unlimited => TimeSpan.FromHours(24),
                 _ => TimeSpan.FromMinutes(10)
             };
         }
@@ -38,12 +38,12 @@ namespace Chess
 
     public enum TimeControl
     {
-        Bullet1,        // 1 minute
-        Bullet3,        // 3 minutes
-        Blitz5,         // 5 minutes
-        TenMinutes,     // 10 minutes
-        FifteenMinutes, // 15 minutes
-        ThirtyMinutes,  // 30 minutes
-        Unlimited       // No time limit
+        Bullet1,
+        Bullet3,
+        Blitz5,
+        TenMinutes,
+        FifteenMinutes,
+        ThirtyMinutes,
+        Unlimited
     }
 }

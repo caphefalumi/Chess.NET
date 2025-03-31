@@ -6,7 +6,7 @@
         public override Position From { get; }
         public override Position To { get; }
         public override Piece MovedPiece { get; }
-        private Piece _capturedPiece;  // Store captured piece
+        public override Piece CapturedPiece { get; set; }
 
         public NormalMove(Position from, Position to, Piece piece)
         {
@@ -17,11 +17,11 @@
 
         public override void Execute(Board board, bool isSimulation)
         {
-            _capturedPiece = board.GetPieceAt(To);  // Save captured piece (if any)
+            CapturedPiece = board.GetPieceAt(To);  // Save captured piece (if any)
 
-            if (_capturedPiece != null)
+            if (CapturedPiece != null)
             {
-                board.Pieces.Remove(_capturedPiece);
+                board.Pieces.Remove(CapturedPiece);
                 board.CurrentSound = Sounds.Capture;
             }
             else
@@ -45,9 +45,9 @@
                     MovedPiece.HasMoved = false;
                 }
             }
-            if (_capturedPiece is not null)
+            if (CapturedPiece is not null)
             {
-                board.Pieces.Add(_capturedPiece);  // Restore captured piece
+                board.Pieces.Add(CapturedPiece);  // Restore captured piece
             }
         }
     }

@@ -112,6 +112,11 @@ namespace Chess
             _timer = new Stopwatch();
         }
 
+        /// <summary>
+        /// Gets the best move for the current player using negamax with alpha-beta pruning
+        /// </summary>
+        /// <param name="timeLimit">Time limit for the search in milliseconds</param>
+        /// <returns>The best move found within the time limit</returns>
         public Move GetBestMove(int timeLimit = 1000)
         {
             _shouldStopSearch = false;
@@ -440,7 +445,7 @@ namespace Chess
 
             foreach (Move move in moves)
             {
-                // Estimate move value
+                // Estimate move                // Estimate move value
                 int score = EstimateMoveValue(move, player);
                 moveScores[move] = score;
             }
@@ -503,4 +508,6 @@ namespace Chess
             }
         }
     }
+
+
 }

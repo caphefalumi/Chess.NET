@@ -69,13 +69,13 @@ namespace Chess
             return true;
         }
 
-        private bool CanCastleKS()
+        public bool CanCastleKS()
         {
             Position[] betweenPositions = { new Position(6, Position.Rank), new Position(5, Position.Rank) };
             return CanCastle(7, betweenPositions);
         }
 
-        private bool CanCastleQS()
+        public bool CanCastleQS()
         {
             Position[] betweenPositions = { new Position(1, Position.Rank), new Position(2, Position.Rank), new Position(3, Position.Rank) };
             return CanCastle(0, betweenPositions);
@@ -90,12 +90,12 @@ namespace Chess
             if (CanCastleKS())
             {
                 Console.WriteLine("OK");
-                moves.Add(new CastleMove(MoveType.CastleKS, Position));
+                moves.Add(new CastleMove(MoveType.CastleKS, Position, this));
             }
 
             if (CanCastleQS())
             {
-                moves.Add(new CastleMove(MoveType.CastleQS, Position));
+                moves.Add(new CastleMove(MoveType.CastleQS, Position, this));
             }
 
             return moves;

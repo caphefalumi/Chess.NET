@@ -11,14 +11,13 @@ namespace Chess
         public PieceType Type { get; }
         public Bitmap PieceImage;
         public Board MyBoard { get; }
-
         public Piece(char pieceChar, Board board)
         {
             PieceChar = pieceChar;
             Color = char.IsUpper(pieceChar) ? Player.White : Player.Black;
             Type = PieceFactory.GetPieceType(PieceChar);
             char pieceColor = (Player.White == Color) ? 'w' : 'b';
-            PieceImage = new Bitmap(pieceColor.ToString() + PieceChar.ToString(), $"pieces\\{pieceColor.ToString() + PieceChar.ToString()}.png");
+            PieceImage = new Bitmap(pieceColor.ToString() + PieceChar.ToString(), $"Resources\\Pieces\\{pieceColor.ToString() + PieceChar.ToString()}.png");
             HasMoved = false;
             MyBoard = board;
         }

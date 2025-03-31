@@ -12,15 +12,16 @@
 		<DefineConstants>$(DefineConstants);GENERATE_PLANTUML</DefineConstants>
 	</PropertyGroup>
   <ItemGroup>
-	  <Content Include="Pieces\**\*.png">
+	  <Content Include="Resources\Pieces\**\*.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
-	  <Content Include="Sounds\**\*.mp3">
+	  <Content Include="Resources\Sounds\**\*.mp3">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="Resources\**\*.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 			 
 	  <PackageReference Include="SplashKit" Version="1.2.0" />
 	  <CompilerVisibleProperty Include="PlantUmlGenerator_OutputDir" />

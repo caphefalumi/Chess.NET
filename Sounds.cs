@@ -19,14 +19,14 @@ namespace Chess
     {
         private static readonly Dictionary<SoundType, Sound> _sounds = new()
         {
-            { SoundType.Capture, new Sound("Sounds/capture.mp3") },
-            { SoundType.Castle, new Sound("Sounds/castle.mp3") },
-            { SoundType.GameEnd, new Sound("Sounds/game_end.mp3") },
-            { SoundType.GameStart, new Sound("Sounds/game_start.mp3") },
-            { SoundType.Illegal, new Sound("Sounds/illegal.mp3") },
-            { SoundType.MoveCheck, new Sound("Sounds/move_check.mp3") },
-            { SoundType.MoveSelf, new Sound("Sounds/move_self.mp3") },
-            { SoundType.Promote, new Sound("Sounds/promote.mp3") }
+            { SoundType.Capture, new Sound("Resources/Sounds/capture.mp3") },
+            { SoundType.Castle, new Sound("Resources/Sounds/castle.mp3") },
+            { SoundType.GameEnd, new Sound("Resources/Sounds/game_end.mp3") },
+            { SoundType.GameStart, new Sound("Resources/Sounds/game_start.mp3") },
+            { SoundType.Illegal, new Sound("Resources/Sounds/illegal.mp3") },
+            { SoundType.MoveCheck, new Sound("Resources/Sounds/move_check.mp3") },
+            { SoundType.MoveSelf, new Sound("Resources/Sounds/move_self.mp3") },
+            { SoundType.Promote, new Sound("Resources/Sounds/promote.mp3") }
         };
 
         public static Sound Capture => _sounds[SoundType.Capture];

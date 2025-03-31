@@ -38,7 +38,6 @@ namespace Chess
         {
             _rect.Draw();
 
-            // Calculate text position for centering
             Font font = SplashKit.LoadFont("Arial", "Arial.ttf");
 
             int textWidth = SplashKit.TextWidth(_text, font, 16);

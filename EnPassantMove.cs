@@ -7,7 +7,8 @@
         public override Position To { get; }
         public override Piece MovedPiece { get; }
         private Piece _capturedPiece;
-        
+        public override Piece CapturedPiece { get; set; }
+
         public EnPassantMove(Position from, Position to, Pawn pawn)
         {
             From = from;
