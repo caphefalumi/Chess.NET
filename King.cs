@@ -65,13 +65,32 @@ namespace Chess
 
             if (!NoPiecesBetween(betweenPositions, MyBoard)) return false;
 
+            // Check if any of the squares the king moves through are under attack
+            foreach (Position pos in betweenPositions)
+            {
+                if (IsSquareUnderAttack(pos))
+                    return false;
+            }
 
             return true;
         }
 
+        private bool IsSquareUnderAttack(Position pos)
+        {
+            foreach (Piece piece in MyBoard.Pieces)
+            {
+                if (piece.Color != Color)
+                {
+                    if (piece.GetAttackedSquares().Any(move => move.To.Equals(pos)))
+                        return true;
+                }
+            }
+            return false;
+        }
+
         public bool CanCastleKS()
         {
-            Position[] betweenPositions = { new Position(6, Position.Rank), new Position(5, Position.Rank) };
+            Position[] betweenPositions = { new Position(5, Position.Rank), new Position(6, Position.Rank) };
             return CanCastle(7, betweenPositions);
         }
 
@@ -89,7 +108,6 @@ namespace Chess
 
             if (CanCastleKS())
             {
-                Console.WriteLine("OK");
                 moves.Add(new CastleMove(MoveType.CastleKS, Position, this));
             }
 

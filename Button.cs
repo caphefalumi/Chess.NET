@@ -22,7 +22,15 @@ namespace Chess
             _rect = new Rectangle(_normalColor, x, y, width, height);
             _isHovered = false;
         }
-
+        public Button(int x, int y, int width, int height)
+        {
+            _text = "";
+            _normalColor = Color.Transparent;
+            _hoverColor = Color.Transparent;
+            _textColor = Color.Transparent;
+            _rect = new Rectangle(_normalColor, x, y, width, height);
+            _isHovered = false;
+        }
         public void Update()
         {
             _isHovered = _rect.IsAt(SplashKit.MousePosition());

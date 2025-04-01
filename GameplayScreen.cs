@@ -1,6 +1,7 @@
 ﻿using SplashKitSDK;
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Chess
 {
@@ -22,6 +23,12 @@ namespace Chess
         private bool _botIsThinking = false; // Flag to indicate bot is "thinking"
         private Move _botSelectedMove = null; // The move the bot has selected
         public static bool PromotionFlag;
+        private static bool _showPromotionMenu;
+        private static Move _promotionMove;
+        private static Player _promotionColor;
+        private static Dictionary<PieceType, Bitmap> _promotionPieces;
+        private static Dictionary<PieceType, Rectangle> _promotionButtons;  // Add this for click detection
+
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {
             _game = game;
@@ -32,7 +39,6 @@ namespace Chess
 
             // Create the clock with the configured time settings
             _clock = new Clock(config.GetTimeSpan(), config.GetIncrementSpan());
-
             // Setup UI buttons
             _menuButton = new Button("Menu", 610, 10, 80, 30);
             _undoButton = new Button("Undo", 610, 50, 80, 30);
@@ -57,6 +63,7 @@ namespace Chess
 
         public override void HandleInput()
         {
+            // First check for game over state
             if (_gameOver)
             {
                 if (_gameOverNewGameButton.IsClicked())
@@ -66,16 +73,17 @@ namespace Chess
                 return;
             }
 
-            // Handle human input - only if it's not the computer's turn or not in computer mode
-            if (!_botIsThinking && (_config.Mode != Variant.Computer || _gameState.CurrentPlayer == Player.White))
+            // Then check for promotion menu
+            if (_showPromotionMenu && SplashKit.MouseClicked(MouseButton.LeftButton))
             {
-                BoardEvent.HandleMouseEvents(_board, _gameState);
+                HandlePromotionSelection(); // If promotion menu is active, don't handle other inputs
             }
 
             // Handle menu buttons
             if (_menuButton.IsClicked())
             {
                 _game.ChangeState(new MainMenuState(_game, _board));
+                return;
             }
             else if (_undoButton.IsClicked() || SplashKit.KeyTyped(KeyCode.ZKey))
             {
@@ -87,16 +95,28 @@ namespace Chess
                 {
                     _botIsThinking = false;
                 }
+                return;
             }
             else if (_resetButton.IsClicked() || SplashKit.KeyTyped(KeyCode.RKey))
             {
                 ResetBoard();
+                return;
+            }
+
+            // Handle human input - only if it's not the computer's turn or not in computer mode
+            if (!_botIsThinking && (_config.Mode != Variant.Computer || _gameState.CurrentPlayer == Player.White))
+            {
+                BoardEvent.HandleMouseEvents(_board, _gameState);
             }
         }
 
         public override void Update()
         {
-            if (_gameOver) return;
+            if (_gameOver) 
+            {
+                _gameOverNewGameButton.Update();
+                return;
+            }
 
             _menuButton.Update();
             _undoButton.Update();
@@ -124,20 +144,17 @@ namespace Chess
                     if (remainingTime.TotalSeconds < 10)
                     {
                         // Low time - make quick moves
-                        _bot.AdjustDepthForTime(500); // Very shallow search
-                        thinkTime = 300; // Appear to think for 300ms
+                        thinkTime = 300; // Very shallow search
                     }
                     else if (remainingTime.TotalSeconds < 30)
                     {
                         // Limited time - make reasonable moves quickly
-                        _bot.AdjustDepthForTime(1000);
-                        thinkTime = 500; // Think for 500ms
+                        thinkTime = 500;
                     }
                     else
                     {
                         // Plenty of time - make strong moves
-                        _bot.AdjustDepthForTime((int)remainingTime.TotalMilliseconds);
-                        thinkTime = 1000; // Think for 1 second
+                        thinkTime = 1000;
                     }
 
                     // Calculate the move on a separate thread to avoid freezing UI
@@ -146,12 +163,12 @@ namespace Chess
                         _botSelectedMove = _bot.GetBestMove(thinkTime);
                     });
                 }
-                else if (_botThinkTimer.ElapsedMilliseconds >= 500 && _botSelectedMove is not null)
+                else if (_botThinkTimer.ElapsedMilliseconds >= 500 && _botSelectedMove != null)
                 {
-                    // Bot has finished "thinking" - make the move
+                    // Execute the bot's move
                     _gameState.MakeMove(_botSelectedMove);
                     _clock.SwitchTurn();
-                    BoardEvent.CheckGameResult(); // Check if the move resulted in game over
+                    BoardEvent.CheckGameResult();
                     _botIsThinking = false;
                     _botSelectedMove = null;
                 }
@@ -163,26 +180,25 @@ namespace Chess
                 HandleSpellChessLogic();
             }
         }
-        public static PieceType HandlePromotionSelection()
+        public static void HandlePromotionSelection()
         {
-            PieceType promotedPiece = PieceType.Pawn;
             if (SplashKit.MouseClicked(MouseButton.LeftButton))
             {
-                int x = 250, y = 200, width = 80, height = 80;
-                float mx = SplashKit.MouseX(), my = SplashKit.MouseY();
+                Point2D clickPoint = new Point2D() { X = SplashKit.MouseX(), Y = SplashKit.MouseY() };
 
-                if (mx >= x && mx <= x + width)
+                foreach (var button in _promotionButtons)
                 {
-                    if (my >= y && my <= y + height * 4)
+                    if (button.Value.IsAt(clickPoint))
                     {
-                        int choice = (int)((my - y) / height);
-                        PieceType[] choices = { PieceType.Queen, PieceType.Rook, PieceType.Bishop, PieceType.Knight };
-                        promotedPiece = choices[choice];
-                        PromotionFlag = false; // Reset the promotion flag
+                        // Create and execute the promotion move
+                        Move promotionMove = new PromotionMove(_promotionMove.From, _promotionMove.To, _promotionMove.MovedPiece, button.Key);
+                        BoardEvent.HandleMove(promotionMove);
+                        _showPromotionMenu = false;
+                        PromotionFlag = false;
+                        break;
                     }
                 }
             }
-            return promotedPiece;
         }
 
         private void HandleSpellChessLogic()
@@ -212,6 +228,40 @@ namespace Chess
         {
             SplashKit.ClearScreen(Color.White);
             _board.Draw();
+
+            // Draw promotion menu if active (draw before game over UI)
+            if (_showPromotionMenu)
+            {
+                // Calculate center position of the board
+                int menuX = 160; // Center horizontally (640/2 - 320/2)
+                int menuY = 280; // Center vertically (640/2 - 80/2)
+
+                // Draw menu background (white color)
+                SplashKit.FillRectangle(Color.White, menuX, menuY, 320, 80);
+                SplashKit.DrawRectangle(Color.Gray, menuX, menuY, 320, 80);
+
+                // Draw piece options horizontally with their click detection rectangles
+                int x = menuX;
+                foreach (KeyValuePair<PieceType, Bitmap> piece in _promotionPieces)
+                {
+                    // Calculate the padding to center the piece in the 80x80 box
+                    float pieceSize = 70.0f; // Slightly smaller than the 80x80 box
+                    float padding = (80 - pieceSize) / 2; // Center the piece in the box
+                    
+                    // Draw piece image centered in the box
+                    SplashKit.DrawBitmap(
+                        piece.Value, 
+                        x + padding - 25, 
+                        menuY + padding - 45, 
+                        SplashKit.OptionScaleBmp(pieceSize / piece.Value.Width, pieceSize / piece.Value.Height)
+                    );
+                    
+                    // Draw transparent rectangle for click detection
+                    _promotionButtons[piece.Key].Draw();
+                    
+                    x += 80; // Move to next piece position
+                }
+            }
 
             if (_gameOver)
             {
@@ -248,14 +298,10 @@ namespace Chess
                 {
                     SplashKit.DrawText("Computer is thinking...", Color.Black, "Arial", 16, 10, 580);
                 }
-
-                // Draw increment info if using increment
-                if (_config.UseIncrement)
-                {
-                    SplashKit.DrawText($"Increment: +{_config.IncrementSeconds}s", Color.Black, "Arial", 14, 10, 670);
-                }
             }
-            if (!_botIsThinking)
+            
+            // Always refresh the screen except when actually executing the bot's move
+            if (!(_botIsThinking && _botSelectedMove != null))
             {
                 SplashKit.RefreshScreen();
             }
@@ -302,6 +348,35 @@ namespace Chess
         {
             _gameOver = true;
             _gameOverMessage = msg;
+        }
+
+        public static void ShowPromotionMenu(Move move, Player color)
+        {
+            _showPromotionMenu = true;
+            _promotionMove = move;
+            _promotionColor = color;
+            PromotionFlag = true;
+
+            // Center position of the board
+            int menuX = 160; // Center horizontally (640/2 - 320/2)
+            int menuY = 280; // Center vertically (640/2 - 80/2)
+
+            _promotionPieces = new Dictionary<PieceType, Bitmap>
+            {
+                { PieceType.Queen, new Bitmap("wQ", $"Resources\\Pieces\\wQ.png") },
+                { PieceType.Rook, new Bitmap("wR", $"Resources\\Pieces\\wR.png") },
+                { PieceType.Bishop, new Bitmap("wB", $"Resources\\Pieces\\wB.png") },
+                { PieceType.Knight, new Bitmap("wN", $"Resources\\Pieces\\wN.png") }
+            };
+
+            // Create transparent rectangles for click detection
+            _promotionButtons = new Dictionary<PieceType, Rectangle>
+            {
+                { PieceType.Queen, new Rectangle(Color.RGBAColor(0,0,0,0), menuX, menuY, 80, 80) },
+                { PieceType.Rook, new Rectangle(Color.RGBAColor(0,0,0,0), menuX + 80, menuY, 80, 80) },
+                { PieceType.Bishop, new Rectangle(Color.RGBAColor(0,0,0,0), menuX + 160, menuY, 80, 80) },
+                { PieceType.Knight, new Rectangle(Color.RGBAColor(0,0,0,0), menuX + 240, menuY, 80, 80) }
+            };
         }
 
         public override string GetStateName() => "GamePlay";

@@ -9,7 +9,6 @@ namespace Chess
     {
         private readonly Board _board;
         private int MAX_DEPTH = 4;  // Default depth limit
-        private readonly int QUIESCENCE_DEPTH = 4;  // Depth for quiescence search
         private readonly Random _random = new Random();
 
         // Time control variables
@@ -17,7 +16,6 @@ namespace Chess
         private Stopwatch _timer;
         private bool _shouldStopSearch;
 
-        // Piece values (in centipawns)
         private static readonly Dictionary<PieceType, int> PieceValues = new Dictionary<PieceType, int>
         {
             { PieceType.Pawn, 100 },
@@ -138,8 +136,8 @@ namespace Chess
             if (legalMoves.Count == 1)
                 return legalMoves.First();
 
-            // Randomize the move order to add variety and potentially find good moves earlier
-            List<Move> shuffledMoves = legalMoves.OrderBy(x => _random.Next()).ToList();
+            // Start with a random order of moves
+            List<Move> orderedMoves = legalMoves.OrderBy(x => _random.Next()).ToList();
 
             // Iterative deepening - start with a shallow search and gradually increase depth
             for (int depth = 1; depth <= MAX_DEPTH; depth++)
@@ -147,7 +145,7 @@ namespace Chess
                 if (_shouldStopSearch)
                     break;
 
-                foreach (Move move in shuffledMoves)
+                foreach (Move move in orderedMoves)
                 {
                     if (_shouldStopSearch)
                         break;
@@ -176,12 +174,12 @@ namespace Chess
                 if (!_shouldStopSearch)
                 {
                     // Order moves for next iteration based on scores
-                    shuffledMoves = OrderMovesByScore(shuffledMoves, currentPlayer);
+                    orderedMoves = OrderMovesByScore(orderedMoves, currentPlayer);
                 }
             }
 
             _timer.Stop();
-            return bestMove ?? shuffledMoves.First(); // Fallback to first move if no best move found
+            return bestMove ?? orderedMoves.First(); // Fallback to first move if no best move found
         }
 
         /// <summary>
@@ -203,13 +201,16 @@ namespace Chess
             if (_board.GetAllyMoves(player).Count == 0)
                 return 0; // Stalemate (draw)
 
-            // Base case: if we reached the maximum depth, evaluate the position or enter quiescence search
+            // Base case: if we reached the maximum depth, evaluate the position
             if (depth <= 0)
-                return Quiescence(alpha, beta, player, 0);
+                return EvaluatePosition(player);
 
             HashSet<Move> legalMoves = _board.GetAllyMoves(player);
+            
+            // Sort moves for better alpha-beta pruning
+            List<Move> orderedMoves = OrderMovesByScore(legalMoves.ToList(), player);
 
-            foreach (Move move in legalMoves)
+            foreach (Move move in orderedMoves)
             {
                 if (_shouldStopSearch)
                     break;
@@ -228,73 +229,6 @@ namespace Chess
         }
 
         /// <summary>
-        /// Quiescence search to avoid horizon effect - continues searching in unstable positions
-        /// </summary>
-        private int Quiescence(int alpha, int beta, Player player, int depth)
-        {
-            // Check if we're out of time
-            if (_timer.Elapsed > _timeLimit)
-            {
-                _shouldStopSearch = true;
-                return 0;
-            }
-
-            // Stand-pat score - static evaluation of current position
-            int standPat = EvaluatePosition(player);
-
-            if (depth >= QUIESCENCE_DEPTH)
-                return standPat;
-
-            if (standPat >= beta)
-                return beta;
-
-            if (alpha < standPat)
-                alpha = standPat;
-
-            // Only consider captures in quiescence search
-            HashSet<Move> captureMoves = GetCaptureMoves(player);
-
-            foreach (Move move in captureMoves)
-            {
-                if (_shouldStopSearch)
-                    break;
-
-                _board.MatchState.MakeMove(move);
-                int score = -Quiescence(-beta, -alpha, player.Opponent(), depth + 1);
-                _board.MatchState.UnmakeMove();
-
-                if (score >= beta)
-                    return beta;
-
-                if (score > alpha)
-                    alpha = score;
-            }
-
-            return alpha;
-        }
-
-        /// <summary>
-        /// Get all capture moves for the given player
-        /// </summary>
-        private HashSet<Move> GetCaptureMoves(Player player)
-        {
-            HashSet<Move> allMoves = _board.GetAllyMoves(player);
-            HashSet<Move> captureMoves = new HashSet<Move>();
-
-            foreach (Move move in allMoves)
-            {
-                // Check if the move is a capture
-                Piece capturedPiece = _board.GetPieceAt(move.To);
-                if (capturedPiece != null && capturedPiece.Color != player)
-                {
-                    captureMoves.Add(move);
-                }
-            }
-
-            return captureMoves;
-        }
-
-        /// <summary>
         /// Static evaluation of the current position
         /// </summary>
         private int EvaluatePosition(Player player)
@@ -306,12 +240,9 @@ namespace Chess
 
             // Positional factors
             score += EvaluatePositions(player);
-
-            // Mobility (count of legal moves)
-            score += EvaluateMobility(player);
-
-            // Check and checkmate possibilities
-            score += EvaluateKingSafety(player);
+            
+            // Safety - avoid leaving pieces hanging
+            score += EvaluateSafety(player);
 
             return score;
         }
@@ -388,56 +319,23 @@ namespace Chess
         }
 
         /// <summary>
-        /// Evaluate mobility (number of legal moves)
-        /// </summary>
-        private int EvaluateMobility(Player player)
-        {
-            int playerMoves = _board.GetAllyMoves(player).Count;
-            int opponentMoves = _board.GetAllyMoves(player.Opponent()).Count;
-            return (playerMoves - opponentMoves) * 10; // 10 points per extra move
-        }
-
-        /// <summary>
-        /// Evaluate king safety
-        /// </summary>
-        private int EvaluateKingSafety(Player player)
-        {
-            int score = 0;
-
-            // Check status
-            if (_board.IsInCheck(player))
-                score -= 50; // Being in check is bad
-
-            if (_board.IsInCheck(player.Opponent()))
-                score += 50; // Putting opponent in check is good
-
-            return score;
-        }
-
-        /// <summary>
-        /// Check if the game is in the endgame phase (queens gone or limited material)
+        /// Check if the game is in the endgame phase
         /// </summary>
         private bool IsEndgame()
         {
-            // Count queens
-            int queenCount = 0;
-            int pieceCount = 0;
-
+            int majorPieceCount = 0;
+            
             foreach (Piece piece in _board.Pieces)
             {
-                if (piece.Type == PieceType.Queen)
-                    queenCount++;
-
-                if (piece.Type != PieceType.King && piece.Type != PieceType.Pawn)
-                    pieceCount++;
+                if (piece.Type == PieceType.Queen || piece.Type == PieceType.Rook)
+                    majorPieceCount++;
             }
-
-            // Endgame if no queens or fewer than 6 pieces excluding kings and pawns
-            return queenCount == 0 || pieceCount <= 6;
+            
+            return majorPieceCount <= 2;
         }
 
         /// <summary>
-        /// Order moves by their estimated score to improve alpha-beta pruning efficiency
+        /// Order moves by their estimated value to improve alpha-beta pruning efficiency
         /// </summary>
         private List<Move> OrderMovesByScore(List<Move> moves, Player player)
         {
@@ -445,8 +343,8 @@ namespace Chess
 
             foreach (Move move in moves)
             {
-                // Estimate move                // Estimate move value
-                int score = EstimateMoveValue(move, player);
+                // Estimate move value
+                int score = EstimateMoveValue(move);
                 moveScores[move] = score;
             }
 
@@ -454,33 +352,120 @@ namespace Chess
         }
 
         /// <summary>
-        /// Estimate the value of a move without performing deep search
+        /// Estimate the value of a move for move ordering
         /// </summary>
-        private int EstimateMoveValue(Move move, Player player)
+        private int EstimateMoveValue(Move move)
         {
             int score = 0;
-
-            // Capturing moves are valuable
-            Piece capturedPiece = _board.GetPieceAt(move.To);
-            if (capturedPiece != null)
+            
+            // Captures are good - prioritize capturing high-value pieces with low-value pieces
+            if (move.CapturedPiece != null)
             {
                 // MVV-LVA (Most Valuable Victim - Least Valuable Aggressor)
-                Piece movingPiece = _board.GetPieceAt(move.From);
-                score += 10 * PieceValues[capturedPiece.Type] - PieceValues[movingPiece.Type];
+                score = 10 * PieceValues[move.CapturedPiece.Type] - PieceValues[move.MovedPiece.Type];
             }
-
-            // Promotion moves are valuable
+            
+            // Castling is generally good
+            if (move.Type == MoveType.CastleKS || move.Type == MoveType.CastleQS)
+            {
+                score += 300;
+            }
+            
+            // Promotions are good
             if (move.Type == MoveType.Promotion)
             {
-                score += 900; // Value of a queen promotion
+                score += 900;  // Assume queen promotion
             }
-
-            // Center control
-            if ((move.To.File >= 2 && move.To.File <= 5) && (move.To.Rank >= 2 && move.To.Rank <= 5))
+            
+            // Check if the move leaves a piece hanging or undefended
+            _board.MatchState.MakeMove(move, true);
+            bool leavesHangingPiece = IsHangingPiece(move.MovedPiece);
+            _board.MatchState.UnmakeMove(true);
+            
+            // Heavy penalty for moves that leave pieces hanging
+            if (leavesHangingPiece)
             {
-                score += 10;
+                score -= PieceValues[move.MovedPiece.Type] * 2;
             }
 
+            return score;
+        }
+
+        /// <summary>
+        /// Check if a piece is hanging (can be captured without compensation)
+        /// </summary>
+        private bool IsHangingPiece(Piece piece)
+        {
+            if (piece == null) return false;
+            
+            // Get all opponent moves that can capture this piece
+            var opponentMoves = _board.GetAllyMoves(piece.Color.Opponent())
+                .Where(m => m.To.Equals(piece.Position))
+                .ToList();
+            
+            if (!opponentMoves.Any()) return false;
+            
+            // Check if any defending pieces can recapture
+            foreach (var attackMove in opponentMoves)
+            {
+                // Make the capture
+                _board.MatchState.MakeMove(attackMove, true);
+                
+                // See if we can recapture
+                var recaptureMoves = _board.GetAllyMoves(piece.Color)
+                    .Where(m => m.To.Equals(attackMove.MovedPiece.Position))
+                    .ToList();
+                
+                bool canRecapture = recaptureMoves.Any(m => 
+                    PieceValues[m.MovedPiece.Type] <= PieceValues[attackMove.MovedPiece.Type]);
+                
+                _board.MatchState.UnmakeMove(true);
+                
+                // If we can't recapture at least one attacker favorably, the piece is hanging
+                if (!canRecapture) return true;
+            }
+            
+            return false;
+        }
+
+        /// <summary>
+        /// Evaluate piece safety to avoid hanging pieces
+        /// </summary>
+        private int EvaluateSafety(Player player)
+        {
+            int score = 0;
+            var pieces = _board.Pieces.Where(p => p.Color == player).ToList();
+            var opponentMoves = _board.GetAllyMoves(player.Opponent());
+
+            foreach (var piece in pieces)
+            {
+                // Check if this piece is under attack
+                bool isUnderAttack = opponentMoves.Any(m => m.To.Equals(piece.Position));
+                
+                if (isUnderAttack)
+                {
+                    // Apply penalty based on piece value
+                    score -= PieceValues[piece.Type] / 4;
+                    
+                    // Check if the piece is defended
+                    bool isDefended = false;
+                    foreach (var allyPiece in pieces.Where(p => p != piece))
+                    {
+                        if (allyPiece.GetMoves().Any(m => m.To.Equals(piece.Position)))
+                        {
+                            isDefended = true;
+                            break;
+                        }
+                    }
+                    
+                    // Extra penalty if not defended
+                    if (!isDefended)
+                    {
+                        score -= PieceValues[piece.Type] / 2;
+                    }
+                }
+            }
+            
             return score;
         }
 
@@ -489,25 +474,12 @@ namespace Chess
         /// </summary>
         public void AdjustDepthForTime(int remainingTimeMs)
         {
-            // Adjust MAX_DEPTH based on available time
-            if (remainingTimeMs < 1000) // Less than 1 second
-            {
+            if (remainingTimeMs < 1000)
                 MAX_DEPTH = 2;
-            }
-            else if (remainingTimeMs < 5000) // Less than 5 seconds
-            {
+            else if (remainingTimeMs < 5000)
                 MAX_DEPTH = 3;
-            }
-            else if (remainingTimeMs < 30000) // Less than 30 seconds
-            {
-                MAX_DEPTH = 4;
-            }
             else
-            {
-                MAX_DEPTH = 5;
-            }
+                MAX_DEPTH = 4;
         }
     }
-
-
 }

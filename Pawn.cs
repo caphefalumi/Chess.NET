@@ -13,14 +13,14 @@
             CanBeEnpassant = false;
         }
 
-        private static HashSet<Move> PromotionMoves(Position from, Position to)
+        private HashSet<Move> PromotionMoves(Position from, Position to)
         {
             return new HashSet<Move>
             {
-                new PromotionMove(from, to, PieceType.Queen),
-                new PromotionMove(from, to, PieceType.Rook),
-                new PromotionMove(from, to, PieceType.Bishop),
-                new PromotionMove(from, to, PieceType.Knight)
+                new PromotionMove(from, to, this, PieceType.Queen),
+                new PromotionMove(from, to, this, PieceType.Rook),
+                new PromotionMove(from, to, this, PieceType.Bishop),
+                new PromotionMove(from, to, this, PieceType.Knight)
             };
         }
 

@@ -48,9 +48,8 @@ namespace Chess
                 }
             }
 
-
             // Execute the move
-            move.Execute(_board);
+            move.Execute(_board, isSimulation);
             MoveHistory.Push(new KeyValuePair<Move, string>(move, _board.GetFen()));
 
             // Switch player
@@ -140,18 +139,17 @@ namespace Chess
             if (MoveHistory.Count > 0)
             {
                 Move lastMove = MoveHistory.Pop().Key;
-                lastMove.Undo(_board);
+                lastMove.Undo(_board, isSimulation);
                 CurrentPlayer = CurrentPlayer.Opponent();
 
                 if (!isSimulation)
                 {
-                    HalfmoveClock--;
                     if (CurrentPlayer == Player.Black)
                     {
                         FullmoveNumber--;
                     }
+                    HalfmoveClock--;
                 }
-
             }
         }
         public bool MoveResolvesCheck(Move move, Player player)

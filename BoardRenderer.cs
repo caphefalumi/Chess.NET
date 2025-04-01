@@ -79,8 +79,31 @@ namespace Chess
 
         public void Draw(HashSet<Piece> pieces)
         {
-            foreach (Piece piece in pieces)
+            if (pieces == null)
             {
+                Console.WriteLine("ERROR: pieces collection is null");
+                return;
+            }
+
+            // Create a safe copy of the pieces collection for rendering
+            var piecesCopy = pieces.ToList();
+            foreach (Piece piece in piecesCopy)
+            {
+                if (piece == null)
+                {
+                    Console.WriteLine("ERROR: null piece in collection");
+                    continue;
+                }
+                if (piece.Position == null)
+                {
+                    Console.WriteLine($"ERROR: null position for piece {piece.PieceChar}");
+                    continue;
+                }
+                if (piece.PieceImage == null)
+                {
+                    Console.WriteLine($"ERROR: null image for piece {piece.PieceChar} at position {piece.Position}");
+                    continue;
+                }
                 piece.Draw();
             }
         }

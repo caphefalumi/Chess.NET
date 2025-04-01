@@ -9,31 +9,30 @@
         public override Piece CapturedPiece { get; set; }
 
         private readonly PieceType _newType;
-        private Pawn _originalPawn;
         private Piece _promotedPiece;
         private Piece _capturedPiece;
-        public PromotionMove(Position from, Position to, PieceType newType)
+        public PromotionMove(Position from, Position to, Piece piece,  PieceType newType)
         {
             From = from;
             To = to;
+            MovedPiece = piece;
             _newType = newType;
         }
 
-        private Piece CreatePromotionPiece(Pawn pawn)
+        private Piece CreatePromotionPiece(PieceType newType)
         {
-            return PieceFactory.CreatePiece(pawn.PieceChar, To, pawn.MyBoard);
+            return PieceFactory.CreatePiece(PieceFactory.GetPieceChar(newType, MovedPiece.Color), To, MovedPiece.MyBoard);
         }
 
         public override void Execute(Board board, bool isSimulation)
         {
-            _originalPawn = board.GetPieceAt(From) as Pawn;
-            board.Pieces.Remove(_originalPawn);
+            board.Pieces.Remove(MovedPiece);
             _capturedPiece = board.GetPieceAt(To);
             if (_capturedPiece != null)
             {
                 board.Pieces.Remove(_capturedPiece);
             }
-            _promotedPiece = CreatePromotionPiece(_originalPawn);
+            _promotedPiece = CreatePromotionPiece(_newType);
             _promotedPiece.Position = To;
             _promotedPiece.HasMoved = true;
             board.CurrentSound = Sounds.Promote;
@@ -43,8 +42,8 @@
         public override void Undo(Board board, bool isSimulation)
         {
             board.Pieces.Remove(_promotedPiece);
-            _originalPawn.Position = From;
-            board.Pieces.Add(_originalPawn);
+            MovedPiece.Position = From;
+            board.Pieces.Add(MovedPiece);
             board.Pieces.Add(_capturedPiece);
         }
     }

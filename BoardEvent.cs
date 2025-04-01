@@ -40,15 +40,15 @@ namespace Chess
 
                 if (move.Type == MoveType.Promotion)
                 {
-                    HandlePromotion(move.From, move.To);
+                    HandlePromotion(move);
                 }
                 else
                 {
                     HandleMove(move);
+                    GameplayScreen.SwitchTurn();
+                    CheckGameResult();
+                    _board.CurrentSound.Play();
                 }
-                GameplayScreen.SwitchTurn();
-                CheckGameResult();
-                _board.CurrentSound.Play();
             }
             else if (_board.GetPieceAt(pos)?.Color == _board.MatchState.CurrentPlayer)
             {
@@ -168,19 +168,10 @@ namespace Chess
             _board.MatchState.UnmakeMove();
         }
 
-        private static void HandlePromotion(Position from, Position to)
+        private static void HandlePromotion(Move move)
         {
-            GameplayScreen.PromotionFlag = true;
-            while (GameplayScreen.PromotionFlag)
-            {
-                // Wait for the player to select a promotion piece
-                PieceType selectedPiece = GameplayScreen.HandlePromotionSelection();
-                if (!GameplayScreen.PromotionFlag)
-                {
-                    Move proMove = new PromotionMove(from, to, selectedPiece);
-                    HandleMove(proMove);
-                }
-            }
+            // Show the promotion menu at the promotion square
+            GameplayScreen.ShowPromotionMenu(move, _board.MatchState.CurrentPlayer);
         }
 
         private static void BufferMoves(IEnumerable<Move> moves)
@@ -230,13 +221,36 @@ namespace Chess
             {
                 Position pos = GetClickedSquare();
 
-                if (_selectedPiece == null)
+                // If promotion menu is active, don't handle board clicks
+                if (GameplayScreen.PromotionFlag)
                 {
+                    return;
+                }
+
+                Piece clickedPiece = _board.GetPieceAt(pos);
+                
+                // If clicking a piece of the current player's color
+                if (clickedPiece?.Color == _board.MatchState.CurrentPlayer)
+                {
+                    // Clear previous selection and select new piece
+                    _selectedPiece = null;
+                    _moveBuffer.Clear();
+                    _board.BoardHighlights.Clear();
+                    _board.BackgroundOverlays[2] = null;
                     SelectPiece(pos);
                 }
-                else
+                // If a piece is selected and clicking a valid move position
+                else if (_selectedPiece != null && _moveBuffer.ContainsKey(pos))
                 {
                     MakeMove(pos);
+                }
+                // If clicking an empty square or opponent's piece with no piece selected
+                else
+                {
+                    _selectedPiece = null;
+                    _moveBuffer.Clear();
+                    _board.BoardHighlights.Clear();
+                    _board.BackgroundOverlays[2] = null;
                 }
             }
         }

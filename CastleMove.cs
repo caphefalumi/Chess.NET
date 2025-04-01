@@ -17,6 +17,7 @@ namespace Chess
         {
             Type = type;
             From = kingPos;
+            MovedPiece = king;
 
             if (type == MoveType.CastleKS)
             {
@@ -26,41 +27,43 @@ namespace Chess
             }
             else if (type == MoveType.CastleQS)
             {
+                To = new Position(2, kingPos.Rank);
                 _rookFrom = new Position(0, kingPos.Rank);
                 _rookTo = new Position(3, kingPos.Rank);
             }
-            MovedPiece = king;
         }
 
         public override void Execute(Board board, bool isSimulation)
         {
             King king = (King)MovedPiece;
+            _rook = (Rook)board.GetPieceAt(_rookFrom);
+            
             // Move the king
-            Rook _rook = (Rook)board.GetPieceAt(_rookFrom);
-            // Move the king
-            MovedPiece.Position = To;
-            board.CurrentSound = Sounds.Castle;
+            king.Position = To;
             // Move the rook
             _rook.Position = _rookTo;
+            
             if (!isSimulation)
             {
                 king.HasMoved = true;
                 _rook.HasMoved = true;
+                king.Castled = true;
+                board.CurrentSound = Sounds.Castle;
             }
         }
 
         public override void Undo(Board board, bool isSimulation)
         {
             King king = (King)MovedPiece;
-
+            
             if (king is not null)
             {
                 king.Position = From;
                 if (!isSimulation)
                 {
                     king.HasMoved = false;
+                    king.Castled = false;
                 }
-                king.Castled = true;
             }
             
             if (_rook is not null)
