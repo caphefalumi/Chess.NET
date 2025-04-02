@@ -77,7 +77,7 @@ namespace Chess
         {
             if (playerSpells.ContainsKey(player) && playerSpells[player].ContainsKey(type))
             {
-                var spell = playerSpells[player][type].FirstOrDefault(s => !s.IsUsed);
+                Spell spell = playerSpells[player][type].FirstOrDefault(s => !s.IsUsed);
                 if (spell != null)
                 {
                     spell.Use();

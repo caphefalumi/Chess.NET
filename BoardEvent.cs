@@ -109,7 +109,7 @@ namespace Chess
             string currentFen = _board.MatchState.MoveHistory.Peek().Value;
             int count = 1;
 
-            foreach (var entry in _board.MatchState.MoveHistory.Reverse().Skip(1))
+            foreach (KeyValuePair<Move, string> entry in _board.MatchState.MoveHistory.Reverse().Skip(1))
             {
                 if (entry.Value == currentFen)
                 {

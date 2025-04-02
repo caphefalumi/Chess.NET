@@ -252,12 +252,12 @@ namespace Chess
                 return beta;
             alpha = Math.Max(alpha, standPat);
 
-            var captures = _board.GetAllyMoves(player)
+            List<Move> captures = _board.GetAllyMoves(player)
                 .Where(m => m.CapturedPiece != null)
                 .OrderByDescending(m => EstimateMoveValue(m))
                 .ToList();
 
-            foreach (var move in captures)
+            foreach (Move move in captures)
             {
                 if (_shouldStopSearch)
                     break;
@@ -287,6 +287,7 @@ namespace Chess
 
             // Positional factors
             score += EvaluatePositions(player);
+        
 
             return score;
         }
@@ -432,24 +433,30 @@ namespace Chess
             // Check if we're making a bad exchange
             if (move.CapturedPiece != null && move.MovedPiece.Type != PieceType.Pawn)
             {
-                HashSet<Move> opponentMoves = _board.GetAllyMoves(move.MovedPiece.Color.Opponent());
-                bool willBeRecaptured = opponentMoves.Any(m => m.To.Equals(move.To));
+                List<Move> opponentMoves = _board.GetAllyMoves(move.MovedPiece.Color.Opponent())
+                    .Where(m => m.To.Equals(move.To))
+                    .ToList();
                 
-                if (willBeRecaptured && PIECE_VALUES[move.MovedPiece.GetType()] > PIECE_VALUES[move.CapturedPiece.GetType()])
+                if (opponentMoves.Any())
                 {
-                    // Heavily penalize sacrificing a higher value piece for a lower value one
-                    score -= (PIECE_VALUES[move.MovedPiece.GetType()] - PIECE_VALUES[move.CapturedPiece.GetType()]) * 4;
+                    int maxCapturedValue = opponentMoves.Max(m => PIECE_VALUES[m.CapturedPiece.GetType()]);
+                    int minAttackerValue = PIECE_VALUES[move.MovedPiece.GetType()];
+                    
+                    if (maxCapturedValue > minAttackerValue)
+                    {
+                        score -= (maxCapturedValue - minAttackerValue) * 4;
+                    }
                 }
             }
             
             // Avoid moving to squares attacked by pawns
-            var opponentPawns = _board.Pieces
+            List<Piece> opponentPawns = _board.Pieces
                 .Where(p => p.Type == PieceType.Pawn && p.Color == move.MovedPiece.Color.Opponent())
                 .ToList();
                 
-            foreach (var pawn in opponentPawns)
+            foreach (Piece pawn in opponentPawns)
             {
-                var attackedSquares = pawn.GetAttackedSquares();
+                IEnumerable<Move> attackedSquares = pawn.GetAttackedSquares();
                 if (attackedSquares.Any(m => m.To.Equals(move.To)))
                 {
                     score -= PIECE_VALUES[move.MovedPiece.GetType()] / 2;
@@ -481,20 +488,20 @@ namespace Chess
             if (piece == null) return false;
             
             // Get all opponent moves that can capture this piece
-            var opponentMoves = _board.GetAllyMoves(piece.Color.Opponent())
+            List<Move> opponentMoves = _board.GetAllyMoves(piece.Color.Opponent())
                 .Where(m => m.To.Equals(piece.Position))
                 .ToList();
             
             if (!opponentMoves.Any()) return false;
             
             // Check if any defending pieces can recapture
-            foreach (var attackMove in opponentMoves)
+            foreach (Move attackMove in opponentMoves)
             {
                 // Make the capture
                 _board.MatchState.MakeMove(attackMove, true);
                 
                 // See if we can recapture
-                var recaptureMoves = _board.GetAllyMoves(piece.Color)
+                List<Move> recaptureMoves = _board.GetAllyMoves(piece.Color)
                     .Where(m => m.To.Equals(attackMove.MovedPiece.Position))
                     .ToList();
                 
@@ -511,44 +518,6 @@ namespace Chess
         }
 
         /// <summary>
-        /// Evaluate piece safety to avoid hanging pieces
-        /// </summary>
-        private int EvaluateSafety(Player player)
-        {
-            int score = 0;
-            var pieces = _board.Pieces.Where(p => p.Color == player).ToList();
-            var opponentMoves = _board.GetAllyMoves(player.Opponent());
-
-            foreach (var piece in pieces)
-            {
-                // Check if this piece is under attack
-                bool isUnderAttack = opponentMoves.Any(m => m.To.Equals(piece.Position));
-                
-                if (isUnderAttack)
-                {
-                    // Apply penalty based on piece value
-                    score -= PIECE_VALUES[piece.GetType()] / 4;
-                    
-                    // Check if the piece is defended
-                    bool isDefended = false;
-                    foreach (var allyPiece in pieces.Where(p => p != piece))
-                    {
-                        if (allyPiece.GetMoves().Any(m => m.To.Equals(piece.Position)))
-                        {
-                            isDefended = true;
-                            break;
-                        }
-                    }
-                    
-                    // Extra penalty if not defended
-                    if (!isDefended)
-                    {
-                        score -= PIECE_VALUES[piece.GetType()] / 2;
-                    }
-                }
-            }
-            
-            return score;
-        }
+    
     }
 }

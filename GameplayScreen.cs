@@ -2,9 +2,35 @@
 using System;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Chess
 {
+    // Simple TextLabel class for displaying status messages
+    public class TextLabel
+    {
+        public string Text { get; set; }
+        public int X { get; set; }
+        public int Y { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        
+        public TextLabel(string text, int x, int y, int width, int height)
+        {
+            Text = text;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+        }
+        
+        public void Draw()
+        {
+            SplashKit.DrawText(Text, Color.DarkBlue, X, Y);
+        }
+    }
+    
     public class GameplayScreen : ScreenState
     {
         private readonly Game _game;
@@ -20,10 +46,8 @@ namespace Chess
         private MatchState _gameState;
         private static bool _gameOver;
         private static string _gameOverMessage;
-        private ChessBot _bot; // For computer mode
         private Stopwatch _botThinkTimer; // Timer to control bot thinking
         private bool _botIsThinking = false; // Flag to indicate bot is "thinking"
-        private Move _botSelectedMove = null; // The move the bot has selected
         private bool _isSpellMode = false;
         private SpellType _selectedSpell;
         public static bool PromotionFlag;
@@ -37,6 +61,11 @@ namespace Chess
         private Bitmap _teleportBottleImage;
         private Bitmap _freezeBottleImage;
 
+        private TextLabel _statusLabel; // Using our custom TextLabel class
+
+        // Add a field for ComputerStrategyManager at the top of the class
+        private ComputerStrategyManager _computerStrategy;
+
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {
             _game = game;
@@ -47,6 +76,7 @@ namespace Chess
 
             // Create the clock with the configured time settings
             _clock = new Clock(config.GetTimeSpan(), config.GetIncrementSpan());
+            
             // Setup UI buttons
             _menuButton = new Button("Menu", 610, 10, 80, 30);
             _undoButton = new Button("Undo", 610, 50, 80, 30);
@@ -56,6 +86,9 @@ namespace Chess
             // Setup spell buttons
             _teleportSpellButton = new Button("Teleport", 610, 130, 80, 30);
             _freezeSpellButton = new Button("Freeze", 610, 170, 80, 30);
+            
+            // Setup status label - using custom TextLabel class
+            _statusLabel = new TextLabel("", 610, 220, 120, 60);
 
             _gameOver = false;
             _gameOverMessage = "";
@@ -67,8 +100,10 @@ namespace Chess
             // Initialize AI if in computer mode
             if (config.Mode == Variant.Computer)
             {
-                _bot = new ChessBot(_board);
                 _botThinkTimer = new Stopwatch();
+                
+                // Initialize the ComputerStrategyManager
+                _computerStrategy = new ComputerStrategyManager();
             }
 
             // Initialize spells for both players
@@ -169,13 +204,12 @@ namespace Chess
                 {
                     if (_selectedSpell == SpellType.Teleport)
                     {
-                        var selectedPiece = _board.GetSelectedPiece();
+                        Piece selectedPiece = _board.GetSelectedPiece();
                         if (selectedPiece != null && _board.CanTeleport(selectedPiece, targetPos))
                         {
                             _board.UseSpell(_gameState.CurrentPlayer, SpellType.Teleport);
-                            // Play teleport sound if available
                             
-                            var move = new NormalMove(selectedPiece.Position, targetPos, selectedPiece);
+                            NormalMove move = new NormalMove(selectedPiece.Position, targetPos, selectedPiece);
                             BoardEvent.HandleMove(move);
                             _isSpellMode = false;
                             
@@ -227,47 +261,40 @@ namespace Chess
             _clock.Update();
 
             // Computer Move Logic
-            if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black)
+            if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black && !_botIsThinking)
             {
-                // Handle computer move in stages for a better user experience
-                if (!_botIsThinking)
+                _botIsThinking = true;
+                _botThinkTimer.Restart();
+
+                // Call the synchronous GetBestMove method
+                Dictionary<string, object> result = _computerStrategy.GetBestMove(_board.GetFen());
+                if (result.ContainsKey("error"))
                 {
-                    // Start thinking process
-                    _botIsThinking = true;
-                    _botThinkTimer.Restart();
-
-                    // Determine how much time the bot should "think"
-                    TimeSpan remainingTime = _clock.BlackTime;
-                    int thinkTime;
-
-                    // Adjust search strategy based on remaining time
-                    if (remainingTime.TotalSeconds < 10)
+                    UpdateStatusLabel($"Error: {result["error"]}");
+                }
+                else
+                {
+                    string bestMove = result["move"].ToString();
+                    if (!string.IsNullOrEmpty(bestMove))
                     {
-                        // Low time - make quick moves
-                        thinkTime = 300; // Very shallow search
-                    }
-                    else if (remainingTime.TotalSeconds < 30)
-                    {
-                        // Limited time - make reasonable moves quickly
-                        thinkTime = 500;
+                        // Convert the string move to a Move object
+                        Move move = ConvertStringToMove(bestMove, result["flags"].ToString());
+                        if (move != null)
+                        {
+                            _gameState.MakeMove(move);
+                            _clock.SwitchTurn();
+                            BoardEvent.CheckGameResult();
+                            _botIsThinking = false; // Stop further requests
+                        }
+                        else
+                        {
+                            UpdateStatusLabel("Invalid move received from API.");
+                        }
                     }
                     else
                     {
-                        // Plenty of time - make strong moves
-                        thinkTime = 1000;
+                        UpdateStatusLabel("Failed to get move from API.");
                     }
-
-                    // Calculate the move on a separate thread to avoid freezing UI
-                    _botSelectedMove = _bot.GetBestMove(thinkTime);
-                }
-                else if (_botThinkTimer.ElapsedMilliseconds >= 500 && _botSelectedMove != null)
-                {
-                    // Execute the bot's move
-                    _gameState.MakeMove(_botSelectedMove);
-                    _clock.SwitchTurn();
-                    BoardEvent.CheckGameResult();
-                    _botIsThinking = false;
-                    _botSelectedMove = null;
                 }
             }
 
@@ -276,49 +303,6 @@ namespace Chess
             {
                 HandleSpellChessLogic();
             }
-        }
-        public static void HandlePromotionSelection()
-        {
-            if (SplashKit.MouseClicked(MouseButton.LeftButton))
-            {
-                Point2D clickPoint = new Point2D() { X = SplashKit.MouseX(), Y = SplashKit.MouseY() };
-
-                foreach (var button in _promotionButtons)
-                {
-                    if (button.Value.IsAt(clickPoint))
-                    {
-                        // Create and execute the promotion move
-                        Move promotionMove = new PromotionMove(_promotionMove.From, _promotionMove.To, _promotionMove.MovedPiece, button.Key);
-                        BoardEvent.HandleMove(promotionMove);
-                        _showPromotionMenu = false;
-                        PromotionFlag = false;
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void HandleSpellChessLogic()
-        {
-            // Implement special spell chess logic
-            // This would include spell effects, power-ups, etc.
-        }
-
-        private void ResetBoard()
-        {
-            _board.ResetBoard();
-
-            _gameOver = false;
-            _gameOverMessage = "";
-            _botIsThinking = false;
-            _botSelectedMove = null;
-            _isSpellMode = false;
-            _clock.Reset(_config.GetTimeSpan());
-            _clock.Start();
-
-            // Reinitialize spells
-            _board.InitializeSpells(Player.White);
-            _board.InitializeSpells(Player.Black);
         }
 
         public override void Render()
@@ -408,6 +392,12 @@ namespace Chess
             string modeText = GetModeDisplayText();
             SplashKit.DrawText(modeText, Color.Black, 610, 350);
 
+            // Draw status label
+            if (!string.IsNullOrEmpty(_statusLabel.Text))
+            {
+                _statusLabel.Draw();
+            }
+            
             SplashKit.RefreshScreen();
         }
         
@@ -502,5 +492,95 @@ namespace Chess
         }
 
         public override string GetStateName() => "GamePlay";
+
+        // Add a stub implementation for the ResetBoard method
+        private void ResetBoard()
+        {
+            _board.ResetBoard();
+
+            _gameOver = false;
+            _gameOverMessage = "";
+            _botIsThinking = false;
+            _isSpellMode = false;
+            _clock.Reset(_config.GetTimeSpan());
+            _clock.Start();
+
+            // Reinitialize spells
+            _board.InitializeSpells(Player.White);
+            _board.InitializeSpells(Player.Black);
+        }
+
+        // Add a stub implementation for the HandlePromotionSelection method
+        private void HandlePromotionSelection()
+        {
+            if (SplashKit.MouseClicked(MouseButton.LeftButton))
+            {
+                Point2D clickPoint = new Point2D() { X = SplashKit.MouseX(), Y = SplashKit.MouseY() };
+
+                foreach (KeyValuePair<PieceType, Rectangle> button in _promotionButtons)
+                {
+                    if (button.Value.IsAt(clickPoint))
+                    {
+                        // Create and execute the promotion move
+                        Move promotionMove = new PromotionMove(_promotionMove.From, _promotionMove.To, _promotionMove.MovedPiece, button.Key);
+                        BoardEvent.HandleMove(promotionMove);
+                        _showPromotionMenu = false;
+                        PromotionFlag = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Add a stub implementation for the HandleSpellChessLogic method
+        private void HandleSpellChessLogic()
+        {
+            // Implementation of spell chess logic
+            // This might include updating spell effects, handling cooldowns, etc.
+        }
+
+        /// <summary>
+        /// Updates the status label with the provided text
+        /// </summary>
+        private void UpdateStatusLabel(string text)
+        {
+            _statusLabel.Text = text;
+        }
+
+        /// <summary>
+        /// Converts a string move (e.g., "e2e4") to a Move object.
+        /// </summary>
+        private Move ConvertStringToMove(string moveStr, string flags)
+        {
+            if (string.IsNullOrEmpty(moveStr) || moveStr.Length < 4)
+            {
+                return null;
+            }
+
+            // Parse the move string
+            Position from = new Position(moveStr.Substring(0, 2)); // Assuming Position can be constructed from a string
+            Position to = new Position(moveStr.Substring(2, 2));
+
+            Piece movedPiece = _board.GetPieceAt(from);
+            if (movedPiece == null)
+            {
+                return null;
+            }
+
+            // Determine the type of move based on flags
+            if (flags.Contains("k") || flags.Contains("q"))
+            {
+                Console.WriteLine(flags.Contains("k") ? "Kingside castling" : "Queenside castling");
+                return new CastleMove(flags.Contains("k") ? MoveType.CastleKS : MoveType.CastleQS, from, (King)movedPiece);
+            }
+            if (flags.Contains("e") && movedPiece is Pawn)
+            {
+                Console.WriteLine("En passant capture");
+                return new EnPassantMove(from, to, (Pawn)movedPiece);
+            }
+
+            // Default to normal move
+            return new NormalMove(from, to, movedPiece);
+        }
     }
 }

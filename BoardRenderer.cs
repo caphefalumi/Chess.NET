@@ -89,7 +89,7 @@ namespace Chess
             }
 
             // Create a safe copy of the pieces collection for rendering
-            var piecesCopy = pieces.ToHashSet();
+            HashSet<Piece> piecesCopy = pieces.ToHashSet();
             foreach (Piece piece in piecesCopy)
             {
                 if (piece == null)

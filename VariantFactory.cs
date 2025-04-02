@@ -11,7 +11,7 @@ namespace Chess
                 Variant.Computer => new ComputerMode(),
                 Variant.SpellChess => new SpellChessMode(),
                 Variant.Custom => new CustomMode(),
-                _ => new TwoPlayerMode() // Default
+                _ => new TwoPlayerMode()
             };
         }
     }

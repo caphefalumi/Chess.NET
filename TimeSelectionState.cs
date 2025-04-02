@@ -106,11 +106,15 @@ namespace Chess
             _backButton.Update();
             _startGameButton.Update();
             
-            foreach (var button in _timeButtons)
+            foreach (Button button in _timeButtons)
+            {
                 button.Update();
+            }
                 
-            foreach (var button in _incrementButtons)
+            foreach (Button button in _incrementButtons)
+            {
                 button.Update();
+            }
         }
         
         public override void Render()

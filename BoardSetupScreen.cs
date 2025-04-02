@@ -96,7 +96,7 @@ namespace Chess
                 _selectedPlayerColor = Player.Black;
             }
 
-            foreach (var entry in _pieceTypeButtons)
+            foreach (KeyValuePair<PieceType, Button> entry in _pieceTypeButtons)
             {
                 if (entry.Value.IsClicked())
                 {
@@ -114,7 +114,10 @@ namespace Chess
             _timeSettingsButton.Update();
             _whitePieceButton.Update();
             _blackPieceButton.Update();
-            foreach (var button in _pieceTypeButtons.Values) button.Update();
+            foreach (KeyValuePair<PieceType, Button> entry in _pieceTypeButtons) 
+            {
+                entry.Value.Update();
+            }
         }
 
         public override void Render()
@@ -140,7 +143,7 @@ namespace Chess
             HighlightButton(_selectedPlayerColor == Player.White ? _whitePieceButton : _blackPieceButton);
 
             SplashKit.DrawText("Piece Type:", Color.Black, "Arial", 16, 650, 180);
-            foreach (var entry in _pieceTypeButtons)
+            foreach (KeyValuePair<PieceType, Button> entry in _pieceTypeButtons)
             {
                 entry.Value.Draw();
                 if (entry.Key == _selectedPieceType) HighlightButton(entry.Value);

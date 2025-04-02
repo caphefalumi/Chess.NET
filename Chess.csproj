@@ -21,6 +21,7 @@
 	  <Content Include="Resources\**\*.png">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
+	  <PackageReference Include="Flurl.Http" Version="4.0.2" />
 	  <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 			 
 	  <PackageReference Include="SplashKit" Version="1.2.0" />

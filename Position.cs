@@ -11,6 +11,18 @@
             Rank = rank;
         }
 
+        public Position(string algebraicNotation)
+        {
+            char fileChar = algebraicNotation[0];
+            char rankChar = algebraicNotation[1];
+            
+            // Convert file character (a-h) to index (0-7)
+            File = char.ToLower(fileChar) - 'a';
+            
+            // Convert rank character (1-8) to index (0-7), with 0 at the top
+            Rank = '8' - rankChar;
+        }
+
         public int X
         {
             get => File * 80;

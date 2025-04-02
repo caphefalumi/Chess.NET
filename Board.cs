@@ -161,19 +161,19 @@ namespace Chess
             if (!IsInside(target)) return false;
             
             // Check if there's a friendly piece between the current position and target
-            var currentPos = piece.Position;
-            var dx = target.File - currentPos.File;
-            var dy = target.Rank - currentPos.Rank;
-            var steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            Position currentPos = piece.Position;
+            int dx = target.File - currentPos.File;
+            int dy = target.Rank - currentPos.Rank;
+            int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
             
             for (int i = 1; i < steps; i++)
             {
-                var checkPos = new Position(
+                Position checkPos = new Position(
                     currentPos.File + (dx * i) / steps,
                     currentPos.Rank + (dy * i) / steps
                 );
                 
-                var pieceAtPos = GetPieceAt(checkPos);
+                Piece pieceAtPos = GetPieceAt(checkPos);
                 if (pieceAtPos != null && pieceAtPos.Color == piece.Color)
                 {
                     return true; // Found a friendly piece to teleport past
@@ -185,8 +185,8 @@ namespace Chess
 
         public HashSet<Move> GetAllyMoves(Player player)
         {
-            var piecesCopy = _pieces.ToHashSet();
-            var moves = piecesCopy
+            HashSet<Piece> piecesCopy = _pieces.ToHashSet();
+            HashSet<Move> moves = piecesCopy
                 .Where(piece => piece.Color == player)
                 .SelectMany(piece => piece.GetLegalMoves())
                 .ToHashSet();
@@ -202,12 +202,12 @@ namespace Chess
             StringBuilder fen = new StringBuilder();
 
             // 1. Board Representation (ranks 8 to 1, files a to h)
-            for (int rank = 7; rank >= 0; rank--)
+            for (int rank = 0; rank < 8; rank++)  // Start from rank 0 (which corresponds to the bottom in FEN)
             {
                 int emptyCount = 0;
                 for (int file = 0; file < 8; file++)
                 {
-                    Position pos = new Position(file, rank);
+                    Position pos = new Position(file, rank);  // Use the rank as it is, no reverse needed here
                     Piece piece = GetPieceAt(pos);
 
                     if (piece == null)
@@ -225,7 +225,7 @@ namespace Chess
                     }
                 }
                 if (emptyCount > 0) fen.Append(emptyCount);
-                if (rank > 0) fen.Append('/');
+                if (rank < 7) fen.Append('/');  // Append slash except for the last rank
             }
 
             // 2. Active Color
@@ -241,17 +241,7 @@ namespace Chess
 
             // 4. En Passant Target Square
             fen.Append(' ');
-            if (MatchState.EnPassantTarget is not null)
-            {
-                // Convert to algebraic notation (e.g., "e3")
-                char file = (char)('a' + MatchState.EnPassantTarget.File);
-                int rank = MatchState.EnPassantTarget.Rank + 1; // +1 because rank is 0-indexed
-                fen.Append(file).Append(rank);
-            }
-            else
-            {
-                fen.Append('-');
-            }
+            fen.Append('-');
 
             // 5. Halfmove Clock (moves since last capture or pawn advance)
             fen.Append(' ').Append(MatchState.HalfmoveClock);
@@ -261,6 +251,8 @@ namespace Chess
 
             return fen.ToString();
         }
+
+
 
         public Position GetPositionFromPoint(Point2D point)
         {
