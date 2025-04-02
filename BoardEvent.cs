@@ -155,7 +155,6 @@ namespace Chess
                     if (pawn != null)
                     {
                         pawn.CanBeEnpassant = false;
-                        _board.MatchState.EnPassantTarget = null;
                     }
 
                 }

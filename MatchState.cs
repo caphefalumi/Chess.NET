@@ -13,7 +13,6 @@ namespace Chess
         public bool CanWhiteCastleQueenside { get; private set; } = true;
         public bool CanBlackCastleKingside { get; private set; } = true;
         public bool CanBlackCastleQueenside { get; private set; } = true;
-        public Position EnPassantTarget { get; set; }
         public int HalfmoveClock { get; private set; } = 0;
         public int FullmoveNumber { get; private set; } = 1;
 

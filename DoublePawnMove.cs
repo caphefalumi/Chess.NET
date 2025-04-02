@@ -22,8 +22,6 @@
             if (_movedPawn is Pawn && !isSimulation)
             {
                 _movedPawn.CanBeEnpassant = true;
-                board.MatchState.EnPassantTarget = To - _movedPawn.Dir;
-                Console.WriteLine("En passant target: " + board.MatchState.EnPassantTarget);
             }
 
             board.CurrentSound = Sounds.MoveSelf;
