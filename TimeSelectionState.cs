@@ -159,8 +159,8 @@ namespace Chess
         private void DrawButtonHighlight(Button button)
         {
             SplashKit.FillRectangle(Color.RGBAColor(50, 120, 200, 100), 
-                button.Rect.X - 4, button.Rect.Y - 4, 
-                button.Rect.Width + 8, button.Rect.Height + 8);
+                button.X - 4, button.Y - 4, 
+                button.Width + 8, button.Height + 8);
         }
         
         public override string GetStateName() => "TimeSelection";

@@ -14,6 +14,8 @@ namespace Chess
         private Button _undoButton;
         private Button _resetButton;
         private Button _gameOverNewGameButton;
+        private Button _teleportSpellButton;
+        private Button _freezeSpellButton;
         private static Clock _clock;
         private MatchState _gameState;
         private static bool _gameOver;
@@ -22,12 +24,18 @@ namespace Chess
         private Stopwatch _botThinkTimer; // Timer to control bot thinking
         private bool _botIsThinking = false; // Flag to indicate bot is "thinking"
         private Move _botSelectedMove = null; // The move the bot has selected
+        private bool _isSpellMode = false;
+        private SpellType _selectedSpell;
         public static bool PromotionFlag;
         private static bool _showPromotionMenu;
         private static Move _promotionMove;
         private static Player _promotionColor;
         private static Dictionary<PieceType, Bitmap> _promotionPieces;
         private static Dictionary<PieceType, Rectangle> _promotionButtons;  // Add this for click detection
+
+        // Spell UI Resources
+        private Bitmap _teleportBottleImage;
+        private Bitmap _freezeBottleImage;
 
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {
@@ -44,16 +52,28 @@ namespace Chess
             _undoButton = new Button("Undo", 610, 50, 80, 30);
             _resetButton = new Button("Reset", 610, 90, 80, 30);
             _gameOverNewGameButton = new Button("New Game", 250, 470, 200, 50);
+            
+            // Setup spell buttons
+            _teleportSpellButton = new Button("Teleport", 610, 130, 80, 30);
+            _freezeSpellButton = new Button("Freeze", 610, 170, 80, 30);
 
             _gameOver = false;
             _gameOverMessage = "";
 
+            // Load spell bottle images
+            _teleportBottleImage = SplashKit.LoadBitmap("TeleportBottle", "Resources/Spell/Teleport_bottle.png");
+            _freezeBottleImage = SplashKit.LoadBitmap("FreezeBottle", "Resources/Spell/Freeze_bottle.png");
+            
             // Initialize AI if in computer mode
             if (config.Mode == Variant.Computer)
             {
                 _bot = new ChessBot(_board);
                 _botThinkTimer = new Stopwatch();
             }
+
+            // Initialize spells for both players
+            _board.InitializeSpells(Player.White);
+            _board.InitializeSpells(Player.Black);
 
             _clock.Start();
 
@@ -103,10 +123,84 @@ namespace Chess
                 return;
             }
 
+            // Handle spell buttons in Spell Chess mode
+            if (_config.Mode == Variant.SpellChess)
+            {
+                if (_teleportSpellButton.IsClicked())
+                {
+                    if (_board.HasUnusedSpell(_gameState.CurrentPlayer, SpellType.Teleport))
+                    {
+                        _isSpellMode = true;
+                        _selectedSpell = SpellType.Teleport;
+                    }
+                }
+                else if (_freezeSpellButton.IsClicked())
+                {
+                    if (_board.HasUnusedSpell(_gameState.CurrentPlayer, SpellType.Freeze))
+                    {
+                        _isSpellMode = true;
+                        _selectedSpell = SpellType.Freeze;
+                    }
+                }
+            }
+
             // Handle human input - only if it's not the computer's turn or not in computer mode
             if (!_botIsThinking && (_config.Mode != Variant.Computer || _gameState.CurrentPlayer == Player.White))
             {
-                BoardEvent.HandleMouseEvents(_board, _gameState);
+                if (_isSpellMode)
+                {
+                    HandleSpellInput();
+                }
+                else
+                {
+                    BoardEvent.HandleMouseEvents(_board, _gameState);
+                }
+            }
+        }
+
+        private void HandleSpellInput()
+        {
+            if (SplashKit.MouseClicked(MouseButton.LeftButton))
+            {
+                Point2D clickPoint = new Point2D() { X = SplashKit.MouseX(), Y = SplashKit.MouseY() };
+                Position targetPos = _board.GetPositionFromPoint(clickPoint);
+
+                if (targetPos != null)
+                {
+                    if (_selectedSpell == SpellType.Teleport)
+                    {
+                        var selectedPiece = _board.GetSelectedPiece();
+                        if (selectedPiece != null && _board.CanTeleport(selectedPiece, targetPos))
+                        {
+                            _board.UseSpell(_gameState.CurrentPlayer, SpellType.Teleport);
+                            // Play teleport sound if available
+                            
+                            var move = new NormalMove(selectedPiece.Position, targetPos, selectedPiece);
+                            BoardEvent.HandleMove(move);
+                            _isSpellMode = false;
+                            
+                            // Switch turns
+                            _clock.SwitchTurn();
+                        }
+                    }
+                    else if (_selectedSpell == SpellType.Freeze)
+                    {
+                        _board.UseSpell(_gameState.CurrentPlayer, SpellType.Freeze);
+                        
+                        
+                        _board.ApplyFreezeSpell(targetPos);
+                        _isSpellMode = false;
+                        
+                        // Switch turns
+                        _clock.SwitchTurn();
+                    }
+                }
+            }
+            
+            // Allow canceling spell mode with right-click
+            if (SplashKit.MouseClicked(MouseButton.RightButton))
+            {
+                _isSpellMode = false;
             }
         }
 
@@ -121,6 +215,12 @@ namespace Chess
             _menuButton.Update();
             _undoButton.Update();
             _resetButton.Update();
+            
+            if (_config.Mode == Variant.SpellChess)
+            {
+                _teleportSpellButton.Update();
+                _freezeSpellButton.Update();
+            }
 
             // Update clock
             _clock.CurrentTurn = _gameState.CurrentPlayer;
@@ -158,10 +258,7 @@ namespace Chess
                     }
 
                     // Calculate the move on a separate thread to avoid freezing UI
-                    Task.Run(() =>
-                    {
-                        _botSelectedMove = _bot.GetBestMove(thinkTime);
-                    });
+                    _botSelectedMove = _bot.GetBestMove(thinkTime);
                 }
                 else if (_botThinkTimer.ElapsedMilliseconds >= 500 && _botSelectedMove != null)
                 {
@@ -209,19 +306,19 @@ namespace Chess
 
         private void ResetBoard()
         {
-            _board.Pieces = PieceFactory.CreatePieces(_board);
-            _board.BoardHighlights.Clear();
-            for (int i = 0; i < _board.BackgroundOverlays.Length; i++)
-            {
-                _board.BackgroundOverlays[i] = null;
-            }
+            _board.ResetBoard();
 
             _gameOver = false;
             _gameOverMessage = "";
             _botIsThinking = false;
             _botSelectedMove = null;
+            _isSpellMode = false;
             _clock.Reset(_config.GetTimeSpan());
             _clock.Start();
+
+            // Reinitialize spells
+            _board.InitializeSpells(Player.White);
+            _board.InitializeSpells(Player.Black);
         }
 
         public override void Render()
@@ -229,7 +326,6 @@ namespace Chess
             SplashKit.ClearScreen(Color.White);
             _board.Draw();
 
-            // Draw promotion menu if active (draw before game over UI)
             if (_showPromotionMenu)
             {
                 // Calculate center position of the board
@@ -263,79 +359,105 @@ namespace Chess
                 }
             }
 
-            if (_gameOver)
+            // Draw the player indicators and spell counts
+            DrawPlayerInfo(Player.White, 20, 5);
+            DrawPlayerInfo(Player.Black, 20, SplashKit.ScreenHeight() - 60);
+            
+            // Draw game buttons
+            _menuButton.Draw();
+            _undoButton.Draw();
+            _resetButton.Draw();
+            
+            // Draw spell buttons if in spell chess mode
+            if (_config.Mode == Variant.SpellChess)
             {
-                // Game Over UI
-                SplashKit.FillRectangle(Color.RGBAColor(30, 30, 30, 200), 200, 200, 300, 200);
-                SplashKit.DrawRectangle(Color.Black, 200, 200, 300, 200);
-                SplashKit.DrawText("Game Over", Color.White, "Arial", 24, 270, 220);
-                SplashKit.DrawText(_gameOverMessage, Color.White, "Arial", 18, 230, 260);
-                _gameOverNewGameButton.Draw();
-            }
-            else
-            {
-                // Game UI
-                _menuButton.Draw();
-                _undoButton.Draw();
-                _resetButton.Draw();
+                _teleportSpellButton.Draw();
+                _freezeSpellButton.Draw();
 
-                // Draw clock
-                string whiteTime = _clock.GetFormattedTime(Player.White);
-                string blackTime = _clock.GetFormattedTime(Player.Black);
-
-                // Create a nicer time display
-                DrawTimeDisplay(Player.White, whiteTime, 600, 150);
-                DrawTimeDisplay(Player.Black, blackTime, 600, 200);
-
-                // Draw current player indicator
-                string currentPlayer = _gameState.CurrentPlayer == Player.White ? "White" : "Black";
-                string modeText = GetModeDisplayText();
-                SplashKit.DrawText($"Mode: {modeText}", Color.Black, "Arial", 16, 10, 610);
-                SplashKit.DrawText($"Current Player: {currentPlayer}", Color.Black, "Arial", 16, 10, 640);
-
-                // Show "thinking" indicator when bot is thinking
-                if (_botIsThinking)
+                // Visual feedback for selected spell in spell mode
+                if (_isSpellMode)
                 {
-                    SplashKit.DrawText("Computer is thinking...", Color.Black, "Arial", 16, 10, 580);
+                    Button selectedButton = _selectedSpell == SpellType.Teleport ? 
+                        _teleportSpellButton : _freezeSpellButton;
+                    SplashKit.DrawRectangle(Color.Yellow, selectedButton.X - 2, selectedButton.Y - 2, 
+                        selectedButton.Width + 4, selectedButton.Height + 4);
                 }
             }
-            
-            // Always refresh the screen except when actually executing the bot's move
-            if (!(_botIsThinking && _botSelectedMove != null))
+
+            // Draw game over message if applicable
+            if (_gameOver)
             {
-                SplashKit.RefreshScreen();
+                // Draw semi-transparent overlay
+                Rectangle overlay = new Rectangle(Color.RGBAColor(0, 0, 0, 128), 0, 0, 
+                    SplashKit.ScreenWidth(), SplashKit.ScreenHeight());
+                overlay.Draw();
+                
+                // Draw game over text
+                Font font = SplashKit.LoadFont("Arial", "Arial.ttf");
+                SplashKit.DrawText(_gameOverMessage, Color.White, font, 36, 
+                    SplashKit.ScreenWidth() / 2 - 150, SplashKit.ScreenHeight() / 2 - 50);
+                
+                _gameOverNewGameButton.Draw();
+            }
+
+            // Draw time display
+            DrawTimeDisplay(Player.White, _clock.WhiteTime.ToString(@"mm\:ss"), 610, 250);
+            DrawTimeDisplay(Player.Black, _clock.BlackTime.ToString(@"mm\:ss"), 610, 300);
+
+            // Draw current mode text
+            string modeText = GetModeDisplayText();
+            SplashKit.DrawText(modeText, Color.Black, 610, 350);
+
+            SplashKit.RefreshScreen();
+        }
+        
+        private void DrawPlayerInfo(Player player, int x, int y)
+        {
+            string playerName = player == Player.White ? "White" : "Black";
+            Color playerBoxColor = player == Player.White ? Color.White : Color.Black;
+            Color textColor = player == Player.White ? Color.Black : Color.White;
+            
+            // Draw player background
+            SplashKit.FillRectangle(playerBoxColor, x - 5, y - 5, 90, 30);
+            SplashKit.DrawRectangle(Color.Gray, x - 5, y - 5, 90, 30);
+            SplashKit.DrawText(playerName, textColor, x, y);
+            
+            if (_config.Mode == Variant.SpellChess)
+            {
+                // Draw teleport bottle and count
+                int teleportCount = _board.GetSpellCount(player, SpellType.Teleport);
+                SplashKit.DrawText($"x{teleportCount}", Color.Black, x + 110, y + 5);
+                SplashKit.DrawBitmap(_teleportBottleImage, x + 80, y, SplashKit.OptionScaleBmp(0.5, 0.5));
+                
+                // Draw freeze bottle and count
+                int freezeCount = _board.GetSpellCount(player, SpellType.Freeze);
+                SplashKit.DrawText($"x{freezeCount}", Color.Black, x + 170, y + 5);
+                SplashKit.DrawBitmap(_freezeBottleImage, x + 140, y, SplashKit.OptionScaleBmp(0.5, 0.5));
+                
+                // Highlight current player
+                if (_gameState.CurrentPlayer == player && !_gameOver)
+                {
+                    SplashKit.DrawRectangle(Color.YellowGreen, x - 5, y - 5, 90, 30);
+                }
             }
         }
 
-        private void DrawTimeDisplay(Player player, string time, int x, int y)
+        private void DrawTimeDisplay(Player player, string timeStr, int x, int y)
         {
-            string playerLabel = player == Player.White ? "White" : "Black";
-            Color bgColor = player == Player.White ? Color.White : Color.Black;
-            Color textColor = player == Player.White ? Color.Black : Color.White;
-
-            // Draw background
-            SplashKit.FillRectangle(bgColor, x, y, 80, 30);
-            SplashKit.DrawRectangle(Color.Gray, x, y, 80, 30);
-
-            // Draw text
-            SplashKit.DrawText($"{playerLabel}: {time}", textColor, "Arial", 14, x + 5, y + 8);
-
-            // Highlight current player
-            if (_gameState.CurrentPlayer == player)
-            {
-                SplashKit.DrawRectangle(Color.RGBAColor(0, 255, 0, 150), x, y, 80, 30);
-            }
+            string playerText = player == Player.White ? "White: " : "Black: ";
+            Color textColor = player == _gameState.CurrentPlayer ? Color.Blue : Color.Black;
+            SplashKit.DrawText(playerText + timeStr, textColor, x, y);
         }
 
         private string GetModeDisplayText()
         {
             return _config.Mode switch
             {
-                Variant.TwoPlayer => "Two Player",
-                Variant.Computer => "vs Computer",
-                Variant.SpellChess => "Spell Chess",
-                Variant.Custom => "Custom",
-                _ => "Standard"
+                Variant.TwoPlayer => "Two Player Mode",
+                Variant.Computer => "Computer Mode",
+                Variant.SpellChess => "Spell Chess Mode",
+                Variant.Custom => "Custom Mode",
+                _ => "Chess"
             };
         }
 

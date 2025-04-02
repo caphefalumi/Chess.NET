@@ -4,15 +4,18 @@ namespace Chess
 {
     public class BoardRenderer
     {
-        private int _squareSize;
-        private int _startX;
-        private int _startY;
-        private Color _lightColor;
-        private Color _darkColor;
+        private readonly int _squareSize;
+        private readonly Color _lightColor;
+        private readonly Color _darkColor;
+        private readonly int _startX;
+        private readonly int _startY;
         private Color _textColor = Color.Black; // Color for indices
         private const int Margin = 20; // Space for indices
 
         private static BoardRenderer _instance;
+
+        public int StartX => _startX;
+        public int StartY => _startY;
 
         private BoardRenderer(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
@@ -86,22 +89,12 @@ namespace Chess
             }
 
             // Create a safe copy of the pieces collection for rendering
-            var piecesCopy = pieces.ToList();
+            var piecesCopy = pieces.ToHashSet();
             foreach (Piece piece in piecesCopy)
             {
                 if (piece == null)
                 {
                     Console.WriteLine("ERROR: null piece in collection");
-                    continue;
-                }
-                if (piece.Position == null)
-                {
-                    Console.WriteLine($"ERROR: null position for piece {piece.PieceChar}");
-                    continue;
-                }
-                if (piece.PieceImage == null)
-                {
-                    Console.WriteLine($"ERROR: null image for piece {piece.PieceChar} at position {piece.Position}");
                     continue;
                 }
                 piece.Draw();
@@ -113,6 +106,60 @@ namespace Chess
             foreach (Circle legalMove in legalMoves)
             {
                 legalMove.Draw();
+            }
+        }
+
+        public void Draw(Board board)
+        {
+            // Draw the board squares
+            for (int rank = 0; rank < 8; rank++)
+            {
+                for (int file = 0; file < 8; file++)
+                {
+                    Color squareColor = (rank + file) % 2 == 0 ? _lightColor : _darkColor;
+                    Rectangle square = new Rectangle(squareColor, _startX + file * _squareSize, _startY + rank * _squareSize, _squareSize, _squareSize);
+                    square.Draw();
+
+                    // Draw frozen square effect if applicable
+                    if (board.IsSquareFrozen(new Position(file, rank)))
+                    {
+                        // Create a custom semitransparent blue color (light blue for better visibility)
+                        Color freezeColor = Color.LightBlue;
+                        Rectangle frozenOverlay = new Rectangle(freezeColor, _startX + file * _squareSize, _startY + rank * _squareSize, _squareSize, _squareSize);
+                        frozenOverlay.Draw();
+                        
+                        // Draw a snowflake symbol or pattern to indicate frozen square
+                        SplashKit.DrawText("❄", Color.White, 
+                            _startX + file * _squareSize + _squareSize/2 - 8, 
+                            _startY + rank * _squareSize + _squareSize/2 - 8);
+                    }
+                }
+            }
+            
+            // Draw the pieces
+            foreach (Piece piece in board.Pieces)
+            {
+                if (piece.PieceImage != null)
+                {
+                    float x = _startX + piece.Position.File * _squareSize;
+                    float y = _startY + piece.Position.Rank * _squareSize;
+                    SplashKit.DrawBitmap(piece.PieceImage, x, y);
+                }
+            }
+
+            // Draw the highlights
+            foreach (Circle highlight in board.BoardHighlights)
+            {
+                highlight.Draw();
+            }
+
+            // Draw the background overlays
+            foreach (Rectangle overlay in board.BackgroundOverlays)
+            {
+                if (overlay != null)
+                {
+                    overlay.Draw();
+                }
             }
         }
     }

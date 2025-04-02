@@ -1,0 +1,212 @@
+@startuml Chess Features and Variants
+
+' Game Variants and Features
+enum Variant {
+  TwoPlayer
+  Computer
+  SpellChess
+  Custom
+}
+
+interface IVariantStrategy {
+  +void SetupMatch(MatchConfiguration config)
+  +void HandleTurn(MatchState state)
+}
+
+class VariantFactory {
+  +static IVariantStrategy CreateVariant(Variant variant)
+}
+
+class MatchConfiguration {
+  +Variant GameMode
+  +int TimeControl
+  +int TimeIncrement
+  +bool CustomPosition
+  +string CustomFen
+}
+
+' Spell System
+class SpellManager {
+  -Dictionary<Player, Dictionary<SpellType, int>> _spells
+  +void InitializeSpells(Player player)
+  +bool HasUnusedSpell(Player player, SpellType type)
+  +void UseSpell(Player player, SpellType type)
+  +int GetSpellCount(Player player, SpellType type)
+}
+
+enum SpellType {
+  Freeze
+  Teleport
+  Revive
+}
+
+class Spell {
+  +SpellType Type
+  +Player Owner
+  +bool IsUsed
+  +void Use()
+  +void ApplyEffect(Board board, Position target)
+}
+
+' Clock System
+class Clock {
+  -int _initialSeconds
+  -long _remainingMillis
+  -long _lastUpdateTime
+  +bool IsRunning
+  +void Start()
+  +void Stop()
+  +void Reset()
+  +string GetTimeString()
+  +bool IsTimeUp()
+}
+
+class Timer {
+  -int _durationMillis
+  -long _startTimeMillis
+  -bool _isRunning
+  +void Start(int durationMillis)
+  +void Stop()
+  +bool IsFinished()
+}
+
+' Board Events
+class BoardEvent {
+  +EventType Type
+  +Position Position
+  +Player TargetPlayer
+  +int Duration
+  +void Apply(Board board)
+  +void Cleanup(Board board)
+}
+
+enum EventType {
+  Freeze
+  Teleport
+  Revive
+  TimeBonus
+}
+
+' Special Moves
+abstract class Move {
+  +{abstract} MoveType Type
+  +{abstract} void Execute(Board board, bool isSimulation)
+}
+
+class CastleMove extends Move {
+  -Rook _rook
+  -Position _rookDestination
+  +override void Execute(Board board, bool isSimulation)
+}
+
+class EnPassantMove extends Move {
+  -Position _capturedPawnPos
+  +override void Execute(Board board, bool isSimulation)
+}
+
+class DoublePawnMove extends Move {
+  +override void Execute(Board board, bool isSimulation)
+}
+
+class PromotionMove extends Move {
+  -PieceType _promotionType
+  +override void Execute(Board board, bool isSimulation)
+}
+
+' Classes that use special features
+class Board {
+  -HashSet<Position> _frozenSquares
+  -SpellManager _spellManager
+  +void ApplyFreezeSpell(Position center)
+  +bool IsSquareFrozen(Position pos)
+  +void ClearFrozenSquares()
+  +bool CanTeleport(Piece piece, Position target)
+  +bool HasUnusedSpell(Player player, SpellType type)
+  +void UseSpell(Player player, SpellType type)
+}
+
+class MatchState {
+  -Clock _whiteClock
+  -Clock _blackClock
+  -List<BoardEvent> _activeEvents
+  +void ProcessEvents()
+  +void AddEvent(BoardEvent event)
+  +void HandleTimeControl()
+}
+
+class GameplayScreen {
+  -bool _spellMode
+  -SpellType _selectedSpell
+  +void HandleSpellSelection()
+  +void CastSpell(Position target)
+}
+
+class ChessBot {
+  -int _searchDepth
+  -Dictionary<string, int> _positionEvaluations
+  +Move FindBestMove(Board board, Player player)
+  -int Evaluate(Board board, Player player)
+  -int MinMax(Board board, int depth, int alpha, int beta, bool maximizingPlayer)
+}
+
+' Relationships
+VariantFactory ..> IVariantStrategy : creates
+SpellManager --> Spell : manages
+Board --> SpellManager : uses
+Board --> BoardEvent : processes
+MatchState --> Clock : manages
+MatchState --> BoardEvent : tracks
+GameplayScreen --> SpellType : selects
+GameplayScreen --> Board : casts spells on
+ChessBot ..> Move : evaluates & selects
+Spell ..> BoardEvent : creates
+Board --> EventType : processes
+Clock --> Timer : uses
+IVariantStrategy ..> MatchState : configures
+IVariantStrategy ..> MatchConfiguration : uses
+Board --> EventType : applies effects
+
+' Variant Strategy Implementations
+class TwoPlayerStrategy implements IVariantStrategy {
+  +override void SetupMatch(MatchConfiguration config)
+  +override void HandleTurn(MatchState state)
+}
+
+class ComputerStrategy implements IVariantStrategy {
+  -ChessBot _bot
+  +override void SetupMatch(MatchConfiguration config)
+  +override void HandleTurn(MatchState state)
+}
+
+class SpellChessStrategy implements IVariantStrategy {
+  +override void SetupMatch(MatchConfiguration config)
+  +override void HandleTurn(MatchState state)
+}
+
+class CustomStrategy implements IVariantStrategy {
+  +override void SetupMatch(MatchConfiguration config)
+  +override void HandleTurn(MatchState state)
+}
+
+' Implementation Details
+note bottom of SpellChessStrategy
+  Initializes spells for both players
+  and enables spell casting in gameplay
+end note
+
+note bottom of ComputerStrategy
+  Handles computer move calculation
+  using the ChessBot's AI algorithms
+end note
+
+note bottom of CastleMove
+  Special move that moves both
+  the king and rook simultaneously
+end note
+
+note right of BoardEvent
+  Events that can temporarily
+  modify the board state
+end note
+
+@enduml 

@@ -1,0 +1,169 @@
+@startuml Chess UI and States
+
+' Main Game and States
+class Game {
+  -ScreenState _currentState
+  -Board _board
+  -Window _window
+  -MatchState _GameState
+  +void ChangeState(ScreenState newState)
+  +void Run()
+}
+
+enum Variant {
+  TwoPlayer
+  Computer
+  SpellChess
+  Custom
+}
+
+abstract class ScreenState {
+  +Game Game
+  +Board Board
+  +void HandleInput()
+  +void Render()
+  +void Update()
+}
+
+class MainMenuState extends ScreenState {
+  -List<Button> _buttons
+  +MainMenuState(Game game, Board board)
+  +override void HandleInput()
+  +override void Render()
+}
+
+class GameplayScreen extends ScreenState {
+  -bool _pieceSelected
+  -Piece _selectedPiece
+  -HashSet<Move> _legalMoves
+  -bool _isDragging
+  +GameplayScreen(Game game, Board board)
+  +override void HandleInput()
+  +override void Render()
+  +override void Update()
+}
+
+class TimeSelectionState extends ScreenState {
+  -List<Button> _timeButtons
+  -MatchConfiguration _config
+  +TimeSelectionState(Game game, Board board, MatchConfiguration config)
+  +override void HandleInput()
+  +override void Render()
+}
+
+class BoardSetupScreen extends ScreenState {
+  -HashSet<Piece> _pieces
+  -PieceType _selectedType
+  -Player _selectedColor
+  +BoardSetupScreen(Game game, Board board)
+  +override void HandleInput()
+  +override void Render()
+}
+
+class VariantSelectionScreen extends ScreenState {
+  -List<Button> _buttons
+  +VariantSelectionScreen(Game game, Board board)
+  +override void HandleInput()
+  +override void Render()
+}
+
+' UI Components
+interface IDrawable {
+  +void Draw()
+}
+
+class Button {
+  +string Text
+  +Rectangle Bounds
+  +Color BackgroundColor
+  +Color TextColor
+  +void Draw()
+  +bool IsClicked()
+}
+
+class Rectangle extends Shape {
+  +float X
+  +float Y
+  +float Width
+  +float Height
+  +override void Draw()
+}
+
+class Circle extends Shape {
+  +float X
+  +float Y
+  +float Radius
+  +override void Draw()
+}
+
+abstract class Shape {
+  +Color Color
+  +{abstract} void Draw()
+}
+
+class BoardRenderer {
+  -static BoardRenderer _instance
+  -int _squareSize
+  -int _startX
+  -int _startY
+  -Color _lightColor
+  -Color _darkColor
+  +void Draw()
+  +void Draw(HashSet<Piece> pieces)
+  +void Draw(HashSet<Circle> highlights)
+  +void Draw(Rectangle[] overlays)
+}
+
+' Match Configuration
+class MatchConfiguration {
+  +Variant GameMode
+  +int TimeControl
+  +int TimeIncrement
+  +bool CustomPosition
+  +string CustomFen
+  +MatchConfiguration()
+}
+
+' State Machine Transitions
+Game --> ScreenState : "currentState"
+MainMenuState --> VariantSelectionScreen : "selects variant"
+VariantSelectionScreen --> TimeSelectionState : "selects mode"
+TimeSelectionState --> BoardSetupScreen : "if custom setup"
+TimeSelectionState --> GameplayScreen : "if standard setup"
+BoardSetupScreen --> GameplayScreen : "confirms setup"
+
+' Component Relationships
+ScreenState --> Game : references
+ScreenState --> Board : references
+Button --> Rectangle : contains
+Board --> BoardRenderer : uses
+GameplayScreen --> Board : manipulates
+BoardSetupScreen --> PieceFactory : uses
+VariantSelectionScreen --> Variant : selects
+TimeSelectionState --> MatchConfiguration : configures
+GameplayScreen o-- Button : contains buttons
+MainMenuState o-- Button : contains buttons
+VariantSelectionScreen o-- Button : contains buttons
+TimeSelectionState o-- Button : contains buttons
+BoardRenderer ..> IDrawable : renders
+Shape --|> IDrawable
+Button --|> IDrawable
+ScreenState ..> IDrawable : draws components
+
+' Implementation Notes
+note bottom of GameplayScreen
+  Handles piece selection, movement,
+  and game state transitions
+end note
+
+note bottom of VariantSelectionScreen
+  Allows selection of different 
+  chess game variants
+end note
+
+note bottom of BoardSetupScreen
+  Allows custom board 
+  position configuration
+end note
+
+@enduml 

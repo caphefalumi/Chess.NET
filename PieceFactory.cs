@@ -60,9 +60,11 @@ namespace Chess
                 PieceType.Bishop => 'b',
                 PieceType.Queen => 'q',
                 PieceType.King => 'k',
+                _ => throw new ArgumentException($"Invalid piece type: {type}")
             };
             return color == Player.White ? char.ToUpper(c) : c;
         }
+
         public static PieceType GetPieceType(char c)
         {
             return char.ToLower(c) switch
@@ -73,8 +75,8 @@ namespace Chess
                 'b' => PieceType.Bishop,
                 'q' => PieceType.Queen,
                 'k' => PieceType.King,
+                _ => throw new ArgumentException($"Invalid piece character: {c}")
             };
         }
-
     }
 }

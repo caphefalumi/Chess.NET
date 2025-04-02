@@ -20,10 +20,10 @@ alwaysApply: true
 These requirements relate to the layout of the syntax and logic in your code.
 
 Files
-Use PascalCaseLinks to an external site. when naming files and folders - e.g., “MyFolder”, “SomeClassFile.cs”.
-Wherever possible, one class definition per file.
-File names should match the name of the class contained within — e.g., a file containing the class MyClass should be named “MyClass.cs”.
-Code Layout
+- Use PascalCaseLinks to an external site. when naming files and folders - e.g., “MyFolder”, “SomeClassFile.cs”.
+- Wherever possible, one class definition per file.
+- File names should match the name of the class contained within — e.g., a file containing the class MyClass should be named “MyClass.cs”.
+- Code Layout
 One statement per line.
 One blank line between method and property definitions.
 Use Allman styleLinks to an external site. braces, where each curly bracket is on its own line and statements within curly braces are indented one more level.

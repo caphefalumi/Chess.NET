@@ -7,102 +7,109 @@ namespace Chess
 {
     public class ChessBot
     {
-        private readonly Board _board;
-        private int MAX_DEPTH = 4;  // Default depth limit
+        private const int MAX_DEPTH = 3; // Start with depth 3 for good balance of speed/strength
+        private const int MATE_SCORE = 10000;
+        private const int DRAW_SCORE = 0;
+
+        // Piece values
+        private static readonly Dictionary<Type, int> PIECE_VALUES = new()
+        {
+            { typeof(Pawn), 100 },
+            { typeof(Knight), 320 },
+            { typeof(Bishop), 330 },
+            { typeof(Rook), 500 },
+            { typeof(Queen), 900 },
+            { typeof(King), 20000 }
+        };
+
+        // Piece position tables
+        private static readonly int[,] PAWN_POSITION = {
+            {  0,  0,  0,  0,  0,  0,  0,  0 },
+            { 50, 50, 50, 50, 50, 50, 50, 50 },
+            { 10, 10, 20, 30, 30, 20, 10, 10 },
+            {  5,  5, 10, 25, 25, 10,  5,  5 },
+            {  0,  0,  0, 20, 20,  0,  0,  0 },
+            {  5, -5,-10,  10,  10,-10, -5,  5 },
+            {  5, 10, 10,-20,-20, 10, 10,  5 },
+            {  0,  0,  0,  0,  0,  0,  0,  0 }
+        };
+
+        private static readonly int[,] KNIGHT_POSITION = {
+            {-50,-40,-30,-30,-30,-30,-40,-50 },
+            {-40,-20,  0,  0,  0,  0,-20,-40 },
+            {-30,  0, 10, 15, 15, 10,  0,-30 },
+            {-30,  5, 15, 20, 20, 15,  5,-30 },
+            {-30,  0, 15, 20, 20, 15,  0,-30 },
+            {-30,  5, 10, 15, 15, 10,  5,-30 },
+            {-40,-20,  0,  5,  5,  0,-20,-40 },
+            {-50,-40,-30,-30,-30,-30,-40,-50 }
+        };
+
+        private static readonly int[,] BISHOP_POSITION = {
+            {-20,-10,-10,-10,-10,-10,-10,-20 },
+            {-10,  0,  0,  0,  0,  0,  0,-10 },
+            {-10,  0,  5, 10, 10,  5,  0,-10 },
+            {-10,  5,  5, 10, 10,  5,  5,-10 },
+            {-10,  0, 10, 10, 10, 10,  0,-10 },
+            {-10, 10, 10, 10, 10, 10, 10,-10 },
+            {-10,  5,  0,  0,  0,  0,  5,-10 },
+            {-20,-10,-10,-10,-10,-10,-10,-20 }
+        };
+
+        private static readonly int[,] ROOK_POSITION = {
+            {  0,  0,  0,  0,  0,  0,  0,  0 },
+            {  5, 10, 10, 10, 10, 10, 10,  5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            { -5,  0,  0,  0,  0,  0,  0, -5 },
+            {  0,  0,  0,  5,  5,  0,  0,  0 }
+        };
+
+        private static readonly int[,] QUEEN_POSITION = {
+            {-20,-10,-10, -5, -5,-10,-10,-20 },
+            {-10,  0,  0,  0,  0,  0,  0,-10 },
+            {-10,  0,  5,  5,  5,  5,  0,-10 },
+            { -5,  0,  5,  5,  5,  5,  0, -5 },
+            {  0,  0,  5,  5,  5,  5,  0, -5 },
+            {-10,  5,  5,  5,  5,  5,  0,-10 },
+            {-10,  0,  5,  0,  0,  0,  0,-10 },
+            {-20,-10,-10, -5, -5,-10,-10,-20 }
+        };
+
+        private static readonly int[,] KING_MIDDLEGAME_POSITION = {
+            {-30,-40,-40,-50,-50,-40,-40,-30 },
+            {-30,-40,-40,-50,-50,-40,-40,-30 },
+            {-30,-40,-40,-50,-50,-40,-40,-30 },
+            {-30,-40,-40,-50,-50,-40,-40,-30 },
+            {-20,-30,-30,-40,-40,-30,-30,-20 },
+            {-10,-20,-20,-20,-20,-20,-20,-10 },
+            { 20, 20,  0,  0,  0,  0, 20, 20 },
+            { 20, 30, 10,  0,  0, 10, 30, 20 }
+        };
+
+        private static readonly int[,] KING_ENDGAME_POSITION = {
+            {-50,-40,-30,-20,-20,-30,-40,-50 },
+            {-30,-20,-10,  0,  0,-10,-20,-30 },
+            {-30,-10, 20, 30, 30, 20,-10,-30 },
+            {-30,-10, 30, 40, 40, 30,-10,-30 },
+            {-30,-10, 30, 40, 40, 30,-10,-30 },
+            {-30,-10, 20, 30, 30, 20,-10,-30 },
+            {-30,-30,  0,  0,  0,  0,-30,-30 },
+            {-50,-30,-30,-30,-30,-30,-30,-50 }
+        };
+
+        private Board _board;
         private readonly Random _random = new Random();
 
         // Time control variables
         private TimeSpan _timeLimit;
         private Stopwatch _timer;
         private bool _shouldStopSearch;
-
-        private static readonly Dictionary<PieceType, int> PieceValues = new Dictionary<PieceType, int>
-        {
-            { PieceType.Pawn, 100 },
-            { PieceType.Knight, 320 },
-            { PieceType.Bishop, 330 },
-            { PieceType.Rook, 500 },
-            { PieceType.Queen, 900 },
-            { PieceType.King, 20000 }
-        };
-
-        // Piece-Square tables for positional evaluation
-        private static readonly int[,] PawnPositionWhite = {
-            { 0,  0,  0,  0,  0,  0,  0,  0 },
-            { 50, 50, 50, 50, 50, 50, 50, 50 },
-            { 10, 10, 20, 30, 30, 20, 10, 10 },
-            { 5,  5, 10, 25, 25, 10,  5,  5 },
-            { 0,  0,  0, 20, 20,  0,  0,  0 },
-            { 5, -5,-10,  0,  0,-10, -5,  5 },
-            { 5, 10, 10,-20,-20, 10, 10,  5 },
-            { 0,  0,  0,  0,  0,  0,  0,  0 }
-        };
-
-        private static readonly int[,] KnightPosition = {
-            { -50,-40,-30,-30,-30,-30,-40,-50 },
-            { -40,-20,  0,  0,  0,  0,-20,-40 },
-            { -30,  0, 10, 15, 15, 10,  0,-30 },
-            { -30,  5, 15, 20, 20, 15,  5,-30 },
-            { -30,  0, 15, 20, 20, 15,  0,-30 },
-            { -30,  5, 10, 15, 15, 10,  5,-30 },
-            { -40,-20,  0,  5,  5,  0,-20,-40 },
-            { -50,-40,-30,-30,-30,-30,-40,-50 }
-        };
-
-        private static readonly int[,] BishopPosition = {
-            { -20,-10,-10,-10,-10,-10,-10,-20 },
-            { -10,  0,  0,  0,  0,  0,  0,-10 },
-            { -10,  0, 10, 10, 10, 10,  0,-10 },
-            { -10,  5,  5, 10, 10,  5,  5,-10 },
-            { -10,  0,  5, 10, 10,  5,  0,-10 },
-            { -10,  5,  5,  5,  5,  5,  5,-10 },
-            { -10,  0,  5,  0,  0,  5,  0,-10 },
-            { -20,-10,-10,-10,-10,-10,-10,-20 }
-        };
-
-        private static readonly int[,] RookPosition = {
-            { 0,  0,  0,  0,  0,  0,  0,  0 },
-            { 5, 10, 10, 10, 10, 10, 10,  5 },
-            {-5,  0,  0,  0,  0,  0,  0, -5 },
-            {-5,  0,  0,  0,  0,  0,  0, -5 },
-            {-5,  0,  0,  0,  0,  0,  0, -5 },
-            {-5,  0,  0,  0,  0,  0,  0, -5 },
-            {-5,  0,  0,  0,  0,  0,  0, -5 },
-            { 0,  0,  0,  5,  5,  0,  0,  0 }
-        };
-
-        private static readonly int[,] QueenPosition = {
-            { -20,-10,-10, -5, -5,-10,-10,-20 },
-            { -10,  0,  0,  0,  0,  0,  0,-10 },
-            { -10,  0,  5,  5,  5,  5,  0,-10 },
-            {  -5,  0,  5,  5,  5,  5,  0, -5 },
-            {   0,  0,  5,  5,  5,  5,  0, -5 },
-            { -10,  5,  5,  5,  5,  5,  0,-10 },
-            { -10,  0,  5,  0,  0,  0,  0,-10 },
-            { -20,-10,-10, -5, -5,-10,-10,-20 }
-        };
-
-        private static readonly int[,] KingMiddleGamePosition = {
-            { -30,-40,-40,-50,-50,-40,-40,-30 },
-            { -30,-40,-40,-50,-50,-40,-40,-30 },
-            { -30,-40,-40,-50,-50,-40,-40,-30 },
-            { -30,-40,-40,-50,-50,-40,-40,-30 },
-            { -20,-30,-30,-40,-40,-30,-30,-20 },
-            { -10,-20,-20,-20,-20,-20,-20,-10 },
-            {  20, 20,  0,  0,  0,  0, 20, 20 },
-            {  20, 30, 10,  0,  0, 10, 30, 20 }
-        };
-
-        private static readonly int[,] KingEndGamePosition = {
-            { -50,-40,-30,-20,-20,-30,-40,-50 },
-            { -30,-20,-10,  0,  0,-10,-20,-30 },
-            { -30,-10, 20, 30, 30, 20,-10,-30 },
-            { -30,-10, 30, 40, 40, 30,-10,-30 },
-            { -30,-10, 30, 40, 40, 30,-10,-30 },
-            { -30,-10, 20, 30, 30, 20,-10,-30 },
-            { -30,-30,  0,  0,  0,  0,-30,-30 },
-            { -50,-30,-30,-30,-30,-30,-30,-50 }
-        };
+        
+        // Position history tracking to avoid repetitions
+        private Dictionary<string, int> _positionHistory = new Dictionary<string, int>();
 
         public ChessBot(Board board)
         {
@@ -120,6 +127,13 @@ namespace Chess
             _shouldStopSearch = false;
             _timeLimit = TimeSpan.FromMilliseconds(timeLimit);
             _timer.Restart();
+            
+            // Update position history for current position
+            string currentFen = _board.GetFen();
+            if (_positionHistory.ContainsKey(currentFen))
+                _positionHistory[currentFen]++;
+            else
+                _positionHistory[currentFen] = 1;
 
             Player currentPlayer = _board.MatchState.CurrentPlayer;
             Move bestMove = null;
@@ -137,7 +151,7 @@ namespace Chess
                 return legalMoves.First();
 
             // Start with a random order of moves
-            List<Move> orderedMoves = legalMoves.OrderBy(x => _random.Next()).ToList();
+            List<Move> orderedMoves = OrderMovesByScore(legalMoves.ToList(), currentPlayer);
 
             // Iterative deepening - start with a shallow search and gradually increase depth
             for (int depth = 1; depth <= MAX_DEPTH; depth++)
@@ -151,13 +165,13 @@ namespace Chess
                         break;
 
                     // Make the move on the board
-                    _board.MatchState.MakeMove(move);
+                    _board.MatchState.MakeMove(move, true);
 
                     // Evaluate the position with negamax
-                    int score = -NegaMax(depth - 1, -beta, -alpha, currentPlayer.Opponent());
+                    int score = -Negamax(depth - 1, -beta, -alpha, currentPlayer.Opponent());
 
                     // Unmake the move
-                    _board.MatchState.UnmakeMove();
+                    _board.MatchState.UnmakeMove(true);
 
                     // Update best move if better score found
                     if (score > bestScore)
@@ -173,8 +187,8 @@ namespace Chess
                 // If we've completed a depth without timing out, save the best move at this depth
                 if (!_shouldStopSearch)
                 {
-                    // Order moves for next iteration based on scores
-                    orderedMoves = OrderMovesByScore(orderedMoves, currentPlayer);
+                    // Re-order moves for next iteration based on scores
+                    orderedMoves = OrderMovesByScore(legalMoves.ToList(), currentPlayer);
                 }
             }
 
@@ -185,7 +199,7 @@ namespace Chess
         /// <summary>
         /// Negamax algorithm with alpha-beta pruning
         /// </summary>
-        private int NegaMax(int depth, int alpha, int beta, Player player)
+        private int Negamax(int depth, int alpha, int beta, Player player)
         {
             // Check if we're out of time
             if (_timer.Elapsed > _timeLimit)
@@ -196,14 +210,14 @@ namespace Chess
 
             // Check for game over conditions
             if (_board.IsInCheck(player) && _board.GetAllyMoves(player).Count == 0)
-                return -10000; // Checkmate (-10000 relative to player)
+                return -(MATE_SCORE - depth); // Checkmate (prefer shorter mates)
 
             if (_board.GetAllyMoves(player).Count == 0)
-                return 0; // Stalemate (draw)
+                return DRAW_SCORE; // Stalemate (draw)
 
-            // Base case: if we reached the maximum depth, evaluate the position
+            // Base case: use quiescence search
             if (depth <= 0)
-                return EvaluatePosition(player);
+                return Quiescence(alpha, beta, player);
 
             HashSet<Move> legalMoves = _board.GetAllyMoves(player);
             
@@ -215,14 +229,47 @@ namespace Chess
                 if (_shouldStopSearch)
                     break;
 
-                _board.MatchState.MakeMove(move);
-                int score = -NegaMax(depth - 1, -beta, -alpha, player.Opponent());
-                _board.MatchState.UnmakeMove();
+                _board.MatchState.MakeMove(move, true);
+                int score = -Negamax(depth - 1, -beta, -alpha, player.Opponent());
+                _board.MatchState.UnmakeMove(true);
 
                 if (score >= beta)
                     return beta; // Beta cutoff
 
                 alpha = Math.Max(alpha, score);
+            }
+
+            return alpha;
+        }
+
+        /// <summary>
+        /// Quiescence search to evaluate all captures beyond the depth limit
+        /// </summary>
+        private int Quiescence(int alpha, int beta, Player player)
+        {
+            int standPat = EvaluatePosition(player);
+            if (standPat >= beta)
+                return beta;
+            alpha = Math.Max(alpha, standPat);
+
+            var captures = _board.GetAllyMoves(player)
+                .Where(m => m.CapturedPiece != null)
+                .OrderByDescending(m => EstimateMoveValue(m))
+                .ToList();
+
+            foreach (var move in captures)
+            {
+                if (_shouldStopSearch)
+                    break;
+
+                _board.MatchState.MakeMove(move, true);
+                int score = -Quiescence(-beta, -alpha, player.Opponent());
+                _board.MatchState.UnmakeMove(true);
+
+                if (score >= beta)
+                    return beta;
+                if (score > alpha)
+                    alpha = score;
             }
 
             return alpha;
@@ -240,9 +287,6 @@ namespace Chess
 
             // Positional factors
             score += EvaluatePositions(player);
-            
-            // Safety - avoid leaving pieces hanging
-            score += EvaluateSafety(player);
 
             return score;
         }
@@ -256,7 +300,7 @@ namespace Chess
 
             foreach (Piece piece in _board.Pieces)
             {
-                int value = PieceValues[piece.Type];
+                int value = PIECE_VALUES[piece.GetType()];
                 if (piece.Color == player)
                     score += value;
                 else
@@ -290,22 +334,22 @@ namespace Chess
                 switch (piece.Type)
                 {
                     case PieceType.Pawn:
-                        positionValue = PawnPositionWhite[rank, file];
+                        positionValue = PAWN_POSITION[rank, file];
                         break;
                     case PieceType.Knight:
-                        positionValue = KnightPosition[rank, file];
+                        positionValue = KNIGHT_POSITION[rank, file];
                         break;
                     case PieceType.Bishop:
-                        positionValue = BishopPosition[rank, file];
+                        positionValue = BISHOP_POSITION[rank, file];
                         break;
                     case PieceType.Rook:
-                        positionValue = RookPosition[rank, file];
+                        positionValue = ROOK_POSITION[rank, file];
                         break;
                     case PieceType.Queen:
-                        positionValue = QueenPosition[rank, file];
+                        positionValue = QUEEN_POSITION[rank, file];
                         break;
                     case PieceType.King:
-                        positionValue = isEndgame ? KingEndGamePosition[rank, file] : KingMiddleGamePosition[rank, file];
+                        positionValue = isEndgame ? KING_ENDGAME_POSITION[rank, file] : KING_MIDDLEGAME_POSITION[rank, file];
                         break;
                 }
 
@@ -323,15 +367,12 @@ namespace Chess
         /// </summary>
         private bool IsEndgame()
         {
-            int majorPieceCount = 0;
-            
-            foreach (Piece piece in _board.Pieces)
-            {
-                if (piece.Type == PieceType.Queen || piece.Type == PieceType.Rook)
-                    majorPieceCount++;
-            }
-            
-            return majorPieceCount <= 2;
+            int queenCount = _board.Pieces.Count(p => p.Type == PieceType.Queen);
+            int rookCount = _board.Pieces.Count(p => p.Type == PieceType.Rook);
+            int totalPieces = _board.Pieces.Count;
+
+            // Consider endgame when queens are gone and few pieces remain
+            return (queenCount == 0 && totalPieces <= 8) || (totalPieces <= 6);
         }
 
         /// <summary>
@@ -339,16 +380,7 @@ namespace Chess
         /// </summary>
         private List<Move> OrderMovesByScore(List<Move> moves, Player player)
         {
-            Dictionary<Move, int> moveScores = new Dictionary<Move, int>();
-
-            foreach (Move move in moves)
-            {
-                // Estimate move value
-                int score = EstimateMoveValue(move);
-                moveScores[move] = score;
-            }
-
-            return moves.OrderByDescending(m => moveScores[m]).ToList();
+            return moves.OrderByDescending(m => EstimateMoveValue(m)).ToList();
         }
 
         /// <summary>
@@ -362,7 +394,17 @@ namespace Chess
             if (move.CapturedPiece != null)
             {
                 // MVV-LVA (Most Valuable Victim - Least Valuable Aggressor)
-                score = 10 * PieceValues[move.CapturedPiece.Type] - PieceValues[move.MovedPiece.Type];
+                int capturedValue = PIECE_VALUES[move.CapturedPiece.GetType()];
+                int attackerValue = PIECE_VALUES[move.MovedPiece.GetType()];
+                
+                // Consider if exchange is favorable (positive) or unfavorable (negative)
+                score = 10 * capturedValue - attackerValue;
+                
+                // Penalize trading higher value pieces for lower value ones more severely
+                if (attackerValue > capturedValue)
+                {
+                    score -= (attackerValue - capturedValue) * 3;
+                }
             }
             
             // Castling is generally good
@@ -379,13 +421,53 @@ namespace Chess
             
             // Check if the move leaves a piece hanging or undefended
             _board.MatchState.MakeMove(move, true);
-            bool leavesHangingPiece = IsHangingPiece(move.MovedPiece);
-            _board.MatchState.UnmakeMove(true);
             
-            // Heavy penalty for moves that leave pieces hanging
+            // Strong penalty for moves that leave pieces hanging
+            bool leavesHangingPiece = IsHangingPiece(move.MovedPiece);
             if (leavesHangingPiece)
             {
-                score -= PieceValues[move.MovedPiece.Type] * 2;
+                score -= PIECE_VALUES[move.MovedPiece.GetType()] * 5;
+            }
+            
+            // Check if we're making a bad exchange
+            if (move.CapturedPiece != null && move.MovedPiece.Type != PieceType.Pawn)
+            {
+                HashSet<Move> opponentMoves = _board.GetAllyMoves(move.MovedPiece.Color.Opponent());
+                bool willBeRecaptured = opponentMoves.Any(m => m.To.Equals(move.To));
+                
+                if (willBeRecaptured && PIECE_VALUES[move.MovedPiece.GetType()] > PIECE_VALUES[move.CapturedPiece.GetType()])
+                {
+                    // Heavily penalize sacrificing a higher value piece for a lower value one
+                    score -= (PIECE_VALUES[move.MovedPiece.GetType()] - PIECE_VALUES[move.CapturedPiece.GetType()]) * 4;
+                }
+            }
+            
+            // Avoid moving to squares attacked by pawns
+            var opponentPawns = _board.Pieces
+                .Where(p => p.Type == PieceType.Pawn && p.Color == move.MovedPiece.Color.Opponent())
+                .ToList();
+                
+            foreach (var pawn in opponentPawns)
+            {
+                var attackedSquares = pawn.GetAttackedSquares();
+                if (attackedSquares.Any(m => m.To.Equals(move.To)))
+                {
+                    score -= PIECE_VALUES[move.MovedPiece.GetType()] / 2;
+                    break;
+                }
+            }
+            
+            _board.MatchState.UnmakeMove(true);
+            
+            // Check for repetitions
+            _board.MatchState.MakeMove(move, true);
+            string resultingFen = _board.GetFen();
+            _board.MatchState.UnmakeMove(true);
+            
+            if (_positionHistory.ContainsKey(resultingFen))
+            {
+                // Penalize moves that lead to repeated positions
+                score -= 100 * _positionHistory[resultingFen];
             }
 
             return score;
@@ -417,7 +499,7 @@ namespace Chess
                     .ToList();
                 
                 bool canRecapture = recaptureMoves.Any(m => 
-                    PieceValues[m.MovedPiece.Type] <= PieceValues[attackMove.MovedPiece.Type]);
+                    PIECE_VALUES[m.MovedPiece.GetType()] <= PIECE_VALUES[attackMove.MovedPiece.GetType()]);
                 
                 _board.MatchState.UnmakeMove(true);
                 
@@ -445,7 +527,7 @@ namespace Chess
                 if (isUnderAttack)
                 {
                     // Apply penalty based on piece value
-                    score -= PieceValues[piece.Type] / 4;
+                    score -= PIECE_VALUES[piece.GetType()] / 4;
                     
                     // Check if the piece is defended
                     bool isDefended = false;
@@ -461,25 +543,12 @@ namespace Chess
                     // Extra penalty if not defended
                     if (!isDefended)
                     {
-                        score -= PieceValues[piece.Type] / 2;
+                        score -= PIECE_VALUES[piece.GetType()] / 2;
                     }
                 }
             }
             
             return score;
-        }
-
-        /// <summary>
-        /// Adjust search depth based on available time
-        /// </summary>
-        public void AdjustDepthForTime(int remainingTimeMs)
-        {
-            if (remainingTimeMs < 1000)
-                MAX_DEPTH = 2;
-            else if (remainingTimeMs < 5000)
-                MAX_DEPTH = 3;
-            else
-                MAX_DEPTH = 4;
         }
     }
 }

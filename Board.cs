@@ -15,6 +15,8 @@ namespace Chess
         private int _squareSize;
         private King _whiteKing;
         private King _blackKing;
+        private HashSet<Position> _frozenSquares;
+        private SpellManager _spellManager;
         
         public bool IsGameOver { get; set; }
         public Sound CurrentSound { get; set; }
@@ -22,7 +24,7 @@ namespace Chess
         public HashSet<Piece> Pieces
         {
             get => _pieces;
-            set => _pieces = value;
+            private set => _pieces = value;
         }
         public HashSet<Circle> BoardHighlights
         {
@@ -47,6 +49,8 @@ namespace Chess
             _boardDrawer = BoardRenderer.GetInstance(squareSize, startX, startY, lightColor, darkColor);
             _whiteKing = FindKing(Player.White);
             _blackKing = FindKing(Player.Black);
+            _frozenSquares = new HashSet<Position>();
+            _spellManager = new SpellManager();
             GameResult = GameResult.Ongoing;
         }
         public static Board GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
@@ -112,14 +116,87 @@ namespace Chess
                 .Any(move => move.To == king.Position);
         }
 
+        public void InitializeSpells(Player player)
+        {
+            _spellManager.InitializeSpells(player);
+        }
+
+        public bool HasUnusedSpell(Player player, SpellType type)
+        {
+            return _spellManager.HasUnusedSpell(player, type);
+        }
+
+        public void UseSpell(Player player, SpellType type)
+        {
+            _spellManager.UseSpell(player, type);
+        }
+
+        public void ApplyFreezeSpell(Position center)
+        {
+            for (int rank = -1; rank <= 1; rank++)
+            {
+                for (int file = -1; file <= 1; file++)
+                {
+                    Position pos = new Position(center.File + file, center.Rank + rank);
+                    if (IsInside(pos))
+                    {
+                        _frozenSquares.Add(pos);
+                    }
+                }
+            }
+        }
+
+        public bool IsSquareFrozen(Position pos)
+        {
+            return _frozenSquares.Contains(pos);
+        }
+
+        public void ClearFrozenSquares()
+        {
+            _frozenSquares.Clear();
+        }
+
+        public bool CanTeleport(Piece piece, Position target)
+        {
+            if (!IsInside(target)) return false;
+            
+            // Check if there's a friendly piece between the current position and target
+            var currentPos = piece.Position;
+            var dx = target.File - currentPos.File;
+            var dy = target.Rank - currentPos.Rank;
+            var steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            
+            for (int i = 1; i < steps; i++)
+            {
+                var checkPos = new Position(
+                    currentPos.File + (dx * i) / steps,
+                    currentPos.Rank + (dy * i) / steps
+                );
+                
+                var pieceAtPos = GetPieceAt(checkPos);
+                if (pieceAtPos != null && pieceAtPos.Color == piece.Color)
+                {
+                    return true; // Found a friendly piece to teleport past
+                }
+            }
+            
+            return false;
+        }
+
         public HashSet<Move> GetAllyMoves(Player player)
         {
-            var piecesCopy = _pieces.ToHashSet(); // Create a copy of the collection
-            return piecesCopy
+            var piecesCopy = _pieces.ToHashSet();
+            var moves = piecesCopy
                 .Where(piece => piece.Color == player)
                 .SelectMany(piece => piece.GetLegalMoves())
                 .ToHashSet();
+
+            // Filter out moves to frozen squares
+            moves.RemoveWhere(move => IsSquareFrozen(move.To));
+
+            return moves;
         }
+
         public string GetFen()
         {
             StringBuilder fen = new StringBuilder();
@@ -185,5 +262,30 @@ namespace Chess
             return fen.ToString();
         }
 
+        public Position GetPositionFromPoint(Point2D point)
+        {
+            // Convert screen coordinates to board coordinates
+            int file = (int)((point.X - _boardDrawer.StartX) / _squareSize);
+            int rank = (int)((point.Y - _boardDrawer.StartY) / _squareSize);
+            return new Position(file, rank);
+        }
+
+        public Piece GetSelectedPiece()
+        {
+            return _pieces.FirstOrDefault(piece => piece.IsSelected);
+        }
+
+        public int GetSpellCount(Player player, SpellType type)
+        {
+            return _spellManager.GetSpellCount(player, type);
+        }
+
+        public void ResetBoard()
+        {
+            _pieces = PieceFactory.CreatePieces(this);
+            _boardHighlights.Clear();
+            _frozenSquares.Clear();
+            _backgroundOverlays = new Rectangle[3];
+        }
     }
 }

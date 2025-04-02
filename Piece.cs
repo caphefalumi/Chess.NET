@@ -11,6 +11,8 @@ namespace Chess
         public PieceType Type { get; }
         public Bitmap PieceImage;
         public Board MyBoard { get; }
+        public bool IsSelected { get; set; }
+
         public Piece(char pieceChar, Board board)
         {
             PieceChar = pieceChar;
@@ -20,6 +22,7 @@ namespace Chess
             PieceImage = new Bitmap(pieceColor.ToString() + PieceChar.ToString(), $"Resources\\Pieces\\{pieceColor.ToString() + PieceChar.ToString()}.png");
             HasMoved = false;
             MyBoard = board;
+            IsSelected = false;
         }
 
         public HashSet<Move> GetLegalMoves()

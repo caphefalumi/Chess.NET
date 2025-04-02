@@ -174,8 +174,8 @@ namespace Chess
 
         private void HighlightButton(Button button)
         {
-            Rectangle highlightRect = new Rectangle(Color.Green, button.Rect.X - 5, button.Rect.Y - 5,
-                                                    button.Rect.Width + 10, button.Rect.Height + 10);
+            Rectangle highlightRect = new Rectangle(Color.Green, button.X - 5, button.Y - 5,
+                                                    button.Width + 10, button.Height + 10);
             highlightRect.Draw();
         }
 

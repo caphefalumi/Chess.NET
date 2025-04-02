@@ -1,0 +1,324 @@
+@startuml Chess Project Overview
+
+' Main Game Components
+class Game {
+  -ScreenState _currentState
+  -Board _board
+  -Window _window
+  -MatchState _GameState
+  +Game(string title, int width, int height)
+  +MatchState GetGameState()
+  +void ChangeState(ScreenState newState)
+  +void Run()
+}
+
+enum Variant {
+  TwoPlayer
+  Computer
+  SpellChess
+  Custom
+}
+
+enum GameResult {
+  Ongoing
+  Win
+  Draw
+}
+
+' Board and Rendering
+class Board {
+  -HashSet<Piece> _pieces
+  -HashSet<Circle> _boardHighlights
+  -Rectangle[] _backgroundOverlays
+  -static Board _instance
+  -BoardRenderer _boardDrawer
+  -King _whiteKing
+  -King _blackKing
+  -HashSet<Position> _frozenSquares
+  -SpellManager _spellManager
+  +bool IsGameOver
+  +Sound CurrentSound
+  +HashSet<Piece> Pieces
+  +GameResult GameResult
+  +MatchState MatchState
+  +Piece GetPieceAt(Position pos)
+  +bool IsEmpty(Position pos)
+  +bool IsInCheck(Player player)
+}
+
+class BoardRenderer {
+  -static BoardRenderer _instance
+  +void Draw()
+  +void Draw(HashSet<Piece> pieces)
+  +void Draw(HashSet<Circle> highlights)
+}
+
+' Pieces
+interface IPiece {
+  +string Name
+  +string Color
+  +Position Position
+  +bool HasMoved
+  +IEnumerable<Position> GetMoves()
+}
+
+abstract class Piece {
+  +Player Color
+  +Position Position
+  +bool HasMoved
+  +char PieceChar
+  +PieceType Type
+  +Bitmap PieceImage
+  +Board MyBoard
+  +bool IsSelected
+  +HashSet<Move> GetLegalMoves()
+  +{abstract} HashSet<Move> GetMoves()
+  +virtual IEnumerable<Move> GetAttackedSquares()
+  +void Draw()
+}
+
+class King extends Piece {
+  +override HashSet<Move> GetMoves()
+}
+
+class Queen extends Piece {
+  +override HashSet<Move> GetMoves()
+}
+
+class Rook extends Piece {
+  +override HashSet<Move> GetMoves()
+}
+
+class Bishop extends Piece {
+  +override HashSet<Move> GetMoves()
+}
+
+class Knight extends Piece {
+  +override HashSet<Move> GetMoves()
+}
+
+class Pawn extends Piece {
+  +override HashSet<Move> GetMoves()
+}
+
+abstract class SlidingPiece extends Piece {
+  +override HashSet<Move> GetMoves()
+}
+
+enum PieceType {
+  Pawn
+  Rook
+  Knight
+  Bishop
+  Queen
+  King
+}
+
+' Move System
+abstract class Move {
+  +{abstract} MoveType Type
+  +{abstract} Position From
+  +{abstract} Position To
+  +{abstract} Piece MovedPiece
+  +{abstract} Piece CapturedPiece
+  +{abstract} void Execute(Board board, bool isSimulation)
+  +{abstract} void Undo(Board board, bool isSimulation)
+}
+
+enum MoveType {
+  Normal
+  CastleKS
+  CastleQS
+  DoublePawn
+  EnPassant
+  Promotion
+}
+
+class NormalMove extends Move {
+  +override MoveType Type
+  +override Position From
+  +override Position To
+  +override Piece MovedPiece
+  +override Piece CapturedPiece
+}
+
+class CastleMove extends Move {
+  +override MoveType Type
+  +override void Execute(Board board, bool isSimulation)
+}
+
+class EnPassantMove extends Move {
+  +override MoveType Type
+  +override void Execute(Board board, bool isSimulation)
+}
+
+class DoublePawnMove extends Move {
+  +override MoveType Type
+  +override void Execute(Board board, bool isSimulation)
+}
+
+class PromotionMove extends Move {
+  +override MoveType Type
+  +override void Execute(Board board, bool isSimulation)
+}
+
+' Positioning
+class Position {
+  +int Rank
+  +int File
+  +Position(int file, int rank)
+  +Position Copy()
+  +bool Equals(object obj)
+}
+
+class Direction {
+  +int DeltaX
+  +int DeltaY
+  +static Direction North
+  +static Direction South
+  +static Direction East
+  +static Direction West
+  +static Direction NorthEast
+  +static Direction NorthWest
+  +static Direction SouthEast
+  +static Direction SouthWest
+}
+
+' UI Components
+interface IDrawable {
+  +void Draw()
+}
+
+abstract class ScreenState {
+  +void HandleInput()
+  +void Render()
+  +void Update()
+}
+
+class MainMenuState extends ScreenState {
+}
+
+class GameplayScreen extends ScreenState {
+}
+
+class BoardSetupScreen extends ScreenState {
+}
+
+class TimeSelectionState extends ScreenState {
+}
+
+class VariantSelectionScreen extends ScreenState {
+}
+
+class MatchState {
+  -Board _board
+  -Player _currentPlayer
+  -static MatchState _instance
+  -Move _lastMove
+  -Clock _whiteClock
+  -Clock _blackClock
+  +Player CurrentPlayer
+  +bool GameStarted
+  +void MakeMove(Move move)
+  +bool IsLegalMove(Move move)
+  +bool MoveResolvesCheck(Move move, Player player)
+}
+
+' Spell System
+class SpellManager {
+  -Dictionary<Player, Dictionary<SpellType, int>> _spells
+  +void InitializeSpells(Player player)
+  +bool HasUnusedSpell(Player player, SpellType type)
+  +void UseSpell(Player player, SpellType type)
+}
+
+enum SpellType {
+  Freeze
+  Teleport
+  Revive
+}
+
+class Spell {
+  +SpellType Type
+  +Player Owner
+  +bool IsUsed
+  +void Use()
+}
+
+' Factories
+class PieceFactory {
+  +static HashSet<Piece> CreatePieces(Board board)
+  +static PieceType GetPieceType(char pieceChar)
+}
+
+class VariantFactory {
+  +static IVariantStrategy CreateVariant(Variant variant)
+}
+
+interface IVariantStrategy {
+  +void SetupMatch(MatchConfiguration config)
+  +void HandleTurn(MatchState state)
+}
+
+' Utility Components
+class Clock {
+  -int _initialSeconds
+  -long _remainingMillis
+  -long _lastUpdateTime
+  +bool IsRunning
+  +void Start()
+  +void Stop()
+  +void Reset()
+  +string GetTimeString()
+}
+
+class Timer {
+  -int _durationMillis
+  -long _startTimeMillis
+  -bool _isRunning
+  +void Start(int durationMillis)
+  +void Stop()
+  +bool IsFinished()
+}
+
+' Shape Components
+interface IShape {
+  +void Draw()
+}
+
+abstract class Shape {
+  +Color Color
+  +{abstract} void Draw()
+}
+
+class Circle extends Shape {
+  +float X
+  +float Y
+  +float Radius
+  +override void Draw()
+}
+
+class Rectangle extends Shape {
+  +float X
+  +float Y
+  +float Width
+  +float Height
+  +override void Draw()
+}
+
+' Relationships
+Game --> Board : contains
+Game --> ScreenState : manages
+Board --> BoardRenderer : uses
+Board --> Piece : contains
+Piece ..> Move : creates
+Board --> MatchState : contains
+MatchState --> Clock : uses
+Piece --> Position : uses
+Board --> SpellManager : uses
+SpellManager --> Spell : manages
+PieceFactory ..> Piece : creates
+VariantFactory ..> IVariantStrategy : creates
+Board --> Shape : contains
+
+@enduml 

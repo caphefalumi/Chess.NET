@@ -44,7 +44,10 @@
             board.Pieces.Remove(_promotedPiece);
             MovedPiece.Position = From;
             board.Pieces.Add(MovedPiece);
-            board.Pieces.Add(_capturedPiece);
+            if (_capturedPiece != null)
+            {
+                board.Pieces.Add(_capturedPiece);
+            }
         }
     }
 }

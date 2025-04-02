@@ -55,8 +55,9 @@ namespace Chess
             {
                 SplashKit.ProcessEvents();
                 _currentState.HandleInput();
-                _currentState.Update();
                 _currentState.Render();
+                _currentState.Update();
+
             }
         }
     }
