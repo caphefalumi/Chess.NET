@@ -15,8 +15,6 @@ namespace Chess
         private int _squareSize;
         private King _whiteKing;
         private King _blackKing;
-        private HashSet<Position> _frozenSquares;
-        private SpellManager _spellManager;
         
         public bool IsGameOver { get; set; }
         public Sound CurrentSound { get; set; }
@@ -49,8 +47,6 @@ namespace Chess
             _boardDrawer = BoardRenderer.GetInstance(squareSize, startX, startY, lightColor, darkColor);
             _whiteKing = FindKing(Player.White);
             _blackKing = FindKing(Player.Black);
-            _frozenSquares = new HashSet<Position>();
-            _spellManager = new SpellManager();
             GameResult = GameResult.Ongoing;
         }
         public static Board GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
@@ -116,72 +112,7 @@ namespace Chess
                 .Any(move => move.To == king.Position);
         }
 
-        public void InitializeSpells(Player player)
-        {
-            _spellManager.InitializeSpells(player);
-        }
-
-        public bool HasUnusedSpell(Player player, SpellType type)
-        {
-            return _spellManager.HasUnusedSpell(player, type);
-        }
-
-        public void UseSpell(Player player, SpellType type)
-        {
-            _spellManager.UseSpell(player, type);
-        }
-
-        public void ApplyFreezeSpell(Position center)
-        {
-            for (int rank = -1; rank <= 1; rank++)
-            {
-                for (int file = -1; file <= 1; file++)
-                {
-                    Position pos = new Position(center.File + file, center.Rank + rank);
-                    if (IsInside(pos))
-                    {
-                        _frozenSquares.Add(pos);
-                    }
-                }
-            }
-        }
-
-        public bool IsSquareFrozen(Position pos)
-        {
-            return _frozenSquares.Contains(pos);
-        }
-
-        public void ClearFrozenSquares()
-        {
-            _frozenSquares.Clear();
-        }
-
-        public bool CanTeleport(Piece piece, Position target)
-        {
-            if (!IsInside(target)) return false;
-            
-            // Check if there's a friendly piece between the current position and target
-            Position currentPos = piece.Position;
-            int dx = target.File - currentPos.File;
-            int dy = target.Rank - currentPos.Rank;
-            int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
-            
-            for (int i = 1; i < steps; i++)
-            {
-                Position checkPos = new Position(
-                    currentPos.File + (dx * i) / steps,
-                    currentPos.Rank + (dy * i) / steps
-                );
-                
-                Piece pieceAtPos = GetPieceAt(checkPos);
-                if (pieceAtPos != null && pieceAtPos.Color == piece.Color)
-                {
-                    return true; // Found a friendly piece to teleport past
-                }
-            }
-            
-            return false;
-        }
+     
 
         public HashSet<Move> GetAllyMoves(Player player)
         {
@@ -191,8 +122,6 @@ namespace Chess
                 .SelectMany(piece => piece.GetLegalMoves())
                 .ToHashSet();
 
-            // Filter out moves to frozen squares
-            moves.RemoveWhere(move => IsSquareFrozen(move.To));
 
             return moves;
         }
@@ -267,17 +196,96 @@ namespace Chess
             return _pieces.FirstOrDefault(piece => piece.IsSelected);
         }
 
-        public int GetSpellCount(Player player, SpellType type)
-        {
-            return _spellManager.GetSpellCount(player, type);
-        }
-
         public void ResetBoard()
         {
+            // Reset pieces to initial position
             _pieces = PieceFactory.CreatePieces(this);
+            
+            // Clear highlights and overlays
             _boardHighlights.Clear();
-            _frozenSquares.Clear();
             _backgroundOverlays = new Rectangle[3];
+            
+            // Reset kings reference
+            _whiteKing = FindKing(Player.White);
+            _blackKing = FindKing(Player.Black);
+            
+            // Reset game state
+            GameResult = GameResult.Ongoing;
+            IsGameOver = false;
+            
+            // Recreate MatchState with default settings
+            if (MatchState != null)
+            {
+                MatchState = MatchState.GetInstance(this, Player.White);
+            }
+        }
+
+        public void UpdateFromFen(string fen)
+        {
+            // Clear current pieces
+            _pieces.Clear();
+
+            // Split FEN into components
+            string[] parts = fen.Split(' ');
+            if (parts.Length < 4) return;
+
+            string position = parts[0];
+            string activeColor = parts[1];
+            string castling = parts[2];
+            string enPassant = parts[3];
+
+            // Parse position
+            int rank = 7;
+            int file = 0;
+
+            foreach (char c in position)
+            {
+                if (c == '/')
+                {
+                    rank--;
+                    file = 0;
+                    continue;
+                }
+
+                if (char.IsDigit(c))
+                {
+                    file += c - '0';
+                    continue;
+                }
+
+                // Create piece based on character
+                Piece piece = null;
+                char pieceChar = char.ToUpper(c);
+                bool isWhite = char.IsUpper(c);
+
+                switch (pieceChar)
+                {
+                    case 'P': piece = new Pawn(isWhite ? 'P' : 'p', new Position(file, rank), this); break;
+                    case 'N': piece = new Knight(isWhite ? 'N' : 'n', new Position(file, rank), this); break;
+                    case 'B': piece = new Bishop(isWhite ? 'B' : 'b', new Position(file, rank), this); break;
+                    case 'R': piece = new Rook(isWhite ? 'R' : 'r', new Position(file, rank), this); break;
+                    case 'Q': piece = new Queen(isWhite ? 'Q' : 'q', new Position(file, rank), this); break;
+                    case 'K': piece = new King(isWhite ? 'K' : 'k', new Position(file, rank), this); break;
+                }
+
+                if (piece != null)
+                {
+                    _pieces.Add(piece);
+                    if (piece is King)
+                    {
+                        if (isWhite)
+                            _whiteKing = (King)piece;
+                        else
+                            _blackKing = (King)piece;
+                    }
+                }
+
+                file++;
+            }
+
+            // Create a new MatchState instance with the correct player
+            Player startingPlayer = activeColor == "w" ? Player.White : Player.Black;
+            MatchState.GetInstance(this, startingPlayer);
         }
     }
 }

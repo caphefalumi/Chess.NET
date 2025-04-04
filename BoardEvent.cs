@@ -7,6 +7,16 @@ namespace Chess
         private static readonly Dictionary<Position, Move> _moveBuffer = new Dictionary<Position, Move>();
         private static Piece _selectedPiece;
         private static Board _board;
+        private static NetworkChessManager _networkManager;
+        private static bool _isWaitingForOpponent;
+
+        public static void Initialize(Board board)
+        {
+            _board = board;
+            _networkManager = NetworkChessManager.GetInstance();
+            _isWaitingForOpponent = false;
+        }
+
         private static Position GetClickedSquare()
         {
             int file = (int)SplashKit.MouseX() / 80;
@@ -48,6 +58,13 @@ namespace Chess
                     GameplayScreen.SwitchTurn();
                     CheckGameResult();
                     _board.CurrentSound.Play();
+
+                    // Send FEN to opponent in network mode after a move is made
+                    if (_networkManager != null && _networkManager.IsConnected)
+                    {
+                        _networkManager.SendFEN(_board.GetFen());
+                        _isWaitingForOpponent = true;
+                    }
                 }
             }
             else if (_board.GetPieceAt(pos)?.Color == _board.MatchState.CurrentPlayer)
@@ -156,7 +173,6 @@ namespace Chess
                     {
                         pawn.CanBeEnpassant = false;
                     }
-
                 }
             }
             _board.MatchState.MakeMove(move);
@@ -222,6 +238,12 @@ namespace Chess
 
                 // If promotion menu is active, don't handle board clicks
                 if (GameplayScreen.PromotionFlag)
+                {
+                    return;
+                }
+
+                // If waiting for opponent's move, don't handle clicks
+                if (_isWaitingForOpponent)
                 {
                     return;
                 }

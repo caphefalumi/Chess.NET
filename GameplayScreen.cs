@@ -40,31 +40,21 @@ namespace Chess
         private Button _undoButton;
         private Button _resetButton;
         private Button _gameOverNewGameButton;
-        private Button _teleportSpellButton;
-        private Button _freezeSpellButton;
         private static Clock _clock;
         private MatchState _gameState;
         private static bool _gameOver;
         private static string _gameOverMessage;
-        private Stopwatch _botThinkTimer; // Timer to control bot thinking
-        private bool _botIsThinking = false; // Flag to indicate bot is "thinking"
-        private bool _isSpellMode = false;
-        private SpellType _selectedSpell;
+        private Stopwatch _botThinkTimer;
+        private bool _botIsThinking = false;
         public static bool PromotionFlag;
         private static bool _showPromotionMenu;
         private static Move _promotionMove;
         private static Player _promotionColor;
         private static Dictionary<PieceType, Bitmap> _promotionPieces;
-        private static Dictionary<PieceType, Rectangle> _promotionButtons;  // Add this for click detection
-
-        // Spell UI Resources
-        private Bitmap _teleportBottleImage;
-        private Bitmap _freezeBottleImage;
-
-        private TextLabel _statusLabel; // Using our custom TextLabel class
-
-        // Add a field for ComputerStrategyManager at the top of the class
-        private ComputerStrategyManager _computerStrategy;
+        private static Dictionary<PieceType, Rectangle> _promotionButtons;
+        private TextLabel _statusLabel;
+        private ChessBot _chessBot;
+        private NetworkChessManager _networkManager;
 
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {
@@ -83,37 +73,52 @@ namespace Chess
             _resetButton = new Button("Reset", 610, 90, 80, 30);
             _gameOverNewGameButton = new Button("New Game", 250, 470, 200, 50);
             
-            // Setup spell buttons
-            _teleportSpellButton = new Button("Teleport", 610, 130, 80, 30);
-            _freezeSpellButton = new Button("Freeze", 610, 170, 80, 30);
-            
-            // Setup status label - using custom TextLabel class
+            // Setup status label
             _statusLabel = new TextLabel("", 610, 220, 120, 60);
 
             _gameOver = false;
             _gameOverMessage = "";
 
-            // Load spell bottle images
-            _teleportBottleImage = SplashKit.LoadBitmap("TeleportBottle", "Resources/Spell/Teleport_bottle.png");
-            _freezeBottleImage = SplashKit.LoadBitmap("FreezeBottle", "Resources/Spell/Freeze_bottle.png");
-            
             // Initialize AI if in computer mode
             if (config.Mode == Variant.Computer)
             {
                 _botThinkTimer = new Stopwatch();
-                
-                // Initialize the ComputerStrategyManager
-                _computerStrategy = new ComputerStrategyManager();
+                _chessBot = new ChessBot(_board);
             }
 
-            // Initialize spells for both players
-            _board.InitializeSpells(Player.White);
-            _board.InitializeSpells(Player.Black);
+            // Initialize network manager if in network mode
+            if (config.Mode == Variant.Network)
+            {
+                _networkManager = NetworkChessManager.GetInstance();
+                _networkManager.Initialize(_game, _board, _config, OnFenReceived);
+                if (_networkManager.IsServer)
+                {
+                    _networkManager.StartServer();
+                }
+                else
+                {
+                    string serverIP = _networkManager.DiscoverServerIP();
+                    if (serverIP != null)
+                    {
+                        _networkManager.StartClient(serverIP);
+                    }
+                    else
+                    {
+                        UpdateStatusLabel("No server found");
+                    }
+                }
+            }
+
+            // Initialize BoardEvent with network manager
+            BoardEvent.Initialize(_board);
 
             _clock.Start();
-
-            // Subscribe to time expiration event
             _clock.OnTimeExpired += DeclareGameOver;
+        }
+
+        private void OnFenReceived(string fen)
+        {
+            _board.UpdateFromFen(fen);
         }
 
         public override void HandleInput()
@@ -131,110 +136,40 @@ namespace Chess
             // Then check for promotion menu
             if (_showPromotionMenu && SplashKit.MouseClicked(MouseButton.LeftButton))
             {
-                HandlePromotionSelection(); // If promotion menu is active, don't handle other inputs
+                HandlePromotionSelection();
+                return;
             }
 
             // Handle menu buttons
-            if (_menuButton.IsClicked())
+            if (_menuButton.IsClicked() || SplashKit.KeyTyped(KeyCode.EscapeKey))
             {
+                _networkManager?.Cleanup();
+                ResetBoard();
                 _game.ChangeState(new MainMenuState(_game, _board));
                 return;
             }
-            else if (_undoButton.IsClicked() || SplashKit.KeyTyped(KeyCode.ZKey))
+
+            if (_undoButton.IsClicked() || SplashKit.KeyTyped(KeyCode.ZKey))
             {
                 BoardEvent.HandleUndo();
                 _clock.CurrentTurn = _gameState.CurrentPlayer;
-
-                // If it's now computer's turn after undo, reset thinking state
                 if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black)
                 {
                     _botIsThinking = false;
                 }
                 return;
             }
-            else if (_resetButton.IsClicked() || SplashKit.KeyTyped(KeyCode.RKey))
+
+            if (_resetButton.IsClicked() || SplashKit.KeyTyped(KeyCode.RKey))
             {
                 ResetBoard();
                 return;
             }
 
-            // Handle spell buttons in Spell Chess mode
-            if (_config.Mode == Variant.SpellChess)
-            {
-                if (_teleportSpellButton.IsClicked())
-                {
-                    if (_board.HasUnusedSpell(_gameState.CurrentPlayer, SpellType.Teleport))
-                    {
-                        _isSpellMode = true;
-                        _selectedSpell = SpellType.Teleport;
-                    }
-                }
-                else if (_freezeSpellButton.IsClicked())
-                {
-                    if (_board.HasUnusedSpell(_gameState.CurrentPlayer, SpellType.Freeze))
-                    {
-                        _isSpellMode = true;
-                        _selectedSpell = SpellType.Freeze;
-                    }
-                }
-            }
-
-            // Handle human input - only if it's not the computer's turn or not in computer mode
+            // Handle human input - only if it's not waiting for opponent or computer's turn
             if (!_botIsThinking && (_config.Mode != Variant.Computer || _gameState.CurrentPlayer == Player.White))
             {
-                if (_isSpellMode)
-                {
-                    HandleSpellInput();
-                }
-                else
-                {
-                    BoardEvent.HandleMouseEvents(_board, _gameState);
-                }
-            }
-        }
-
-        private void HandleSpellInput()
-        {
-            if (SplashKit.MouseClicked(MouseButton.LeftButton))
-            {
-                Point2D clickPoint = new Point2D() { X = SplashKit.MouseX(), Y = SplashKit.MouseY() };
-                Position targetPos = _board.GetPositionFromPoint(clickPoint);
-
-                if (targetPos != null)
-                {
-                    if (_selectedSpell == SpellType.Teleport)
-                    {
-                        Piece selectedPiece = _board.GetSelectedPiece();
-                        if (selectedPiece != null && _board.CanTeleport(selectedPiece, targetPos))
-                        {
-                            _board.UseSpell(_gameState.CurrentPlayer, SpellType.Teleport);
-                            
-                            NormalMove move = new NormalMove(selectedPiece.Position, targetPos, selectedPiece);
-                            BoardEvent.HandleMove(move);
-                            _isSpellMode = false;
-                            
-                            // Switch turns
-                            _clock.SwitchTurn();
-                        }
-                    }
-                    else if (_selectedSpell == SpellType.Freeze)
-                    {
-                        _board.UseSpell(_gameState.CurrentPlayer, SpellType.Freeze);
-                        
-                        
-                        _board.ApplyFreezeSpell(targetPos);
-                        _isSpellMode = false;
-                        
-                        // Switch turns
-                        _clock.SwitchTurn();
-                    }
-                }
-            }
-            
-            // Allow canceling spell mode with right-click
-            if (SplashKit.MouseClicked(MouseButton.RightButton))
-            {
-                _isSpellMode = false;
+                BoardEvent.HandleMouseEvents(_board, _gameState);
             }
         }
 
@@ -250,58 +185,58 @@ namespace Chess
             _undoButton.Update();
             _resetButton.Update();
             
-            if (_config.Mode == Variant.SpellChess)
-            {
-                _teleportSpellButton.Update();
-                _freezeSpellButton.Update();
-            }
-
             // Update clock
             _clock.CurrentTurn = _gameState.CurrentPlayer;
             _clock.Update();
+
+            // Network mode updates
+            if (_config.Mode == Variant.Network && _networkManager != null)
+            {
+                if (_networkManager.IsConnected)
+                {
+                    UpdateStatusLabel("Connected");
+                }
+                else
+                {
+                    UpdateStatusLabel("Disconnected");
+                }
+            }
 
             // Computer Move Logic
             if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black && !_botIsThinking)
             {
                 _botIsThinking = true;
                 _botThinkTimer.Restart();
-
-                // Call the synchronous GetBestMove method
-                Dictionary<string, object> result = _computerStrategy.GetBestMove(_board.GetFen());
-                if (result.ContainsKey("error"))
+                
+                // Use Task.Run to not block the UI thread
+                Task.Run(async () =>
                 {
-                    UpdateStatusLabel($"Error: {result["error"]}");
-                }
-                else
-                {
-                    string bestMove = result["move"].ToString();
-                    if (!string.IsNullOrEmpty(bestMove))
+                    try
                     {
-                        // Convert the string move to a Move object
-                        Move move = ConvertStringToMove(bestMove, result["flags"].ToString());
-                        if (move != null)
+                        // Get best move directly from ChessBot
+                        Move bestMove = await _chessBot.GetBestMove();
+                        
+                        if (bestMove != null)
                         {
-                            _gameState.MakeMove(move);
+                            // Execute the move on the board
+                            _gameState.MakeMove(bestMove);
                             _clock.SwitchTurn();
                             BoardEvent.CheckGameResult();
-                            _botIsThinking = false; // Stop further requests
                         }
                         else
                         {
-                            UpdateStatusLabel("Invalid move received from API.");
+                            UpdateStatusLabel("Failed to get move from engine.");
                         }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        UpdateStatusLabel("Failed to get move from API.");
+                        UpdateStatusLabel($"Error: {ex.Message}");
                     }
-                }
-            }
-
-            // Special logic for Spell Chess mode
-            if (_config.Mode == Variant.SpellChess)
-            {
-                HandleSpellChessLogic();
+                    finally
+                    {
+                        _botIsThinking = false;
+                    }
+                });
             }
         }
 
@@ -352,21 +287,6 @@ namespace Chess
             _undoButton.Draw();
             _resetButton.Draw();
             
-            // Draw spell buttons if in spell chess mode
-            if (_config.Mode == Variant.SpellChess)
-            {
-                _teleportSpellButton.Draw();
-                _freezeSpellButton.Draw();
-
-                // Visual feedback for selected spell in spell mode
-                if (_isSpellMode)
-                {
-                    Button selectedButton = _selectedSpell == SpellType.Teleport ? 
-                        _teleportSpellButton : _freezeSpellButton;
-                    SplashKit.DrawRectangle(Color.Yellow, selectedButton.X - 2, selectedButton.Y - 2, 
-                        selectedButton.Width + 4, selectedButton.Height + 4);
-                }
-            }
 
             // Draw game over message if applicable
             if (_gameOver)
@@ -412,24 +332,6 @@ namespace Chess
             SplashKit.DrawRectangle(Color.Gray, x - 5, y - 5, 90, 30);
             SplashKit.DrawText(playerName, textColor, x, y);
             
-            if (_config.Mode == Variant.SpellChess)
-            {
-                // Draw teleport bottle and count
-                int teleportCount = _board.GetSpellCount(player, SpellType.Teleport);
-                SplashKit.DrawText($"x{teleportCount}", Color.Black, x + 110, y + 5);
-                SplashKit.DrawBitmap(_teleportBottleImage, x + 80, y, SplashKit.OptionScaleBmp(0.5, 0.5));
-                
-                // Draw freeze bottle and count
-                int freezeCount = _board.GetSpellCount(player, SpellType.Freeze);
-                SplashKit.DrawText($"x{freezeCount}", Color.Black, x + 170, y + 5);
-                SplashKit.DrawBitmap(_freezeBottleImage, x + 140, y, SplashKit.OptionScaleBmp(0.5, 0.5));
-                
-                // Highlight current player
-                if (_gameState.CurrentPlayer == player && !_gameOver)
-                {
-                    SplashKit.DrawRectangle(Color.YellowGreen, x - 5, y - 5, 90, 30);
-                }
-            }
         }
 
         private void DrawTimeDisplay(Player player, string timeStr, int x, int y)
@@ -445,8 +347,8 @@ namespace Chess
             {
                 Variant.TwoPlayer => "Two Player Mode",
                 Variant.Computer => "Computer Mode",
-                Variant.SpellChess => "Spell Chess Mode",
                 Variant.Custom => "Custom Mode",
+                Variant.Network => "Network Mode",
                 _ => "Chess"
             };
         }
@@ -473,12 +375,13 @@ namespace Chess
             int menuX = 160; // Center horizontally (640/2 - 320/2)
             int menuY = 280; // Center vertically (640/2 - 80/2)
 
+            // Use existing piece bitmap images instead of creating new ones
             _promotionPieces = new Dictionary<PieceType, Bitmap>
             {
-                { PieceType.Queen, new Bitmap("wQ", $"Resources\\Pieces\\wQ.png") },
-                { PieceType.Rook, new Bitmap("wR", $"Resources\\Pieces\\wR.png") },
-                { PieceType.Bishop, new Bitmap("wB", $"Resources\\Pieces\\wB.png") },
-                { PieceType.Knight, new Bitmap("wN", $"Resources\\Pieces\\wN.png") }
+                { PieceType.Queen, GetPieceBitmap(PieceType.Queen, color) },
+                { PieceType.Rook, GetPieceBitmap(PieceType.Rook, color) },
+                { PieceType.Bishop, GetPieceBitmap(PieceType.Bishop, color) },
+                { PieceType.Knight, GetPieceBitmap(PieceType.Knight, color) }
             };
 
             // Create transparent rectangles for click detection
@@ -491,26 +394,54 @@ namespace Chess
             };
         }
 
+        // Helper method to get piece bitmap without creating new bitmap objects
+        private static Bitmap GetPieceBitmap(PieceType pieceType, Player color)
+        {
+            // Get the piece character from the PieceFactory
+            char pieceChar = PieceFactory.GetPieceChar(pieceType, color);
+            
+            // Get the bitmap filename directly without creating a temporary piece
+            char pieceColor = (color == Player.White) ? 'w' : 'b';
+            string bitmapName = pieceColor.ToString() + pieceChar.ToString();
+            
+            // Try to load the bitmap using SplashKit's bitmap management
+            // This will reuse existing bitmaps rather than creating new ones
+            return SplashKit.LoadBitmap(bitmapName, $"Resources\\Pieces\\{bitmapName}.png");
+        }
+
         public override string GetStateName() => "GamePlay";
 
-        // Add a stub implementation for the ResetBoard method
         private void ResetBoard()
         {
+            // Reset the board using the OOP approach
             _board.ResetBoard();
-
+            
+            // Get a new game state
+            _gameState = _game.GetGameState();
+            _board.MatchState = _gameState;
+            
+            // Reset UI state
             _gameOver = false;
             _gameOverMessage = "";
             _botIsThinking = false;
-            _isSpellMode = false;
+            
+            // Reset clock
             _clock.Reset(_config.GetTimeSpan());
             _clock.Start();
-
-            // Reinitialize spells
-            _board.InitializeSpells(Player.White);
-            _board.InitializeSpells(Player.Black);
+            
+            // Send initial FEN in network mode
+            if (_config.Mode == Variant.Network && _networkManager != null && _networkManager.IsConnected)
+            {
+                _networkManager.SendFEN(_board.GetFen());
+            }
+            
+            // Clear UI selections and highlights
+            _board.BoardHighlights.Clear();
+            
+            // Update status message
+            UpdateStatusLabel("Game Reset");
         }
 
-        // Add a stub implementation for the HandlePromotionSelection method
         private void HandlePromotionSelection()
         {
             if (SplashKit.MouseClicked(MouseButton.LeftButton))
@@ -532,55 +463,9 @@ namespace Chess
             }
         }
 
-        // Add a stub implementation for the HandleSpellChessLogic method
-        private void HandleSpellChessLogic()
-        {
-            // Implementation of spell chess logic
-            // This might include updating spell effects, handling cooldowns, etc.
-        }
-
-        /// <summary>
-        /// Updates the status label with the provided text
-        /// </summary>
         private void UpdateStatusLabel(string text)
         {
             _statusLabel.Text = text;
-        }
-
-        /// <summary>
-        /// Converts a string move (e.g., "e2e4") to a Move object.
-        /// </summary>
-        private Move ConvertStringToMove(string moveStr, string flags)
-        {
-            if (string.IsNullOrEmpty(moveStr) || moveStr.Length < 4)
-            {
-                return null;
-            }
-
-            // Parse the move string
-            Position from = new Position(moveStr.Substring(0, 2)); // Assuming Position can be constructed from a string
-            Position to = new Position(moveStr.Substring(2, 2));
-
-            Piece movedPiece = _board.GetPieceAt(from);
-            if (movedPiece == null)
-            {
-                return null;
-            }
-
-            // Determine the type of move based on flags
-            if (flags.Contains("k") || flags.Contains("q"))
-            {
-                Console.WriteLine(flags.Contains("k") ? "Kingside castling" : "Queenside castling");
-                return new CastleMove(flags.Contains("k") ? MoveType.CastleKS : MoveType.CastleQS, from, (King)movedPiece);
-            }
-            if (flags.Contains("e") && movedPiece is Pawn)
-            {
-                Console.WriteLine("En passant capture");
-                return new EnPassantMove(from, to, (Pawn)movedPiece);
-            }
-
-            // Default to normal move
-            return new NormalMove(from, to, movedPiece);
         }
     }
 }

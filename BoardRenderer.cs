@@ -120,19 +120,6 @@ namespace Chess
                     Rectangle square = new Rectangle(squareColor, _startX + file * _squareSize, _startY + rank * _squareSize, _squareSize, _squareSize);
                     square.Draw();
 
-                    // Draw frozen square effect if applicable
-                    if (board.IsSquareFrozen(new Position(file, rank)))
-                    {
-                        // Create a custom semitransparent blue color (light blue for better visibility)
-                        Color freezeColor = Color.LightBlue;
-                        Rectangle frozenOverlay = new Rectangle(freezeColor, _startX + file * _squareSize, _startY + rank * _squareSize, _squareSize, _squareSize);
-                        frozenOverlay.Draw();
-                        
-                        // Draw a snowflake symbol or pattern to indicate frozen square
-                        SplashKit.DrawText("❄", Color.White, 
-                            _startX + file * _squareSize + _squareSize/2 - 8, 
-                            _startY + rank * _squareSize + _squareSize/2 - 8);
-                    }
                 }
             }
             

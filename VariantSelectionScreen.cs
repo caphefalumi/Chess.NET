@@ -1,4 +1,4 @@
-﻿// VariantSelectionScreen.cs (Updated)
+﻿﻿// VariantSelectionScreen.cs (Updated)
 using SplashKitSDK;
 
 namespace Chess
@@ -9,7 +9,7 @@ namespace Chess
         private readonly Board _board;
         private readonly Button _twoPlayerButton;
         private readonly Button _computerButton;
-        private readonly Button _spellChessButton;
+        private readonly Button _onlineButton;
         private readonly Button _customModeButton;
         private readonly Button _backButton;
 
@@ -22,7 +22,7 @@ namespace Chess
 
             _twoPlayerButton = new Button("Two Player", centerX - 100, 200, 200, 50);
             _computerButton = new Button("Play Computer", centerX - 100, 270, 200, 50);
-            _spellChessButton = new Button("Spell Chess", centerX - 100, 340, 200, 50);
+            _onlineButton = new Button("Play Online", centerX - 100, 340, 200, 50);
             _customModeButton = new Button("Custom Setup", centerX - 100, 410, 200, 50);
             _backButton = new Button("Back", centerX - 100, 480, 200, 50);
         }
@@ -37,9 +37,9 @@ namespace Chess
             {
                 _game.ChangeState(new TimeSelectionScreen(_game, _board, Variant.Computer));
             }
-            else if (_spellChessButton.IsClicked())
+            else if (_onlineButton.IsClicked())
             {
-                _game.ChangeState(new TimeSelectionScreen(_game, _board, Variant.SpellChess));
+                _game.ChangeState(new TimeSelectionScreen(_game, _board, Variant.Online));
             }
             else if (_customModeButton.IsClicked())
             {
@@ -55,7 +55,7 @@ namespace Chess
         {
             _twoPlayerButton.Update();
             _computerButton.Update();
-            _spellChessButton.Update();
+            _onlineButton.Update();
             _customModeButton.Update();
             _backButton.Update();
         }
@@ -69,7 +69,7 @@ namespace Chess
 
             _twoPlayerButton.Draw();
             _computerButton.Draw();
-            _spellChessButton.Draw();
+            _onlineButton.Draw();
             _customModeButton.Draw();
             _backButton.Draw();
 

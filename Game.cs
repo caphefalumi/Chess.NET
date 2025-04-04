@@ -5,8 +5,9 @@ namespace Chess
     public enum Variant
     {
         TwoPlayer,
+        Network,
         Computer,
-        SpellChess,
+        Online,
         Custom
     }
     public enum GameResult

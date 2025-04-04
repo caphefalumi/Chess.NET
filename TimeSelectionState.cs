@@ -40,7 +40,7 @@ namespace Chess
             
             // Create time control buttons
             int index = 0;
-            foreach (TimeControl time in System.Enum.GetValues(typeof(TimeControl)))
+            foreach (TimeControl time in Enum.GetValues(typeof(TimeControl)))
             {
                 int x = 150 + (index % 4) * 110;
                 int rowY = y + (index / 4) * 70;

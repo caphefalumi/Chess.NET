@@ -8,8 +8,8 @@ namespace Chess
             return config.Mode switch
             {
                 Variant.TwoPlayer => new TwoPlayerMode(),
+                Variant.Online => new OnlineMode(),
                 Variant.Computer => new ComputerMode(),
-                Variant.SpellChess => new SpellChessMode(),
                 Variant.Custom => new CustomMode(),
                 _ => new TwoPlayerMode()
             };
