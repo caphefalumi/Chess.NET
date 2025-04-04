@@ -4,7 +4,7 @@
     {
         static void Main()
         {
-            Game game = new Game("Chess Game", 800, 700);
+            Game game = Game.GetInstance("Chess Game", 800, 700);
             game.Run();
         }
     }

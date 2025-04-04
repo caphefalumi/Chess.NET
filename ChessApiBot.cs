@@ -1,11 +1,5 @@
-using System;
-using System.Net.Http;
 using System.Text;
-using System.Collections.Generic;
-using System.Text.Json;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
-using System.Linq;
 
 namespace Chess
 {
@@ -14,83 +8,67 @@ namespace Chess
     /// </summary>
     public class ChessApiBot : IBot
     {
-        private readonly HttpClient _httpClient;
+        private static readonly HttpClient _httpClient = new HttpClient();
+        private const int DEFAULT_INTERNET_CHECK_TIMEOUT = 3000; // milliseconds
         private const string API_URL = "https://chess-api.com/v1";
 
-        public ChessApiBot()
+        public static async Task<bool> CheckForApiConnectionAsync(int timeoutMs = DEFAULT_INTERNET_CHECK_TIMEOUT)
         {
-            _httpClient = new HttpClient();
-        }
+            // Set timeout for the request
+            CancellationTokenSource cts = new CancellationTokenSource(timeoutMs);
+            
+            // Use HttpClient instead of WebRequest
+            HttpResponseMessage response = await _httpClient.GetAsync(API_URL, cts.Token);
+            return response.IsSuccessStatusCode;
 
+        }
+        
         public async Task<bool> IsAvailableAsync()
         {
-            try
-            {
-                // Check if we can connect to the API by performing a HEAD request
-                var request = new HttpRequestMessage(HttpMethod.Head, API_URL);
-                var response = await _httpClient.SendAsync(request);
-                return response.IsSuccessStatusCode;
-            }
-            catch
-            {
-                return false;
-            }
+            return await CheckForApiConnectionAsync();
         }
 
         public async Task<string> GetBestMoveAsync(string fen, int timeLimit = 1000)
         {
-            try
+            Console.WriteLine("Sending API request...");
+            Console.WriteLine($"FEN: {fen}");
+            Dictionary<string, object> request = new Dictionary<string, object>
             {
-                Console.WriteLine("Sending API request...");
-                Console.WriteLine($"FEN: {fen}");
+                { "fen", fen },
+                { "depth", 12 },
+                { "maxThinkingTime", timeLimit / 10 }
+            };
 
-                var requestData = new
-                {
-                    fen = fen,
-                    depth = 12,
-                    maxThinkingTime = timeLimit/10 // Default time setting from original code
-                };
+            string jsonRequest = JsonConvert.SerializeObject(request);
 
-                string jsonRequest = JsonConvert.SerializeObject(requestData);
-                StringContent content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+            StringContent content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
 
-                HttpResponseMessage response = await _httpClient.PostAsync(API_URL, content);
-                
-                if (!response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine($"API error: {response.StatusCode}");
-                    return null;
-                }
-
-                string responseString = await response.Content.ReadAsStringAsync();
-
-                Console.WriteLine("API Response:");
-                Console.WriteLine(responseString);
-
-                Dictionary<string, object> jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseString);
-
-                if (jsonResponse != null && jsonResponse.ContainsKey("move"))
-                {
-                    string move = jsonResponse["move"].ToString();
-                    Console.WriteLine($"Best move received: {move}");
-                    return move;
-                }
-                else
-                {
-                    Console.WriteLine("No valid move received from API.");
-                    return null;
-                }
+            HttpResponseMessage response = await _httpClient.PostAsync(API_URL, content);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"API error: {response.StatusCode}");
+                return null;
             }
-            catch (Exception ex)
+
+            string responseString = await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine("API Response:");
+            Console.WriteLine(responseString);
+
+            Dictionary<string, object> jsonResponse = JsonConvert.DeserializeObject<Dictionary<string, object>>(responseString);
+
+            if (jsonResponse != null && jsonResponse.ContainsKey("move"))
             {
-                Console.WriteLine($"Error getting best move from API: {ex.Message}");
+                string move = jsonResponse["move"].ToString();
+                Console.WriteLine($"Best move received: {move}");
+                return move;
+            }
+            else
+            {
+                Console.WriteLine("No valid move received from API.");
                 return null;
             }
         }
-
-        public void Dispose()
-        {
-            _httpClient?.Dispose();
-        }
     }
-} 
+}

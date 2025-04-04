@@ -7,10 +7,11 @@ namespace Chess
         private readonly Timer _whiteTimer;
         private readonly Timer _blackTimer;
         private Player _currentTurn;
+        private static Clock _instance;
 
         public event Action<string> OnTimeExpired;
 
-        public Clock(TimeSpan initialTime, TimeSpan increment)
+        private Clock(TimeSpan initialTime, TimeSpan increment)
         {
             _whiteTimer = new Timer(initialTime, increment);
             _blackTimer = new Timer(initialTime, increment);
@@ -19,6 +20,30 @@ namespace Chess
             _whiteTimer.OnTimeExpired += () => HandleTimeExpired(Player.White);
             _blackTimer.OnTimeExpired += () => HandleTimeExpired(Player.Black);
         }
+
+        public static Clock GetInstance(TimeSpan initialTime, TimeSpan increment)
+        {
+            if (_instance == null)
+            {
+                _instance = new Clock(initialTime, increment);
+            }
+            return _instance;
+        }
+        
+        public static Clock GetInstance()
+        {
+            if (_instance == null)
+            {
+                _instance = new Clock(TimeSpan.FromMinutes(10), TimeSpan.Zero);
+            }
+            return _instance;
+        }
+
+        private void HandleTimeExpired(Player player)
+        {
+            OnTimeExpired?.Invoke($"{player} ran out of time!");
+        }
+        
         public TimeSpan WhiteTime => _whiteTimer.TimeRemaining;
         public TimeSpan BlackTime => _blackTimer.TimeRemaining;
         public Player CurrentTurn
@@ -69,11 +94,6 @@ namespace Chess
         public string GetFormattedTime(Player player)
         {
             return player == Player.White ? _whiteTimer.GetFormattedTime() : _blackTimer.GetFormattedTime();
-        }
-
-        private void HandleTimeExpired(Player player)
-        {
-            OnTimeExpired?.Invoke($"{player} ran out of time");
         }
     }
 }

@@ -35,6 +35,17 @@ namespace Chess
             return _instance;
         }
 
+        // Alternative GetInstance method with no parameters
+        public static BoardRenderer GetInstance()
+        {
+            if (_instance == null)
+            {
+                // Default values if not already initialized
+                _instance = new BoardRenderer(80, 0, 0, Color.White, Color.Gray);
+            }
+            return _instance;
+        }
+
         private void DrawBoard()
         {
             for (int rank = 0; rank < 8; rank++)

@@ -1,18 +1,11 @@
-﻿using SplashKitSDK;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.NetworkInformation;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-
-namespace Chess
+﻿namespace Chess
 {
     public class King : Piece
     {
         private bool _isCheckingAttacks = false;
         public bool Castled { get; set; }
 
-        private static readonly Direction[] dirs = new Direction[]
+        private static readonly Direction[] dirs =
         {
             Direction.Up, Direction.Right, Direction.Left, Direction.Down,
             Direction.UpLeft, Direction.UpRight, Direction.DownLeft, Direction.DownRight
@@ -22,21 +15,6 @@ namespace Chess
         {
             Position = pos;
             Castled = false;
-        }
-
-        private HashSet<Move> GetAdjacentMoves()
-        {
-            HashSet<Move> moves = new HashSet<Move>();
-
-            foreach (Direction dir in dirs)
-            {
-                Position to = Position + dir;
-                if (CanMoveTo(to))
-                {
-                    moves.Add(new NormalMove(Position, to, this));
-                }
-            }
-            return moves;
         }
 
         private static bool IsRookHasMoved(Piece rook, Board board)
@@ -103,21 +81,12 @@ namespace Chess
         {
             HashSet<Move> moves = new HashSet<Move>();
             
-            // Normal king moves
-            foreach ((int, int) offset in new[] { 
-                (-1,-1), (-1,0), (-1,1),
-                (0,-1),          (0,1),
-                (1,-1),  (1,0),  (1,1) 
-            })
+            foreach (Direction dir in dirs)
             {
-                Position newPos = new(Position.File + offset.Item1, Position.Rank + offset.Item2);
-                if (Board.IsInside(newPos))
+                Position newPos = Position + dir;
+                if (CanMoveTo(newPos))
                 {
-                    Piece pieceAtDest = MyBoard.GetPieceAt(newPos);
-                    if (pieceAtDest == null || pieceAtDest.Color != Color)
-                    {
-                        moves.Add(new NormalMove(Position, newPos, this));
-                    }
+                    moves.Add(new NormalMove(Position, newPos, this));
                 }
             }
 
@@ -143,14 +112,9 @@ namespace Chess
         {
             HashSet<Move> moves = new HashSet<Move>();
             
-            // Only include basic king moves for attacked squares
-            foreach ((int, int) offset in new[] { 
-                (-1,-1), (-1,0), (-1,1),
-                (0,-1),          (0,1),
-                (1,-1),  (1,0),  (1,1) 
-            })
+            foreach (Direction dir in dirs)
             {
-                Position newPos = new(Position.File + offset.Item1, Position.Rank + offset.Item2);
+                Position newPos = Position + dir;
                 if (Board.IsInside(newPos))
                 {
                     moves.Add(new NormalMove(Position, newPos, this));

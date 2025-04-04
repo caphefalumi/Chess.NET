@@ -7,30 +7,6 @@ using System.Threading.Tasks;
 
 namespace Chess
 {
-    // Simple TextLabel class for displaying status messages
-    public class TextLabel
-    {
-        public string Text { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
-        
-        public TextLabel(string text, int x, int y, int width, int height)
-        {
-            Text = text;
-            X = x;
-            Y = y;
-            Width = width;
-            Height = height;
-        }
-        
-        public void Draw()
-        {
-            SplashKit.DrawText(Text, Color.DarkBlue, X, Y);
-        }
-    }
-    
     public class GameplayScreen : ScreenState
     {
         private readonly Game _game;
@@ -47,7 +23,6 @@ namespace Chess
         public static bool PromotionFlag;
         private static bool _showPromotionMenu;
         private static Move _promotionMove;
-        private static Player _promotionColor;
         private static Dictionary<PieceType, Bitmap> _promotionPieces;
         private static Dictionary<PieceType, Rectangle> _promotionButtons;
         private TextLabel _statusLabel;
@@ -63,8 +38,8 @@ namespace Chess
             _gameState = game.GetGameState();
             _board.MatchState = _gameState;
 
-            // Create the clock with the configured time settings
-            _clock = new Clock(config.GetTimeSpan(), config.GetIncrementSpan());
+            // Create the clock with the configured time settings using singleton pattern
+            _clock = Clock.GetInstance(config.GetTimeSpan(), config.GetIncrementSpan());
             
             // Setup UI buttons
             _menuButton = new Button("Menu", 610, 10, 80, 30);
@@ -81,7 +56,7 @@ namespace Chess
             // Initialize AI if in computer mode
             if (config.Mode == Variant.Computer)
             {
-                _chessBot = new ChessBot(_board);
+                _chessBot = ChessBot.GetInstance(_board, _gameState.CurrentPlayer);
             }
 
             // Initialize network manager if in network mode
@@ -365,7 +340,6 @@ namespace Chess
         {
             _showPromotionMenu = true;
             _promotionMove = move;
-            _promotionColor = color;
             PromotionFlag = true;
 
             // Center position of the board

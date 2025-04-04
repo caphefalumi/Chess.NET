@@ -10,10 +10,20 @@ namespace Chess
     public class Sound
     {
         private SoundEffect _soundEffect;
+        private static Dictionary<string, Sound> _instances = new Dictionary<string, Sound>();
 
-        public Sound(string fileName)
+        private Sound(string fileName)
         {
             _soundEffect = SplashKit.LoadSoundEffect(fileName, fileName);
+        }
+
+        public static Sound GetInstance(string fileName)
+        {
+            if (!_instances.ContainsKey(fileName))
+            {
+                _instances[fileName] = new Sound(fileName);
+            }
+            return _instances[fileName];
         }
 
         public void Stop()
@@ -26,5 +36,4 @@ namespace Chess
             _soundEffect.Play();
         }
     }
-
 }
