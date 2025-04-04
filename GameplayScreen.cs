@@ -44,8 +44,6 @@ namespace Chess
         private MatchState _gameState;
         private static bool _gameOver;
         private static string _gameOverMessage;
-        private Stopwatch _botThinkTimer;
-        private bool _botIsThinking = false;
         public static bool PromotionFlag;
         private static bool _showPromotionMenu;
         private static Move _promotionMove;
@@ -55,6 +53,7 @@ namespace Chess
         private TextLabel _statusLabel;
         private ChessBot _chessBot;
         private NetworkChessManager _networkManager;
+        private bool _botIsThinking = false;
 
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {
@@ -82,7 +81,6 @@ namespace Chess
             // Initialize AI if in computer mode
             if (config.Mode == Variant.Computer)
             {
-                _botThinkTimer = new Stopwatch();
                 _chessBot = new ChessBot(_board);
             }
 
@@ -118,7 +116,7 @@ namespace Chess
 
         private void OnFenReceived(string fen)
         {
-            _board.UpdateFromFen(fen);
+            _board.LoadFen(fen);
         }
 
         public override void HandleInput()
@@ -206,7 +204,6 @@ namespace Chess
             if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black && !_botIsThinking)
             {
                 _botIsThinking = true;
-                _botThinkTimer.Restart();
                 
                 // Use Task.Run to not block the UI thread
                 Task.Run(async () =>
@@ -378,35 +375,20 @@ namespace Chess
             // Use existing piece bitmap images instead of creating new ones
             _promotionPieces = new Dictionary<PieceType, Bitmap>
             {
-                { PieceType.Queen, GetPieceBitmap(PieceType.Queen, color) },
-                { PieceType.Rook, GetPieceBitmap(PieceType.Rook, color) },
-                { PieceType.Bishop, GetPieceBitmap(PieceType.Bishop, color) },
-                { PieceType.Knight, GetPieceBitmap(PieceType.Knight, color) }
+                { PieceType.Queen, Piece.GetPieceBitmap(PieceType.Queen, color) },
+                { PieceType.Rook, Piece.GetPieceBitmap(PieceType.Rook, color) },
+                { PieceType.Bishop, Piece.GetPieceBitmap(PieceType.Bishop, color) },
+                { PieceType.Knight, Piece.GetPieceBitmap(PieceType.Knight, color) }
             };
 
             // Create transparent rectangles for click detection
             _promotionButtons = new Dictionary<PieceType, Rectangle>
             {
-                { PieceType.Queen, new Rectangle(Color.RGBAColor(0,0,0,0), menuX, menuY, 80, 80) },
-                { PieceType.Rook, new Rectangle(Color.RGBAColor(0,0,0,0), menuX + 80, menuY, 80, 80) },
-                { PieceType.Bishop, new Rectangle(Color.RGBAColor(0,0,0,0), menuX + 160, menuY, 80, 80) },
-                { PieceType.Knight, new Rectangle(Color.RGBAColor(0,0,0,0), menuX + 240, menuY, 80, 80) }
+                { PieceType.Queen, new Rectangle(Color.Transparent, menuX, menuY, 80, 80) },
+                { PieceType.Rook, new Rectangle(Color.Transparent, menuX + 80, menuY, 80, 80) },
+                { PieceType.Bishop, new Rectangle(Color.Transparent, menuX + 160, menuY, 80, 80) },
+                { PieceType.Knight, new Rectangle(Color.Transparent, menuX + 240, menuY, 80, 80) }
             };
-        }
-
-        // Helper method to get piece bitmap without creating new bitmap objects
-        private static Bitmap GetPieceBitmap(PieceType pieceType, Player color)
-        {
-            // Get the piece character from the PieceFactory
-            char pieceChar = PieceFactory.GetPieceChar(pieceType, color);
-            
-            // Get the bitmap filename directly without creating a temporary piece
-            char pieceColor = (color == Player.White) ? 'w' : 'b';
-            string bitmapName = pieceColor.ToString() + pieceChar.ToString();
-            
-            // Try to load the bitmap using SplashKit's bitmap management
-            // This will reuse existing bitmaps rather than creating new ones
-            return SplashKit.LoadBitmap(bitmapName, $"Resources\\Pieces\\{bitmapName}.png");
         }
 
         public override string GetStateName() => "GamePlay";

@@ -9,8 +9,8 @@ namespace Chess
         private readonly Color _darkColor;
         private readonly int _startX;
         private readonly int _startY;
-        private Color _textColor = Color.Black; // Color for indices
-        private const int Margin = 20; // Space for indices
+        private readonly Color _textColor = Color.Black; // Color for indices
+        private const int MARGIN = 20; // Space for indices
 
         private static BoardRenderer _instance;
 
@@ -66,7 +66,7 @@ namespace Chess
                 SplashKit.DrawText(files[i], _textColor, "Arial", 16, fileX + 25, _startY + (8 * _squareSize) - 20);
 
                 // Draw rank numbers (left side)
-                SplashKit.DrawText((i + 1).ToString(), _textColor, "Arial", 16, _startX - Margin + 25, rankY + 15);
+                SplashKit.DrawText((i + 1).ToString(), _textColor, "Arial", 16, _startX - MARGIN + 25, rankY + 15);
             }
         }
 

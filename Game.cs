@@ -22,7 +22,7 @@ namespace Chess
         private ScreenState _currentState;
         private Board _board;
         private Window _window;
-        private MatchState _GameState;
+        private MatchState _gameState;
 
         public Game(string title, int width, int height)
         {
@@ -35,14 +35,14 @@ namespace Chess
             Color darkColor = SplashKit.RGBColor(209, 139, 71);
 
             _board = Board.GetInstance(squareSize, startX, startY, lightColor, darkColor);
-            _GameState = MatchState.GetInstance(_board, Player.White);
+            _gameState = MatchState.GetInstance(_board, Player.White);
 
             _currentState = new MainMenuState(this, _board);
         }
 
         public MatchState GetGameState()
         {
-            return _GameState;
+            return _gameState;
         }
 
         public void ChangeState(ScreenState newState)

@@ -14,7 +14,7 @@ namespace Chess
         private Process _stockfishProcess;
         private StreamWriter _writer;
         private StreamReader _reader;
-        private string STOCKFISH_PATH = "Resources/Scripts/stockfish-windows-x86-64-avx2.exe";
+        private const string STOCKFISH_PATH = "Resources/Scripts/stockfish-windows-x86-64-avx2.exe";
         private bool _isInitialized;
 
         public StockfishBot()

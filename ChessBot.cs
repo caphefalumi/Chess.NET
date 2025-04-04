@@ -138,12 +138,12 @@ namespace Chess
         // Helper methods for logging
         private void LogInfo(string message)
         {
-            Console.WriteLine(message);
+            Console.WriteLine($"[ChessBot] INFO: {message}");
         }
 
         private void LogError(string message)
         {
-            Console.WriteLine(message);
+            Console.WriteLine($"[ChessBot] ERROR: {message}");
         }
     }
 
@@ -164,7 +164,7 @@ namespace Chess
 
         public UciMoveConverter(Board board)
         {
-            _board = board ?? throw new ArgumentNullException(nameof(board));
+            _board = board;
         }
 
         public Move ConvertUciToMove(string uciMove)
@@ -188,7 +188,7 @@ namespace Chess
                 if (uciMove.Length == 5)
                 {
                     char promotionPiece = uciMove[4];
-                    return new PromotionMove(source, destination, piece, GetPromotionPieceType(promotionPiece));
+                    return new PromotionMove(source, destination, piece, PieceFactory.GetPieceType(promotionPiece));
                 }
 
                 // Check for castling
@@ -214,16 +214,5 @@ namespace Chess
             }
         }
 
-        private PieceType GetPromotionPieceType(char promotionChar)
-        {
-            return promotionChar switch
-            {
-                'q' => PieceType.Queen,
-                'r' => PieceType.Rook,
-                'b' => PieceType.Bishop,
-                'n' => PieceType.Knight,
-                _ => PieceType.Queen // Default to queen
-            };
-        }
     }
 }

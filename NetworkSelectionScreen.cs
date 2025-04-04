@@ -118,7 +118,7 @@ namespace Chess
 
         private void OnFenReceived(string fen)
         {
-            _board.UpdateFromFen(fen);
+            _board.LoadFen(fen);
         }
 
         public override string GetStateName() => "NetworkSelection";

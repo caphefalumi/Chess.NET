@@ -4,7 +4,7 @@ namespace Chess
 {
     public class Timer
     {
-        private TimeSpan _clockemaining;
+        private TimeSpan _clockRemaining;
         private readonly TimeSpan _increment;
         private DateTime _lastStartTime;
         private bool _isRunning;
@@ -13,12 +13,12 @@ namespace Chess
 
         public Timer(TimeSpan initialTime, TimeSpan increment)
         {
-            _clockemaining = initialTime;
+            _clockRemaining = initialTime;
             _increment = increment;
             _isRunning = false;
         }
 
-        public TimeSpan TimeRemaining => _clockemaining;
+        public TimeSpan TimeRemaining => _clockRemaining;
         public bool IsRunning => _isRunning;
 
         public void Start()
@@ -40,7 +40,7 @@ namespace Chess
 
         public void AddIncrement()
         {
-            _clockemaining += _increment;
+            _clockRemaining += _increment;
         }
 
         public void Update()
@@ -54,11 +54,11 @@ namespace Chess
         private void UpdateTime()
         {
             TimeSpan elapsed = DateTime.Now - _lastStartTime;
-            _clockemaining -= elapsed;
+            _clockRemaining -= elapsed;
 
-            if (_clockemaining <= TimeSpan.Zero)
+            if (_clockRemaining <= TimeSpan.Zero)
             {
-                _clockemaining = TimeSpan.Zero;
+                _clockRemaining = TimeSpan.Zero;
                 OnTimeExpired?.Invoke();
                 Pause();
             }
@@ -68,13 +68,13 @@ namespace Chess
 
         public void Reset(TimeSpan newTime)
         {
-            _clockemaining = newTime;
+            _clockRemaining = newTime;
             _isRunning = false;
         }
 
         public string GetFormattedTime()
         {
-            return $"{(int)_clockemaining.TotalMinutes:D2}:{_clockemaining.Seconds:D2}";
+            return $"{(int)_clockRemaining.TotalMinutes:D2}:{_clockRemaining.Seconds:D2}";
         }
     }
 }

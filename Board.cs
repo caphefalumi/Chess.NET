@@ -180,25 +180,10 @@ namespace Chess
 
             return fen.ToString();
         }
-
-
-
-        public Position GetPositionFromPoint(Point2D point)
-        {
-            // Convert screen coordinates to board coordinates
-            int file = (int)((point.X - _boardDrawer.StartX) / _squareSize);
-            int rank = (int)((point.Y - _boardDrawer.StartY) / _squareSize);
-            return new Position(file, rank);
-        }
-
-        public Piece GetSelectedPiece()
-        {
-            return _pieces.FirstOrDefault(piece => piece.IsSelected);
-        }
-
+        
         public void ResetBoard()
         {
-            // Reset pieces to initial position
+                // Reset pieces to initial position
             _pieces = PieceFactory.CreatePieces(this);
             
             // Clear highlights and overlays
@@ -220,7 +205,7 @@ namespace Chess
             }
         }
 
-        public void UpdateFromFen(string fen)
+        public void LoadFen(string fen)
         {
             // Clear current pieces
             _pieces.Clear();

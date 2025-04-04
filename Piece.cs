@@ -55,6 +55,19 @@ namespace Chess
         {
             SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
         }
-
+                // Helper method to get piece bitmap without creating new bitmap objects
+        public static Bitmap GetPieceBitmap(PieceType pieceType, Player color)
+        {
+            // Get the piece character from the PieceFactory
+            char pieceChar = PieceFactory.GetPieceChar(pieceType, color);
+            
+            // Get the bitmap filename directly without creating a temporary piece
+            char pieceColor = (color == Player.White) ? 'w' : 'b';
+            string bitmapName = pieceColor.ToString() + pieceChar.ToString();
+            
+            // Try to load the bitmap using SplashKit's bitmap management
+            // This will reuse existing bitmaps rather than creating new ones
+            return SplashKit.LoadBitmap(bitmapName, $"Resources\\Pieces\\{bitmapName}.png");
+        }
     }
 }
