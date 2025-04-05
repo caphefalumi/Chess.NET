@@ -1,4 +1,5 @@
 ﻿using SplashKitSDK;
+using System;
 
 namespace Chess
 {
@@ -7,14 +8,23 @@ namespace Chess
         private static readonly Dictionary<Position, Move> _moveBuffer = new Dictionary<Position, Move>();
         private static Piece _selectedPiece;
         private static Board _board;
-        private static NetworkChessManager _networkManager;
+        private static NetworkManager _networkManager;
         private static bool _isWaitingForOpponent;
+        // private static Square _selectedSquare;
+        private static bool _isDragging;
+        private static Point2D _dragOffset;
+        private static Piece _draggedPiece;
+
+        public static event Action<Move> OnMoveMade;
 
         public static void Initialize(Board board)
         {
             _board = board;
-            _networkManager = NetworkChessManager.GetInstance();
+            _networkManager = new NetworkManager();
             _isWaitingForOpponent = false;
+            // _selectedSquare = null;
+            _isDragging = false;
+            _draggedPiece = null;
         }
 
         private static Position GetClickedSquare()
@@ -62,7 +72,7 @@ namespace Chess
                     // Send FEN to opponent in network mode after a move is made
                     if (_networkManager != null && _networkManager.IsConnected)
                     {
-                        _networkManager.SendFEN(_board.GetFen());
+                        _networkManager.SendMove(move.ToString());
                         _isWaitingForOpponent = true;
                     }
                 }
@@ -176,6 +186,7 @@ namespace Chess
                 }
             }
             _board.MatchState.MakeMove(move);
+            OnMoveMade?.Invoke(move);
         }
 
         public static void HandleUndo()

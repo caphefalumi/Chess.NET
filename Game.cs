@@ -9,9 +9,11 @@ namespace Chess
         private Board _board;
         private Window _window;
         private MatchState _gameState;
+        private string _windowName = "Chess";
 
         private Game(string title, int width, int height)
         {
+            _windowName = title;
             _window = SplashKit.OpenWindow(title, width, height);
 
             int squareSize = 80;
@@ -49,6 +51,11 @@ namespace Chess
             return _gameState;
         }
 
+        public string GetWindowName()
+        {
+            return _windowName;
+        }
+
         public void ChangeState(ScreenState newState)
         {
             _currentState = newState;
@@ -56,13 +63,22 @@ namespace Chess
 
         public void Run()
         {
-            while (!_window.CloseRequested)
+            // Main game loop
+            while (!SplashKit.WindowCloseRequested(_windowName))
             {
                 SplashKit.ProcessEvents();
-                _currentState.HandleInput();
-                _currentState.Render();
-                _currentState.Update();
 
+                _currentState.HandleInput();
+                _currentState.Update();
+                _currentState.Render();
+            }
+
+            // Handle auto-save if the current state is GameplayScreen
+            if (_currentState is GameplayScreen)
+            {
+                // Get the current game state and auto-save
+                GameplayScreen gameplayScreen = (GameplayScreen)_currentState;
+                gameplayScreen.HandleAutoSave();
             }
         }
     }

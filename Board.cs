@@ -18,7 +18,7 @@ namespace Chess
         
         public bool IsGameOver { get; set; }
         public Sound CurrentSound { get; set; }
-
+        public bool IsFlipped { get; set; }
         public HashSet<Piece> Pieces
         {
             get => _pieces;
@@ -139,7 +139,7 @@ namespace Chess
                     Position pos = new Position(file, rank);  // Use the rank as it is, no reverse needed here
                     Piece piece = GetPieceAt(pos);
 
-                    if (piece == null)
+                    if (piece is null)
                     {
                         emptyCount++;
                     }
@@ -180,10 +180,37 @@ namespace Chess
 
             return fen.ToString();
         }
+
+        public void Flip()
+        {
+            // Flip all pieces' positions
+            foreach (Piece piece in _pieces)
+            {
+                // Calculate new position (flip vertically)
+                int newRank = 7 - piece.Position.Rank;
+                piece.Position = new Position(piece.Position.File, newRank);
+            }
+
+            // Update kings' positions
+            _whiteKing = FindKing(Player.White);
+            _blackKing = FindKing(Player.Black);
+
+            // Toggle the flipped state
+            IsFlipped = !IsFlipped;
+
+            // Update pawn directions after flipping
+            foreach (Piece piece in _pieces)
+            {
+                if (piece is Pawn pawn)
+                {
+                    pawn.UpdateDirection();
+                }
+            }
+        }
         
         public void ResetBoard()
         {
-                // Reset pieces to initial position
+            // Reset pieces to initial position
             _pieces = PieceFactory.CreatePieces(this);
             
             // Clear highlights and overlays
@@ -207,68 +234,67 @@ namespace Chess
 
         public void LoadFen(string fen)
         {
-            // Clear current pieces
-            _pieces.Clear();
+            if (string.IsNullOrWhiteSpace(fen)) return;
 
-            // Split FEN into components
+            _pieces.Clear(); // Clear current pieces
+
             string[] parts = fen.Split(' ');
-            if (parts.Length < 4) return;
+            if (parts.Length < 2)
+            {
+                Console.WriteLine("Invalid FEN: Missing position or player turn");
+                return;
+            }
 
             string position = parts[0];
             string activeColor = parts[1];
-            string castling = parts[2];
-            string enPassant = parts[3];
 
-            // Parse position
-            int rank = 7;
+            int rank = 0; // Start from rank 7 (top) for black pieces
             int file = 0;
 
             foreach (char c in position)
             {
                 if (c == '/')
                 {
-                    rank--;
+                    rank++; // Move to next row *up* (decreasing rank)
                     file = 0;
                     continue;
                 }
 
                 if (char.IsDigit(c))
                 {
-                    file += c - '0';
+                    file += c - '0'; // Empty squares
                     continue;
                 }
 
-                // Create piece based on character
-                Piece piece = null;
-                char pieceChar = char.ToUpper(c);
-                bool isWhite = char.IsUpper(c);
-
-                switch (pieceChar)
+                if (file > 7 || rank < 0 || rank > 7)
                 {
-                    case 'P': piece = new Pawn(isWhite ? 'P' : 'p', new Position(file, rank), this); break;
-                    case 'N': piece = new Knight(isWhite ? 'N' : 'n', new Position(file, rank), this); break;
-                    case 'B': piece = new Bishop(isWhite ? 'B' : 'b', new Position(file, rank), this); break;
-                    case 'R': piece = new Rook(isWhite ? 'R' : 'r', new Position(file, rank), this); break;
-                    case 'Q': piece = new Queen(isWhite ? 'Q' : 'q', new Position(file, rank), this); break;
-                    case 'K': piece = new King(isWhite ? 'K' : 'k', new Position(file, rank), this); break;
+                    Console.WriteLine($"Invalid board index at character '{c}' (file={file}, rank={rank})");
+                    continue;
                 }
+
+                Position pos = new Position(file, rank); // (x, y)
+                Piece piece = PieceFactory.CreatePiece(c, pos, this);
 
                 if (piece != null)
                 {
                     _pieces.Add(piece);
-                    if (piece is King)
+
+                    if (piece is King king)
                     {
-                        if (isWhite)
-                            _whiteKing = (King)piece;
+                        if (piece.Color == Player.White)
+                            _whiteKing = king;
                         else
-                            _blackKing = (King)piece;
+                            _blackKing = king;
                     }
+                }
+                else
+                {
+                    Console.WriteLine($"Warning: Unrecognized FEN character '{c}' at {file},{rank}");
                 }
 
                 file++;
             }
 
-            // Create a new MatchState instance with the correct player
             Player startingPlayer = activeColor == "w" ? Player.White : Player.Black;
             MatchState.GetInstance(this, startingPlayer);
         }

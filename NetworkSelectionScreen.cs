@@ -10,7 +10,7 @@ namespace Chess
         private readonly Button _joinButton;
         private readonly Button _backButton;
         private readonly TextLabel _statusLabel;
-        private NetworkChessManager _networkManager;
+        private NetworkManager _networkManager;
         private bool _isSearching;
         private string _serverIP;
         private MatchConfiguration _config;
@@ -20,8 +20,7 @@ namespace Chess
             _game = game;
             _board = board;
             _config = new MatchConfiguration { Mode = Variant.Network };
-            _networkManager = NetworkChessManager.GetInstance();
-            _networkManager.Initialize(_game, _board, _config, OnFenReceived);
+            _networkManager = new NetworkManager();
 
             int centerX = SplashKit.ScreenWidth() / 2;
 
@@ -59,19 +58,10 @@ namespace Chess
                     _isSearching = true;
                     _statusLabel.Text = "Searching for server...";
                     
-                    _serverIP = _networkManager.DiscoverServerIP();
+                    _networkManager.StartClientWithDiscovery();
                     
-                    if (_serverIP != null)
-                    {
-                        _statusLabel.Text = $"Server found at {_serverIP}. Connecting...";
-                        _networkManager.StartClient(_serverIP);
-                    }
-                    else
-                    {
-                        _statusLabel.Text = "No server found. Try again.";
-                        _isSearching = false;
-                        _networkManager.Cleanup();
-                    }
+                    // If we get here, connection attempt started
+                    _statusLabel.Text = "Attempting to connect...";
                 }
                 catch (Exception ex)
                 {

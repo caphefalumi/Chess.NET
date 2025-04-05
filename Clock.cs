@@ -95,5 +95,22 @@ namespace Chess
         {
             return player == Player.White ? _whiteTimer.GetFormattedTime() : _blackTimer.GetFormattedTime();
         }
+
+        public void SetRemainingTime(Player player, TimeSpan time)
+        {
+            if (player == Player.White)
+            {
+                _whiteTimer.Reset(time);
+            }
+            else if (player == Player.Black)
+            {
+                _blackTimer.Reset(time);
+            }
+        }
+
+        public TimeSpan GetRemainingTime(Player player)
+        {
+            return player == Player.White ? _whiteTimer.TimeRemaining : _blackTimer.TimeRemaining;
+        }
     }
 }

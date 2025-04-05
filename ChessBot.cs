@@ -47,48 +47,14 @@
         private async Task<Move> GetApiMove(string fen, int thinkingTimeMs)
         {
             string moveNotation = await _apiBot.GetBestMoveAsync(fen, thinkingTimeMs);
-            return ConvertNotationToMove(moveNotation);
+            return Move.ConvertNotation(moveNotation, _board);
         }
         private async Task<Move> GetStockfishMove(string fen, int thinkingTimeMs)
         {
             string moveNotation = await _stockfishBot.GetBestMoveAsync(fen, thinkingTimeMs);
-            return ConvertNotationToMove(moveNotation);
+            return Move.ConvertNotation(moveNotation, _board);
         }
-        public Move ConvertNotationToMove(string moveNotation)
-        {
-            string sourceStr = moveNotation.Substring(0, 2);
-            string destStr = moveNotation.Substring(2, 2);
-            
-            Position source = new Position(sourceStr);
-            Position destination = new Position(destStr);
 
-            // Get the piece at the source position
-            Piece piece = _board.GetPieceAt(source);
-            if (piece == null) return null;
-
-            // Check for promotion
-            if (moveNotation.Length == 5)
-            {
-                char promotionPiece = moveNotation[4];
-                return new PromotionMove(source, destination, piece, PieceFactory.GetPieceType(promotionPiece));
-            }
-
-            // Check for castling
-            if (piece is King king && Math.Abs(source.File - destination.File) > 1)
-            {
-                MoveType castleType = destination.File > source.File ? MoveType.CastleKS : MoveType.CastleQS;
-                return new CastleMove(castleType, source, king);
-            }
-
-            // Check for en passant
-            if (piece is Pawn pawn && destination.File != source.File && _board.GetPieceAt(destination) == null)
-            {
-                return new EnPassantMove(source, destination, pawn);
-            }
-
-            // Default to normal move
-            return new NormalMove(source, destination, piece);
-        }
 
     }
 }

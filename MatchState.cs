@@ -158,5 +158,11 @@ namespace Chess
             UnmakeMove(true);
             return !stillInCheck;
         }
+        public void Reset()
+        {
+            _board.ResetBoard();
+            CurrentPlayer = Player.White;
+            MoveHistory.Clear();
+        }
     }
 }

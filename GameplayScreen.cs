@@ -27,8 +27,10 @@ namespace Chess
         private static Dictionary<PieceType, Rectangle> _promotionButtons;
         private TextLabel _statusLabel;
         private ChessBot _chessBot;
-        private NetworkChessManager _networkManager;
+        private NetworkManager _networkManager;
         private bool _botIsThinking = false;
+        private bool _isMyTurn = true;
+        private const int MAX_FILENAME_LENGTH = 20;
 
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {
@@ -60,38 +62,64 @@ namespace Chess
             }
 
             // Initialize network manager if in network mode
-            if (config.Mode == Variant.Network)
+            if (config.NetworkRole != NetworkRole.None)
             {
-                _networkManager = NetworkChessManager.GetInstance();
-                _networkManager.Initialize(_game, _board, _config, OnFenReceived);
-                if (_networkManager.IsServer)
-                {
-                    _networkManager.StartServer();
-                }
-                else
-                {
-                    string serverIP = _networkManager.DiscoverServerIP();
-                    if (serverIP != null)
-                    {
-                        _networkManager.StartClient(serverIP);
-                    }
-                    else
-                    {
-                        UpdateStatusLabel("No server found");
-                    }
-                }
+                _networkManager = new NetworkManager();
+                // Set initial turn based on network role
+                _isMyTurn = config.NetworkRole == NetworkRole.Host;
+                UpdateStatusLabel(_isMyTurn ? "Your turn" : "Opponent's turn");
+
+                // Subscribe to network events
+                _networkManager.OnMoveReceived += HandleNetworkMove;
+                _networkManager.OnConnectionStatusChanged += HandleConnectionStatus;
             }
 
-            // Initialize BoardEvent with network manager
+            // Initialize BoardEvent
             BoardEvent.Initialize(_board);
+            BoardEvent.OnMoveMade += HandleLocalMove;
 
             _clock.Start();
             _clock.OnTimeExpired += DeclareGameOver;
         }
 
-        private void OnFenReceived(string fen)
+        private void HandleNetworkMove(string moveData)
         {
-            _board.LoadFen(fen);
+            Console.WriteLine($"[GameplayScreen] Received network move: {moveData}");
+            // Parse the move data and apply it to the board
+            Move move = Move.ConvertNotation(moveData, _board);
+            if (move != null)
+            {
+                Console.WriteLine($"[GameplayScreen] Applying move from {move.From} to {move.To}");
+                _gameState.MakeMove(move);
+                _clock.SwitchTurn();
+                _isMyTurn = true;
+                UpdateStatusLabel("Your turn");
+                BoardEvent.CheckGameResult();
+            }
+            else
+            {
+                Console.WriteLine("[GameplayScreen] Failed to parse received move");
+            }
+        }
+
+        private void HandleLocalMove(Move move)
+        {
+            if (_config.NetworkRole != NetworkRole.None && _isMyTurn)
+            {
+                Console.WriteLine($"[GameplayScreen] Sending local move: {move}");
+                // Send move notation to opponent
+                _networkManager.SendMove(move.ToString());
+                _isMyTurn = false;
+                UpdateStatusLabel("Opponent's turn");
+            }
+        }
+
+        private void HandleConnectionStatus(bool isConnected)
+        {
+            Console.WriteLine($"[GameplayScreen] Connection status changed: {isConnected}");
+            UpdateStatusLabel(isConnected ? 
+                (_isMyTurn ? "Your turn" : "Opponent's turn") : 
+                "Disconnected");
         }
 
         public override void HandleInput()
@@ -124,23 +152,38 @@ namespace Chess
 
             if (_undoButton.IsClicked() || SplashKit.KeyTyped(KeyCode.ZKey))
             {
-                BoardEvent.HandleUndo();
-                _clock.CurrentTurn = _gameState.CurrentPlayer;
-                if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black)
+                // Only allow undo in non-network games
+                if (_config.NetworkRole == NetworkRole.None)
                 {
-                    _botIsThinking = false;
+                    BoardEvent.HandleUndo();
+                    _clock.CurrentTurn = _gameState.CurrentPlayer;
+                    if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black)
+                    {
+                        _botIsThinking = false;
+                    }
                 }
                 return;
             }
 
             if (_resetButton.IsClicked() || SplashKit.KeyTyped(KeyCode.RKey))
             {
-                ResetBoard();
+                // Only allow reset in non-network games
+                if (_config.NetworkRole == NetworkRole.None)
+                {
+                    ResetBoard();
+                }
                 return;
             }
-
-            // Handle human input - only if it's not waiting for opponent or computer's turn
-            if (!_botIsThinking && (_config.Mode != Variant.Computer || _gameState.CurrentPlayer == Player.White))
+            if (SplashKit.KeyTyped(KeyCode.FKey))
+            {
+                _board.Flip();
+            }
+            // Handle human input - only if it's the player's turn
+            bool canMove = _config.NetworkRole == NetworkRole.None || 
+                          (_config.NetworkRole != NetworkRole.None && _isMyTurn);
+            
+            if (!_botIsThinking && canMove && 
+                (_config.Mode != Variant.Computer || _gameState.CurrentPlayer == Player.White))
             {
                 BoardEvent.HandleMouseEvents(_board, _gameState);
             }
@@ -162,19 +205,6 @@ namespace Chess
             _clock.CurrentTurn = _gameState.CurrentPlayer;
             _clock.Update();
 
-            // Network mode updates
-            if (_config.Mode == Variant.Network && _networkManager != null)
-            {
-                if (_networkManager.IsConnected)
-                {
-                    UpdateStatusLabel("Connected");
-                }
-                else
-                {
-                    UpdateStatusLabel("Disconnected");
-                }
-            }
-
             // Computer Move Logic
             if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black && !_botIsThinking)
             {
@@ -195,14 +225,6 @@ namespace Chess
                             _clock.SwitchTurn();
                             BoardEvent.CheckGameResult();
                         }
-                        else
-                        {
-                            UpdateStatusLabel("Failed to get move from engine.");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        UpdateStatusLabel($"Error: {ex.Message}");
                     }
                     finally
                     {
@@ -258,7 +280,6 @@ namespace Chess
             _menuButton.Draw();
             _undoButton.Draw();
             _resetButton.Draw();
-            
 
             // Draw game over message if applicable
             if (_gameOver)
@@ -277,12 +298,12 @@ namespace Chess
             }
 
             // Draw time display
-            DrawTimeDisplay(Player.White, _clock.WhiteTime.ToString(@"mm\:ss"), 610, 250);
-            DrawTimeDisplay(Player.Black, _clock.BlackTime.ToString(@"mm\:ss"), 610, 300);
+            DrawTimeDisplay(Player.White, _clock.WhiteTime.ToString(@"mm\:ss"), 630, 250);
+            DrawTimeDisplay(Player.Black, _clock.BlackTime.ToString(@"mm\:ss"), 630, 300);
 
             // Draw current mode text
             string modeText = GetModeDisplayText();
-            SplashKit.DrawText(modeText, Color.Black, 610, 350);
+            SplashKit.DrawText(modeText, Color.Black, 630, 350);
 
             // Draw status label
             if (!string.IsNullOrEmpty(_statusLabel.Text))
@@ -371,10 +392,7 @@ namespace Chess
         {
             // Reset the board using the OOP approach
             _board.ResetBoard();
-            
-            // Get a new game state
-            _gameState = _game.GetGameState();
-            _board.MatchState = _gameState;
+            _gameState.Reset();
             
             // Reset UI state
             _gameOver = false;
@@ -385,10 +403,11 @@ namespace Chess
             _clock.Reset(_config.GetTimeSpan());
             _clock.Start();
             
-            // Send initial FEN in network mode
-            if (_config.Mode == Variant.Network && _networkManager != null && _networkManager.IsConnected)
+            // Reset network state if in network mode
+            if (_config.NetworkRole != NetworkRole.None)
             {
-                _networkManager.SendFEN(_board.GetFen());
+                _isMyTurn = _config.NetworkRole == NetworkRole.Host;
+                UpdateStatusLabel(_isMyTurn ? "Your turn" : "Opponent's turn");
             }
             
             // Clear UI selections and highlights
@@ -422,6 +441,44 @@ namespace Chess
         private void UpdateStatusLabel(string text)
         {
             _statusLabel.Text = text;
+        }
+
+        private void DrawSaveMenu()
+        {
+            // Draw semi-transparent overlay
+            SplashKit.FillRectangle(SplashKit.RGBAColor(0, 0, 0, 128), 0, 0, SplashKit.ScreenWidth(), SplashKit.ScreenHeight());
+            
+            // Draw menu background
+            SplashKit.FillRectangle(Color.White, 200, 200, 400, 200);
+            SplashKit.DrawRectangle(Color.Black, 200, 200, 400, 200);
+            
+            // Draw title
+            SplashKit.DrawText("Save Game", Color.Black, 350, 220);
+            
+            // Draw filename input box
+            SplashKit.FillRectangle(Color.LightGray, 250, 270, 300, 30);
+            SplashKit.DrawRectangle(Color.Black, 250, 270, 300, 30);
+        }
+
+        private void DrawLoadMenu()
+        {
+            // Draw semi-transparent overlay
+            SplashKit.FillRectangle(SplashKit.RGBAColor(0, 0, 0, 128), 0, 0, SplashKit.ScreenWidth(), SplashKit.ScreenHeight());
+            
+            // Draw menu background
+            SplashKit.FillRectangle(Color.White, 200, 50, 400, 400);
+            SplashKit.DrawRectangle(Color.Black, 200, 50, 400, 400);
+            
+            // Draw title
+            SplashKit.DrawText("Load Game", Color.Black, 350, 70);
+        }
+
+        public void HandleAutoSave()
+        {
+            if (!_gameOver)
+            {
+                GameSaver.AutoSaveGame(_config, _clock, _board.GetFen());
+            }
         }
     }
 }

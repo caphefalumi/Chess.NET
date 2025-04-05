@@ -2,15 +2,37 @@
 {
     public class Pawn : Piece
     {
-        public Direction Dir { get; }
+        public Direction Dir { get; private set; }
         public bool CanBeEnpassant { get; set; }
         private Position _originalPosition;
         public Pawn(char pieceChar, Position pos, Board board) : base(pieceChar, board)
         {
             Position = pos;
             _originalPosition = pos;
-            Dir = (Color == Player.White) ? Direction.Up : Direction.Down;
+            UpdateDirection();
             CanBeEnpassant = false;
+        }
+
+        public void UpdateDirection()
+        {
+            // White pawns always move toward rank 7 (top)
+            // Black pawns always move toward rank 0 (bottom)
+            if (Color == Player.White)
+            {
+                Dir = Direction.Up;
+                if (MyBoard.IsFlipped)
+                {
+                    Dir = Direction.Down;
+                }
+            }
+            else
+            {
+                Dir = Direction.Down;
+                if (MyBoard.IsFlipped)
+                {
+                    Dir = Direction.Up;
+                }
+            }
         }
 
         private HashSet<Move> PromotionMoves(Position from, Position to)
@@ -41,7 +63,7 @@
                 }
 
                 Position doubleMovePos = singleMovePos + Dir;
-                if (MyBoard.IsEmpty(doubleMovePos) && Position == _originalPosition)
+                if (MyBoard.IsEmpty(doubleMovePos) && Position == _originalPosition && (Position.Rank == 6 && Color == Player.White || Position.Rank == 1 && Color == Player.Black) && HasMoved == false)
                 {
                     moves.Add(new DoublePawnMove(Position, doubleMovePos, this));
                 }

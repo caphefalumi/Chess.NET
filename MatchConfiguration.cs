@@ -6,6 +6,7 @@ namespace Chess
         public TimeControl TimeControl { get; set; }
         public bool UseIncrement { get; set; }
         public int IncrementSeconds { get; set; }
+        public NetworkRole NetworkRole { get; set; }
         
         public MatchConfiguration()
         {
@@ -13,6 +14,7 @@ namespace Chess
             TimeControl = TimeControl.TenMinutes;
             UseIncrement = false;
             IncrementSeconds = 0;
+            NetworkRole = NetworkRole.None;
         }
 
         public TimeSpan GetTimeSpan()
