@@ -11,10 +11,10 @@
             Rank = rank;
         }
 
-        public Position(string algebraicNotation)
+        public Position(string notation)
         {
-            char fileChar = algebraicNotation[0];
-            char rankChar = algebraicNotation[1];
+            char fileChar = notation[0];
+            char rankChar = notation[1];
             
             // Convert file character (a-h) to index (0-7)
             File = char.ToLower(fileChar) - 'a';

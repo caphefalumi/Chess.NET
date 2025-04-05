@@ -45,8 +45,9 @@ namespace Chess
                 {
                     FullmoveNumber++;
                 }
+                Console.WriteLine(move.Type);
+                move.Sound.Play();
             }
-
             // Execute the move
             move.Execute(_board, isSimulation);
             MoveHistory.Push(new KeyValuePair<Move, string>(move, _board.GetFen()));

@@ -10,10 +10,6 @@ namespace Chess
         private static Board _board;
         private static NetworkManager _networkManager;
         private static bool _isWaitingForOpponent;
-        // private static Square _selectedSquare;
-        private static bool _isDragging;
-        private static Point2D _dragOffset;
-        private static Piece _draggedPiece;
 
         public static event Action<Move> OnMoveMade;
 
@@ -22,9 +18,6 @@ namespace Chess
             _board = board;
             _networkManager = new NetworkManager();
             _isWaitingForOpponent = false;
-            // _selectedSquare = null;
-            _isDragging = false;
-            _draggedPiece = null;
         }
 
         private static Position GetClickedSquare()
@@ -52,7 +45,6 @@ namespace Chess
             _board.BoardHighlights.Clear();
             _board.BackgroundOverlays[0] = null;
             _board.BackgroundOverlays[1] = null;
-            _board.CurrentSound = null;
 
             if (_moveBuffer.TryGetValue(pos, out Move move))
             {
@@ -67,7 +59,6 @@ namespace Chess
                     HandleMove(move);
                     GameplayScreen.SwitchTurn();
                     CheckGameResult();
-                    _board.CurrentSound.Play();
 
                     // Send FEN to opponent in network mode after a move is made
                     if (_networkManager != null && _networkManager.IsConnected)
@@ -84,8 +75,6 @@ namespace Chess
             else
             {
                 _board.BackgroundOverlays[2] = null;
-                _board.CurrentSound = Sounds.Illegal;
-                _board.CurrentSound.Play();
             }
             _selectedPiece = null;
         }
@@ -103,7 +92,7 @@ namespace Chess
                 }
                 else
                 {
-                    _board.CurrentSound = Sounds.MoveCheck;
+                    Sounds.MoveCheck.Play();
                 }
             }
             else if (availableMoves == 0)
@@ -127,7 +116,7 @@ namespace Chess
         private static void SetGameResult(GameResult result, string message)
         {
             GameplayScreen.DeclareGameOver(message);
-            _board.CurrentSound = Sounds.GameEnd;
+            Sounds.GameEnd.Play();
         }
 
         public static bool IsThreefoldRepetition()

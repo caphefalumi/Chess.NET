@@ -8,13 +8,14 @@
         public override Piece MovedPiece { get; }
         private Pawn _movedPawn { get; set; }
         public override Piece CapturedPiece { get; set; }
-
+        public override Sound Sound { get; protected set; }
         public DoublePawnMove(Position from, Position to, Pawn pawn)
         {
             From = from;
             To = to;
             MovedPiece = pawn;
             _movedPawn = pawn;
+            Sound = Sounds.MoveSelf;
         }
 
         public override void Execute(Board board, bool isSimulation)
@@ -24,7 +25,6 @@
                 _movedPawn.CanBeEnpassant = true;
             }
 
-            board.CurrentSound = Sounds.MoveSelf;
             _movedPawn.Position = To;
             _movedPawn.HasMoved = true;
         }

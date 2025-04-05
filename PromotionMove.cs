@@ -8,7 +8,7 @@
         public override Piece MovedPiece { get; }
         public override Piece CapturedPiece { get; set; }
         public PieceType NewPieceType => _newType;
-
+        public override Sound Sound { get; protected set; }
         private readonly PieceType _newType;
         private Piece _promotedPiece;
         private Piece _capturedPiece;
@@ -18,6 +18,7 @@
             To = to;
             MovedPiece = piece;
             _newType = newType;
+            Sound = Sounds.Promote;
         }
 
         private Piece CreatePromotionPiece(PieceType newType)
@@ -36,7 +37,6 @@
             _promotedPiece = CreatePromotionPiece(_newType);
             _promotedPiece.Position = To;
             _promotedPiece.HasMoved = true;
-            board.CurrentSound = Sounds.Promote;
             board.Pieces.Add(_promotedPiece);
         }
 

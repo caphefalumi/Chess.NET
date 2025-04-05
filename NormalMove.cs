@@ -7,12 +7,13 @@
         public override Position To { get; }
         public override Piece MovedPiece { get; }
         public override Piece CapturedPiece { get; set; }
-
+        public override Sound Sound { get; protected set; }
         public NormalMove(Position from, Position to, Piece piece)
         {
             From = from;
             To = to;
             MovedPiece = piece;
+            Sound = Sounds.MoveSelf;
         }
 
         public override void Execute(Board board, bool isSimulation)
@@ -22,11 +23,7 @@
             if (CapturedPiece != null)
             {
                 board.Pieces.Remove(CapturedPiece);
-                board.CurrentSound = Sounds.Capture;
-            }
-            else
-            {
-                board.CurrentSound = Sounds.MoveSelf;
+                Sound = Sounds.Capture;
             }
             MovedPiece.Position = To;
             if (!isSimulation)

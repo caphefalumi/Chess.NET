@@ -9,7 +9,7 @@
         public abstract Piece CapturedPiece { get; set; }
         public abstract void Execute(Board board, bool isSimulation = false);
         public abstract void Undo(Board board, bool isSimulation = false);
-
+        public abstract Sound Sound { get; protected set; }
         public override string ToString()
         {
             string moveStr = $"{From}{To}";

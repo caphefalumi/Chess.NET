@@ -17,7 +17,6 @@ namespace Chess
         private King _blackKing;
         
         public bool IsGameOver { get; set; }
-        public Sound CurrentSound { get; set; }
         public bool IsFlipped { get; set; }
         public HashSet<Piece> Pieces
         {

@@ -12,7 +12,7 @@ namespace Chess
         private Rook _rook;
         private Position _rookFrom;
         private Position _rookTo;
-
+        public override Sound Sound { get; protected set; }
         public CastleMove(MoveType type, Position kingPos, King king)
         {
             Type = type;
@@ -31,6 +31,7 @@ namespace Chess
                 _rookFrom = new Position(0, kingPos.Rank);
                 _rookTo = new Position(3, kingPos.Rank);
             }
+            Sound = Sounds.Castle;
         }
 
         public override void Execute(Board board, bool isSimulation)
@@ -48,7 +49,6 @@ namespace Chess
                 king.HasMoved = true;
                 _rook.HasMoved = true;
                 king.Castled = true;
-                board.CurrentSound = Sounds.Castle;
             }
         }
 

@@ -17,16 +17,16 @@ namespace Chess
 
     public static class Sounds
     {
-        private static readonly Dictionary<SoundType, Sound> _sounds = new()
+        private static readonly Dictionary<SoundType, Sound> _sounds = new Dictionary<SoundType, Sound>
         {
-            { SoundType.Capture, Sound.GetInstance("Resources/Sounds/capture.mp3") },
-            { SoundType.Castle, Sound.GetInstance("Resources/Sounds/castle.mp3") },
-            { SoundType.GameEnd, Sound.GetInstance("Resources/Sounds/game_end.mp3") },
-            { SoundType.GameStart, Sound.GetInstance("Resources/Sounds/game_start.mp3") },
-            { SoundType.Illegal, Sound.GetInstance("Resources/Sounds/illegal.mp3") },
-            { SoundType.MoveCheck, Sound.GetInstance("Resources/Sounds/move_check.mp3") },
-            { SoundType.MoveSelf, Sound.GetInstance("Resources/Sounds/move_self.mp3") },
-            { SoundType.Promote, Sound.GetInstance("Resources/Sounds/promote.mp3") }
+            { SoundType.Capture, Sound.GetInstance("Resources/Sounds/capture.mp3", SoundType.Capture) },
+            { SoundType.Castle, Sound.GetInstance("Resources/Sounds/castle.mp3", SoundType.Castle) },
+            { SoundType.GameEnd, Sound.GetInstance("Resources/Sounds/game_end.mp3", SoundType.GameEnd) },
+            { SoundType.GameStart, Sound.GetInstance("Resources/Sounds/game_start.mp3", SoundType.GameStart) },
+            { SoundType.Illegal, Sound.GetInstance("Resources/Sounds/illegal.mp3", SoundType.Illegal) },
+            { SoundType.MoveCheck, Sound.GetInstance("Resources/Sounds/move_check.mp3", SoundType.MoveCheck) },
+            { SoundType.MoveSelf, Sound.GetInstance("Resources/Sounds/move_self.mp3", SoundType.MoveSelf) },
+            { SoundType.Promote, Sound.GetInstance("Resources/Sounds/promote.mp3", SoundType.Promote) }
         };
 
         public static Sound Capture => _sounds[SoundType.Capture];

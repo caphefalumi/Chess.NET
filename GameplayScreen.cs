@@ -174,6 +174,14 @@ namespace Chess
                 }
                 return;
             }
+            if (SplashKit.KeyTyped(KeyCode.SKey))
+            {
+                _board.LoadFen("8/8/8/4p1K1/2k1P3/8/8/8 b - - 0 1");
+            }
+            if (SplashKit.KeyTyped(KeyCode.LKey))
+            {
+                DrawLoadMenu();
+            }
             if (SplashKit.KeyTyped(KeyCode.FKey))
             {
                 _board.Flip();
@@ -441,23 +449,6 @@ namespace Chess
         private void UpdateStatusLabel(string text)
         {
             _statusLabel.Text = text;
-        }
-
-        private void DrawSaveMenu()
-        {
-            // Draw semi-transparent overlay
-            SplashKit.FillRectangle(SplashKit.RGBAColor(0, 0, 0, 128), 0, 0, SplashKit.ScreenWidth(), SplashKit.ScreenHeight());
-            
-            // Draw menu background
-            SplashKit.FillRectangle(Color.White, 200, 200, 400, 200);
-            SplashKit.DrawRectangle(Color.Black, 200, 200, 400, 200);
-            
-            // Draw title
-            SplashKit.DrawText("Save Game", Color.Black, 350, 220);
-            
-            // Draw filename input box
-            SplashKit.FillRectangle(Color.LightGray, 250, 270, 300, 30);
-            SplashKit.DrawRectangle(Color.Black, 250, 270, 300, 30);
         }
 
         private void DrawLoadMenu()
