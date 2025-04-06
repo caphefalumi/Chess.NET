@@ -165,5 +165,10 @@ namespace Chess
             CurrentPlayer = Player.White;
             MoveHistory.Clear();
         }
+
+        public void SetCurrentPlayer(Player player)
+        {
+            CurrentPlayer = player;
+        }
     }
 }

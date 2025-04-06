@@ -18,8 +18,7 @@ namespace Chess
             PieceChar = pieceChar;
             Color = char.IsUpper(pieceChar) ? Player.White : Player.Black;
             Type = PieceFactory.GetPieceType(PieceChar);
-            char pieceColor = (Player.White == Color) ? 'w' : 'b';
-            PieceImage = new Bitmap(pieceColor.ToString() + PieceChar.ToString(), $"Resources\\Pieces\\{pieceColor.ToString() + PieceChar.ToString()}.png");
+            PieceImage = GetPieceBitmap(Type, Color);
             HasMoved = false;
             MyBoard = board;
             IsSelected = false;
@@ -45,28 +44,15 @@ namespace Chess
         }
         public void Draw()
         {
-            int x = Position.File * 80;
-            int y = Position.Rank * 80;
-
-            DrawAt(x - 35, y - 35);
-        }
-
-        public void DrawAt(float x, float y)
-        {
+            int x = Position.File * 80 -35;
+            int y = Position.Rank * 80 - 35;
             SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
         }
-                // Helper method to get piece bitmap without creating new bitmap objects
         public static Bitmap GetPieceBitmap(PieceType pieceType, Player color)
         {
-            // Get the piece character from the PieceFactory
             char pieceChar = PieceFactory.GetPieceChar(pieceType, color);
-            
-            // Get the bitmap filename directly without creating a temporary piece
             char pieceColor = (color == Player.White) ? 'w' : 'b';
             string bitmapName = pieceColor.ToString() + pieceChar.ToString();
-            
-            // Try to load the bitmap using SplashKit's bitmap management
-            // This will reuse existing bitmaps rather than creating new ones
             return SplashKit.LoadBitmap(bitmapName, $"Resources\\Pieces\\{bitmapName}.png");
         }
     }

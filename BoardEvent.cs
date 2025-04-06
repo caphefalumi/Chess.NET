@@ -10,14 +10,20 @@ namespace Chess
         private static Board _board;
         private static NetworkManager _networkManager;
         private static bool _isWaitingForOpponent;
-
-        public static event Action<Move> OnMoveMade;
+        private static GameEventManager _eventManager;
+        private static GameplayScreen _gameplayScreen;
 
         public static void Initialize(Board board)
         {
             _board = board;
             _networkManager = new NetworkManager();
             _isWaitingForOpponent = false;
+            _eventManager = GameEventManager.GetInstance();
+        }
+
+        public static void SetGameplayScreen(GameplayScreen screen)
+        {
+            _gameplayScreen = screen;
         }
 
         private static Position GetClickedSquare()
@@ -57,7 +63,10 @@ namespace Chess
                 else
                 {
                     HandleMove(move);
-                    GameplayScreen.SwitchTurn();
+                    if (_gameplayScreen != null)
+                    {
+                        _gameplayScreen.SwitchTurn();
+                    }
                     CheckGameResult();
 
                     // Send FEN to opponent in network mode after a move is made
@@ -88,35 +97,46 @@ namespace Chess
             {
                 if (availableMoves == 0)
                 {
+                    // Checkmate
                     SetGameResult(GameResult.Win, $"{currentPlayer.Opponent()} wins by checkmate!");
                 }
                 else
                 {
+                    // Check
                     Sounds.MoveCheck.Play();
+                    _eventManager.NotifyCheck(currentPlayer);
                 }
             }
             else if (availableMoves == 0)
             {
+                // Stalemate
                 SetGameResult(GameResult.Draw, "Game is a draw by stalemate!");
             }
             else if (Is50MoveRule())
             {
-                SetGameResult(GameResult.Draw, "Game is a draw by repetition!");
+                // 50-move rule
+                SetGameResult(GameResult.Draw, "Game is a draw by 50-move rule!");
             }
             else if (IsThreefoldRepetition())
             {
+                // Threefold repetition
                 SetGameResult(GameResult.Draw, "Game is a draw by threefold repetition!");
             }
             else if (IsInsufficientMaterial())
             {
+                // Insufficient material
                 SetGameResult(GameResult.Draw, "Game is a draw due to insufficient material!");
             }
         }
 
         private static void SetGameResult(GameResult result, string message)
         {
-            GameplayScreen.DeclareGameOver(message);
+            if (_gameplayScreen != null)
+            {
+                _gameplayScreen.DeclareGameOver(message);
+            }
             Sounds.GameEnd.Play();
+            _eventManager.NotifyGameOver(result, message);
         }
 
         public static bool IsThreefoldRepetition()
@@ -135,7 +155,6 @@ namespace Chess
             }
             return false;
         }
-
 
         private static bool Is50MoveRule()
         {
@@ -156,13 +175,12 @@ namespace Chess
             // King + Bishop vs. King
             if (pieces.Count(p => char.ToLower(p.PieceChar) == 'b') == 1 && whitePieceCount + blackPieceCount == 2) return true;
 
-
-
             return false;
         }
 
         public static void HandleMove(Move move)
         {
+            // Update en passant status for double pawn moves
             if (_board.MatchState.MoveHistory.TryPeek(out KeyValuePair<Move, string> result))
             {
                 if (result.Key.Type == MoveType.DoublePawn)
@@ -174,8 +192,13 @@ namespace Chess
                     }
                 }
             }
+
+            // Execute the move on the board
             _board.MatchState.MakeMove(move);
-            OnMoveMade?.Invoke(move);
+            
+            // Notify observers through the observer pattern
+            _eventManager.NotifyMoveMade(move);
+            _eventManager.NotifyTurnChanged(_board.MatchState.CurrentPlayer);
         }
 
         public static void HandleUndo()
@@ -186,7 +209,10 @@ namespace Chess
         private static void HandlePromotion(Move move)
         {
             // Show the promotion menu at the promotion square
-            GameplayScreen.ShowPromotionMenu(move, _board.MatchState.CurrentPlayer);
+            if (_gameplayScreen != null)
+            {
+                _gameplayScreen.ShowPromotionMenu(move, _board.MatchState.CurrentPlayer);
+            }
         }
 
         private static void BufferMoves(IEnumerable<Move> moves)
@@ -237,7 +263,7 @@ namespace Chess
                 Position pos = GetClickedSquare();
 
                 // If promotion menu is active, don't handle board clicks
-                if (GameplayScreen.PromotionFlag)
+                if (_gameplayScreen != null && _gameplayScreen.PromotionFlag)
                 {
                     return;
                 }

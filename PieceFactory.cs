@@ -4,22 +4,21 @@ namespace Chess
 {
     public static class PieceFactory
     {
-        public static HashSet<Piece> CreatePieces(Board board)
+        private static readonly char[,] boardSetup =
+        {
+            { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r' },
+            { 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p' },
+            { '.', '.', '.', '.', '.', '.', '.', '.' },
+            { '.', '.', '.', '.', '.', '.', '.', '.' },
+            { '.', '.', '.', '.', '.', '.', '.', '.' },
+            { '.', '.', '.', '.', '.', '.', '.', '.' },
+            { 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P' },
+            { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' }
+        };
+
+        public static HashSet<Piece> CreatePieces(Board board, bool isReversed = false)
         {
             HashSet<Piece> pieces = new HashSet<Piece>();
-
-            char[,] boardSetup =
-            {
-                { 'r', 'n', 'b', 'q', 'k', 'b', 'n', 'r' },
-                { 'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p' },
-                { '.', '.', '.', '.', '.', '.', '.', '.' },
-                { '.', '.', '.', '.', '.', '.', '.', '.' },
-                { '.', '.', '.', '.', '.', '.', '.', '.' },
-                { '.', '.', '.', '.', '.', '.', '.', '.' },
-                { 'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P' },
-                { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' }
-            };
-
             for (int rank = 0; rank < 8; rank++)
             {
                 for (int file = 0; file < 8; file++)

@@ -7,6 +7,7 @@ namespace Chess
         public bool UseIncrement { get; set; }
         public int IncrementSeconds { get; set; }
         public NetworkRole NetworkRole { get; set; }
+        public Player PlayerColor { get; set; }
         
         public MatchConfiguration()
         {
@@ -15,6 +16,7 @@ namespace Chess
             UseIncrement = false;
             IncrementSeconds = 0;
             NetworkRole = NetworkRole.None;
+            PlayerColor = Player.White;
         }
 
         public TimeSpan GetTimeSpan()

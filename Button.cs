@@ -10,6 +10,8 @@ namespace Chess
         private Color _hoverColor;
         private Color _textColor;
         private bool _isHovered;
+        private Bitmap _bitmap;
+        private float _bitmapScale;
 
         public int X => (int)_bounds.X;
         public int Y => (int)_bounds.Y;
@@ -19,6 +21,7 @@ namespace Chess
         public Button(string text, int x, int y, int width, int height)
         {
             _text = text;
+            _bitmap = null;
             _normalColor = SplashKit.RGBColor(200, 200, 200);
             _hoverColor = SplashKit.RGBColor(180, 180, 180);
             _textColor = Color.Black;
@@ -26,19 +29,25 @@ namespace Chess
             _isHovered = false;
         }
 
-        public Button(string text, int x, int y, int width, int height, bool invisible)
+
+        public Button(Bitmap bitmap, int x, int y, int width, int height)
         {
-            _text = text;
-            _normalColor = Color.Transparent;
-            _hoverColor = Color.Transparent;
-            _textColor = Color.Transparent;
+            _text = "";
+            _bitmap = bitmap;
+            _normalColor = Color.White;
+            _hoverColor = SplashKit.RGBColor(240, 240, 240);
+            _textColor = Color.Black;
             _bounds = new Rectangle(_normalColor, x, y, width, height);
             _isHovered = false;
+            
+            // Calculate scale to fit the bitmap in the button while maintaining aspect ratio
+            float scale = (float)width / bitmap.Width;
+            _bitmapScale = scale * 0.8f;
         }
 
         public void Update()
         {
-            _isHovered = _bounds.IsAt(SplashKit.MousePosition());
+            _isHovered = IsAt(SplashKit.MousePosition());
             _bounds.Color = _isHovered ? _hoverColor : _normalColor;
         }
 
@@ -47,18 +56,42 @@ namespace Chess
             return _isHovered && SplashKit.MouseClicked(MouseButton.LeftButton);
         }
 
+        public bool IsAt(Point2D point)
+        {
+            return _bounds.IsAt(point);
+        }
+
         public void Draw()
         {
             _bounds.Draw();
 
-            Font font = SplashKit.LoadFont("Arial", "Arial.ttf");
-            float textWidth = SplashKit.TextWidth(_text, font, 16);
-            float textHeight = SplashKit.TextHeight(_text, font, 16);
+            if (_bitmap != null)
+            {
+                // Draw the bitmap centered in the button
+                float bitmapWidth = _bitmap.Width * _bitmapScale;
+                float bitmapHeight = _bitmap.Height * _bitmapScale;
+                
+                float bitmapX = _bounds.X - 35 + (_bounds.Width - bitmapWidth) / 2;
+                float bitmapY = _bounds.Y - 35 + (_bounds.Height - bitmapHeight) / 2;
+                
+                SplashKit.DrawBitmap(
+                    _bitmap, 
+                    bitmapX, 
+                    bitmapY, 
+                    SplashKit.OptionScaleBmp(_bitmapScale, _bitmapScale)
+                );
+            }
+            else if (!string.IsNullOrEmpty(_text))
+            {
+                // Draw the text centered in the button
+                float textWidth = SplashKit.TextWidth(_text, Font.Get, 16);
+                float textHeight = SplashKit.TextHeight(_text, Font.Get, 16);
 
-            float textX = _bounds.X + (_bounds.Width - textWidth) / 2;
-            float textY = _bounds.Y + (_bounds.Height - textHeight) / 2;
+                float textX = _bounds.X + (_bounds.Width - textWidth) / 2;
+                float textY = _bounds.Y + (_bounds.Height - textHeight) / 2;
 
-            SplashKit.DrawText(_text, _textColor, font, 16, textX, textY);
+                SplashKit.DrawText(_text, _textColor, Font.Get, 16, textX, textY);
+            }
         }
     }
 }

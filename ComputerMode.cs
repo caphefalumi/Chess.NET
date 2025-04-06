@@ -7,4 +7,4 @@ namespace Chess
             game.ChangeState(new GameplayScreen(game, board, config));
         }
     }
-} 
+}

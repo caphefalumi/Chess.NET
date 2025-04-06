@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Chess
 {
-    public class GameplayScreen : ScreenState
+    public class GameplayScreen : ScreenState, IGameObserver
     {
         private readonly Game _game;
         private readonly Board _board;
@@ -16,21 +16,27 @@ namespace Chess
         private Button _undoButton;
         private Button _resetButton;
         private Button _gameOverNewGameButton;
-        private static Clock _clock;
+        private Clock _clock;
         private MatchState _gameState;
-        private static bool _gameOver;
-        private static string _gameOverMessage;
-        public static bool PromotionFlag;
-        private static bool _showPromotionMenu;
-        private static Move _promotionMove;
-        private static Dictionary<PieceType, Bitmap> _promotionPieces;
-        private static Dictionary<PieceType, Rectangle> _promotionButtons;
+        private bool _gameOver;
+        private string _gameOverMessage;
+        private bool _promotionFlag;
+        private bool _showPromotionMenu;
+        private Move _promotionMove;
+        private Dictionary<PieceType, Bitmap> _promotionPieces;
+        private Dictionary<PieceType, Button> _promotionButtons;
         private TextLabel _statusLabel;
         private ChessBot _chessBot;
         private NetworkManager _networkManager;
         private bool _botIsThinking = false;
         private bool _isMyTurn = true;
         private const int MAX_FILENAME_LENGTH = 20;
+        private GameEventManager _eventManager;
+
+        // Properties to replace static access
+        public bool PromotionFlag => _promotionFlag;
+        public bool GameOver => _gameOver;
+        public string GameOverMessage => _gameOverMessage;
 
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {
@@ -54,11 +60,47 @@ namespace Chess
 
             _gameOver = false;
             _gameOverMessage = "";
+            _promotionFlag = false;
+            _showPromotionMenu = false;
 
             // Initialize AI if in computer mode
             if (config.Mode == Variant.Computer)
             {
-                _chessBot = ChessBot.GetInstance(_board, _gameState.CurrentPlayer);
+                // Initialize the AI to play as the opposite color of the player's choice
+                Player computerPlayer = config.PlayerColor.Opponent();
+                _chessBot = ChessBot.GetInstance(_board, computerPlayer);
+                
+                // If player chose Black and it's White's turn, make the computer move immediately
+                if (config.PlayerColor == Player.Black && _gameState.CurrentPlayer == Player.White)
+                {
+                    _botIsThinking = true;
+                    UpdateStatusLabel("Computer is thinking...");
+                    
+                    // Make the computer move
+                    Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // Wait a moment for UI to be fully set up
+                            await Task.Delay(500);
+                            
+                            // Get computer move
+                            Move bestMove = await _chessBot.GetBestMove();
+                            
+                            if (bestMove != null)
+                            {
+                                // Execute the move on the board
+                                _gameState.MakeMove(bestMove);
+                                _clock.SwitchTurn();
+                                BoardEvent.CheckGameResult();
+                            }
+                        }
+                        finally
+                        {
+                            _botIsThinking = false;
+                        }
+                    });
+                }
             }
 
             // Initialize network manager if in network mode
@@ -76,10 +118,57 @@ namespace Chess
 
             // Initialize BoardEvent
             BoardEvent.Initialize(_board);
-            BoardEvent.OnMoveMade += HandleLocalMove;
+            BoardEvent.SetGameplayScreen(this);  // Register this instance with BoardEvent
+
+            // Initialize and register with the event manager
+            _eventManager = GameEventManager.GetInstance();
+            _eventManager.RegisterObserver(this);
+            
+            // No need to create additional observers here
 
             _clock.Start();
-            _clock.OnTimeExpired += DeclareGameOver;
+            _clock.OnTimeExpired += message => DeclareGameOver(message);
+        }
+
+        // IGameObserver implementation
+        public void OnMoveMade(Move move)
+        {
+            // Update UI when a move is made
+            UpdateStatusLabel($"{move.MovedPiece.Color.Opponent()}'s turn");
+            
+            // If we're playing against a computer and it's computer's turn, show "Computer is thinking..."
+            if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black)
+            {
+                UpdateStatusLabel("Computer is thinking...");
+            }
+            
+            // Handle network move sending (previously done via event subscription)
+            HandleLocalMove(move);
+            
+            // Switch the clock
+            SwitchTurn();
+        }
+
+        public void OnGameOver(GameResult result, string message)
+        {
+            // Update game state and UI
+            UpdateStatusLabel(message);
+            DeclareGameOver(message);
+        }
+
+        public void OnCheck(Player playerInCheck)
+        {
+            // Update UI with check state
+            UpdateStatusLabel($"{playerInCheck} is in check!");
+        }
+
+        public void OnTurnChanged(Player newPlayer)
+        {
+            // Update the clock to match the current player
+            _clock.CurrentTurn = newPlayer;
+            
+            // Additional UI updates can be added here if needed
+            // For example, highlighting the active player's information
         }
 
         private void HandleNetworkMove(string moveData)
@@ -174,14 +263,6 @@ namespace Chess
                 }
                 return;
             }
-            if (SplashKit.KeyTyped(KeyCode.SKey))
-            {
-                _board.LoadFen("8/8/8/4p1K1/2k1P3/8/8/8 b - - 0 1");
-            }
-            if (SplashKit.KeyTyped(KeyCode.LKey))
-            {
-                DrawLoadMenu();
-            }
             if (SplashKit.KeyTyped(KeyCode.FKey))
             {
                 _board.Flip();
@@ -204,7 +285,13 @@ namespace Chess
                 _gameOverNewGameButton.Update();
                 return;
             }
-
+            if (_showPromotionMenu)
+            {
+                foreach (Button button in _promotionButtons.Values)
+                {
+                    button.Update();
+                }
+            }
             _menuButton.Update();
             _undoButton.Update();
             _resetButton.Update();
@@ -214,7 +301,9 @@ namespace Chess
             _clock.Update();
 
             // Computer Move Logic
-            if (_config.Mode == Variant.Computer && _gameState.CurrentPlayer == Player.Black && !_botIsThinking)
+            if (_config.Mode == Variant.Computer && 
+                _gameState.CurrentPlayer != _config.PlayerColor && 
+                !_botIsThinking)
             {
                 _botIsThinking = true;
                 
@@ -242,6 +331,50 @@ namespace Chess
             }
         }
 
+        // Method to handle time expiry
+        private void HandleTimeExpired(Player player)
+        {
+            DeclareGameOver($"{player.Opponent()} wins on time!");
+        }
+
+        // Method to switch turns
+        public void SwitchTurn()
+        {
+            _clock.SwitchTurn();
+        }
+
+        // Method to handle game over
+        public void DeclareGameOver(string msg)
+        {
+            _gameOver = true;
+            _gameOverMessage = msg;
+        }
+
+        // Method to show promotion menu
+        public void ShowPromotionMenu(Move move, Player color)
+        {
+            _showPromotionMenu = true;
+            _promotionMove = move;
+            _promotionFlag = true;
+            
+            // Use the provided color (or default to current player if not specified)
+            Player pieceColor = color;
+            
+            
+            // Center position of the board
+            int menuX = 160; // Center horizontally (640/2 - 320/2)
+            int menuY = 280; // Center vertically (640/2 - 80/2)
+            
+            // Create buttons using the piece bitmaps
+            _promotionButtons = new Dictionary<PieceType, Button>
+            {
+                { PieceType.Queen, new Button(Piece.GetPieceBitmap(PieceType.Queen, pieceColor), menuX, menuY, 80, 80) },
+                { PieceType.Rook, new Button(Piece.GetPieceBitmap(PieceType.Rook, pieceColor), menuX + 80, menuY, 80, 80) },
+                { PieceType.Bishop, new Button(Piece.GetPieceBitmap(PieceType.Bishop, pieceColor), menuX + 160, menuY, 80, 80) },
+                { PieceType.Knight, new Button(Piece.GetPieceBitmap(PieceType.Knight, pieceColor), menuX + 240, menuY, 80, 80) }
+            };
+        }
+
         public override void Render()
         {
             SplashKit.ClearScreen(Color.White);
@@ -249,34 +382,9 @@ namespace Chess
 
             if (_showPromotionMenu)
             {
-                // Calculate center position of the board
-                int menuX = 160; // Center horizontally (640/2 - 320/2)
-                int menuY = 280; // Center vertically (640/2 - 80/2)
-
-                // Draw menu background (white color)
-                SplashKit.FillRectangle(Color.White, menuX, menuY, 320, 80);
-                SplashKit.DrawRectangle(Color.Gray, menuX, menuY, 320, 80);
-
-                // Draw piece options horizontally with their click detection rectangles
-                int x = menuX;
-                foreach (KeyValuePair<PieceType, Bitmap> piece in _promotionPieces)
+                foreach (Button button in _promotionButtons.Values)
                 {
-                    // Calculate the padding to center the piece in the 80x80 box
-                    float pieceSize = 70.0f; // Slightly smaller than the 80x80 box
-                    float padding = (80 - pieceSize) / 2; // Center the piece in the box
-                    
-                    // Draw piece image centered in the box
-                    SplashKit.DrawBitmap(
-                        piece.Value, 
-                        x + padding - 25, 
-                        menuY + padding - 45, 
-                        SplashKit.OptionScaleBmp(pieceSize / piece.Value.Width, pieceSize / piece.Value.Height)
-                    );
-                    
-                    // Draw transparent rectangle for click detection
-                    _promotionButtons[piece.Key].Draw();
-                    
-                    x += 80; // Move to next piece position
+                    button.Draw();
                 }
             }
 
@@ -293,14 +401,11 @@ namespace Chess
             if (_gameOver)
             {
                 // Draw semi-transparent overlay
-                Rectangle overlay = new Rectangle(Color.RGBAColor(0, 0, 0, 128), 0, 0, 
-                    SplashKit.ScreenWidth(), SplashKit.ScreenHeight());
+                Rectangle overlay = new Rectangle(Color.RGBAColor(0, 0, 0, 128), 0, 0, SplashKit.ScreenWidth(), SplashKit.ScreenHeight());
                 overlay.Draw();
                 
                 // Draw game over text
-                Font font = SplashKit.LoadFont("Arial", "Arial.ttf");
-                SplashKit.DrawText(_gameOverMessage, Color.White, font, 36, 
-                    SplashKit.ScreenWidth() / 2 - 150, SplashKit.ScreenHeight() / 2 - 50);
+                SplashKit.DrawText(_gameOverMessage, Color.White, Font.Get, 36, SplashKit.ScreenWidth() / 2 - 150, SplashKit.ScreenHeight() / 2 - 50);
                 
                 _gameOverNewGameButton.Draw();
             }
@@ -354,46 +459,6 @@ namespace Chess
             };
         }
 
-        public static void SwitchTurn()
-        {
-            _clock.SwitchTurn();
-        }
-
-        public static void DeclareGameOver(string msg)
-        {
-            _gameOver = true;
-            _gameOverMessage = msg;
-        }
-
-        public static void ShowPromotionMenu(Move move, Player color)
-        {
-            _showPromotionMenu = true;
-            _promotionMove = move;
-            PromotionFlag = true;
-
-            // Center position of the board
-            int menuX = 160; // Center horizontally (640/2 - 320/2)
-            int menuY = 280; // Center vertically (640/2 - 80/2)
-
-            // Use existing piece bitmap images instead of creating new ones
-            _promotionPieces = new Dictionary<PieceType, Bitmap>
-            {
-                { PieceType.Queen, Piece.GetPieceBitmap(PieceType.Queen, color) },
-                { PieceType.Rook, Piece.GetPieceBitmap(PieceType.Rook, color) },
-                { PieceType.Bishop, Piece.GetPieceBitmap(PieceType.Bishop, color) },
-                { PieceType.Knight, Piece.GetPieceBitmap(PieceType.Knight, color) }
-            };
-
-            // Create transparent rectangles for click detection
-            _promotionButtons = new Dictionary<PieceType, Rectangle>
-            {
-                { PieceType.Queen, new Rectangle(Color.Transparent, menuX, menuY, 80, 80) },
-                { PieceType.Rook, new Rectangle(Color.Transparent, menuX + 80, menuY, 80, 80) },
-                { PieceType.Bishop, new Rectangle(Color.Transparent, menuX + 160, menuY, 80, 80) },
-                { PieceType.Knight, new Rectangle(Color.Transparent, menuX + 240, menuY, 80, 80) }
-            };
-        }
-
         public override string GetStateName() => "GamePlay";
 
         private void ResetBoard()
@@ -430,16 +495,20 @@ namespace Chess
             if (SplashKit.MouseClicked(MouseButton.LeftButton))
             {
                 Point2D clickPoint = new Point2D() { X = SplashKit.MouseX(), Y = SplashKit.MouseY() };
-
-                foreach (KeyValuePair<PieceType, Rectangle> button in _promotionButtons)
+                
+                foreach (KeyValuePair<PieceType, Button> button in _promotionButtons)
                 {
-                    if (button.Value.IsAt(clickPoint))
+                    // Update the button first to check hover state
+                    button.Value.Update();
+                    
+                    // Check if the button was clicked
+                    if (button.Value.IsAt(clickPoint) && SplashKit.MouseClicked(MouseButton.LeftButton))
                     {
                         // Create and execute the promotion move
                         Move promotionMove = new PromotionMove(_promotionMove.From, _promotionMove.To, _promotionMove.MovedPiece, button.Key);
                         BoardEvent.HandleMove(promotionMove);
                         _showPromotionMenu = false;
-                        PromotionFlag = false;
+                        _promotionFlag = false;
                         break;
                     }
                 }
@@ -450,20 +519,6 @@ namespace Chess
         {
             _statusLabel.Text = text;
         }
-
-        private void DrawLoadMenu()
-        {
-            // Draw semi-transparent overlay
-            SplashKit.FillRectangle(SplashKit.RGBAColor(0, 0, 0, 128), 0, 0, SplashKit.ScreenWidth(), SplashKit.ScreenHeight());
-            
-            // Draw menu background
-            SplashKit.FillRectangle(Color.White, 200, 50, 400, 400);
-            SplashKit.DrawRectangle(Color.Black, 200, 50, 400, 400);
-            
-            // Draw title
-            SplashKit.DrawText("Load Game", Color.Black, 350, 70);
-        }
-
         public void HandleAutoSave()
         {
             if (!_gameOver)

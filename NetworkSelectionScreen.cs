@@ -6,10 +6,10 @@ namespace Chess
     {
         private readonly Game _game;
         private readonly Board _board;
-        private readonly Button _hostButton;
-        private readonly Button _joinButton;
-        private readonly Button _backButton;
-        private readonly TextLabel _statusLabel;
+        private Button _hostButton;
+        private Button _joinButton;
+        private Button _backButton;
+        private TextLabel _statusLabel;
         private NetworkManager _networkManager;
         private bool _isSearching;
         private string _serverIP;
@@ -20,6 +20,20 @@ namespace Chess
             _game = game;
             _board = board;
             _config = new MatchConfiguration { Mode = Variant.Network };
+            InitializeComponents();
+        }
+        
+        public NetworkSelectionScreen(Game game, Board board, MatchConfiguration config)
+        {
+            _game = game;
+            _board = board;
+            _config = config;
+            _config.Mode = Variant.Network;
+            InitializeComponents();
+        }
+        
+        private void InitializeComponents()
+        {
             _networkManager = new NetworkManager();
 
             int centerX = SplashKit.ScreenWidth() / 2;
@@ -40,6 +54,7 @@ namespace Chess
                     _statusLabel.Text = "Starting server...";
                     
                     _networkManager.StartServer();
+                    _config.NetworkRole = NetworkRole.Host;
                     
                     // If we get here, server started successfully
                     _statusLabel.Text = "Server started. Waiting for player...";
@@ -59,6 +74,7 @@ namespace Chess
                     _statusLabel.Text = "Searching for server...";
                     
                     _networkManager.StartClientWithDiscovery();
+                    _config.NetworkRole = NetworkRole.Client;
                     
                     // If we get here, connection attempt started
                     _statusLabel.Text = "Attempting to connect...";
@@ -73,7 +89,7 @@ namespace Chess
             else if (_backButton.IsClicked())
             {
                 _networkManager.Cleanup();
-                _game.ChangeState(new VariantSelectionScreen(_game, _board));
+                _game.ChangeState(new MainMenuState(_game, _board));
             }
         }
 
@@ -95,9 +111,7 @@ namespace Chess
             SplashKit.ClearScreen(Color.White);
             
             // Draw title
-            Font titleFont = SplashKit.LoadFont("Arial", "Arial.ttf");
-            SplashKit.DrawText("Network Chess", Color.Black, titleFont, 36, 
-                SplashKit.ScreenWidth() / 2 - 150, 100);
+            SplashKit.DrawText("Network Chess", Color.Black, Font.Get, 36, SplashKit.ScreenWidth() / 2 - 150, 100);
 
             _hostButton.Draw();
             _joinButton.Draw();

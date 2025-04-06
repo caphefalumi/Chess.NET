@@ -74,10 +74,10 @@ namespace Chess
                 int rankY = _startY + ((7 - i) * _squareSize) + (_squareSize / 2);
 
                 // Draw file letters (below board)
-                SplashKit.DrawText(files[i], _textColor, "Arial", 16, fileX + 25, _startY + (8 * _squareSize) - 20);
+                SplashKit.DrawText(files[i], _textColor, Font.Get, 16, fileX + 25, _startY + (8 * _squareSize) - 20);
 
                 // Draw rank numbers (left side)
-                SplashKit.DrawText((i + 1).ToString(), _textColor, "Arial", 16, _startX - MARGIN + 25, rankY + 15);
+                SplashKit.DrawText((i + 1).ToString(), _textColor, Font.Get, 16, _startX - MARGIN + 25, rankY + 15);
             }
         }
 

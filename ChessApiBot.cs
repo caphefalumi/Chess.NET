@@ -62,7 +62,7 @@ namespace Chess
             Console.WriteLine("Sending API request...");
             Console.WriteLine($"FEN: {fen}");
 
-            var response = await PostApiRequestAsync(new Dictionary<string, object>
+            Dictionary<string, object> response = await PostApiRequestAsync(new Dictionary<string, object>
             {
                 { "fen", fen },
                 { "depth", 12 },
