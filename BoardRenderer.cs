@@ -14,9 +14,6 @@ namespace Chess
 
         private static BoardRenderer _instance;
 
-        public int StartX => _startX;
-        public int StartY => _startY;
-
         private BoardRenderer(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
             _squareSize = squareSize;

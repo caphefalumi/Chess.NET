@@ -27,15 +27,6 @@
             }
             return _instance;
         }
-        
-        public static Clock GetInstance()
-        {
-            if (_instance == null)
-            {
-                _instance = new Clock(TimeSpan.FromMinutes(10), TimeSpan.Zero);
-            }
-            return _instance;
-        }
 
         private void HandleTimeExpired(Player player)
         {
@@ -89,10 +80,6 @@
             _currentTurn = Player.White;
         }
 
-        public string GetFormattedTime(Player player)
-        {
-            return player == Player.White ? _whiteTimer.GetFormattedTime() : _blackTimer.GetFormattedTime();
-        }
 
         public void SetRemainingTime(Player player, TimeSpan time)
         {

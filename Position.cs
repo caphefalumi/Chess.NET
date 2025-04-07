@@ -1,14 +1,26 @@
-﻿namespace Chess
+namespace Chess
 {
     public class Position
     {
-        public int File { get; set; }
-        public int Rank { get; set; }
+        private int _file;
+        private int _rank;
+
+        public int File 
+        { 
+            get => _file; 
+            set => _file = value; 
+        }
+        
+        public int Rank 
+        { 
+            get => _rank; 
+            set => _rank = value; 
+        }
 
         public Position(int file, int rank)
         {
-            File = file;
-            Rank = rank;
+            _file = file;
+            _rank = rank;
         }
 
         public Position(string notation)
@@ -17,19 +29,19 @@
             char rankChar = notation[1];
             
             // Convert file character (a-h) to index (0-7)
-            File = char.ToLower(fileChar) - 'a';
+            _file = char.ToLower(fileChar) - 'a';
             
             // Convert rank character (1-8) to index (0-7), with 0 at the top
-            Rank = '8' - rankChar;
+            _rank = '8' - rankChar;
         }
 
         public int X
         {
-            get => File * 80;
+            get => _file * 80;
         }
         public int Y
         {
-            get => Rank * 80;
+            get => _rank * 80;
         }
 
         public override bool Equals(object obj)
@@ -38,12 +50,12 @@
                 return false;
 
             Position other = (Position)obj;
-            return File == other.File && Rank == other.Rank;
+            return _file == other._file && _rank == other._rank;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(File, Rank);
+            return HashCode.Combine(_file, _rank);
         }
 
         public static bool operator ==(Position left, Position right)
@@ -58,8 +70,8 @@
 
         public override string ToString()
         {
-            char fileLetter = (char)('a' + File);
-            return $"{fileLetter}{8 - Rank}";
+            char fileLetter = (char)('a' + _file);
+            return $"{fileLetter}{8 - _rank}";
         }
     }
 }

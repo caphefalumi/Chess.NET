@@ -2,49 +2,69 @@
 {
     class NormalMove : Move, IMove
     {
+        private readonly Position _from;
+        private readonly Position _to;
+        private readonly Piece _movedPiece;
+
+        private Piece _capturedPiece;
+        private Sound _sound;
+
         public override MoveType Type => MoveType.Normal;
-        public override Position From { get; }
-        public override Position To { get; }
-        public override Piece MovedPiece { get; }
-        public override Piece CapturedPiece { get; set; }
-        public override Sound Sound { get; protected set; }
+        public override Position From => _from;
+        public override Position To => _to;
+        public override Piece MovedPiece => _movedPiece;
+        public override Piece CapturedPiece
+        {
+            get => _capturedPiece;
+            set => _capturedPiece = value;
+        }
+
+        public override Sound Sound
+        {
+            get => _sound;
+            protected set => _sound = value;
+        }
+
         public NormalMove(Position from, Position to, Piece piece)
         {
-            From = from;
-            To = to;
-            MovedPiece = piece;
-            Sound = Sounds.MoveSelf;
+            _from = from;
+            _to = to;
+            _movedPiece = piece;
+            _sound = Sounds.MoveSelf;
         }
 
         public override void Execute(Board board, bool isSimulation)
         {
-            CapturedPiece = board.GetPieceAt(To);  // Save captured piece (if any)
+            _capturedPiece = board.GetPieceAt(_to);  // Save captured piece (if any)
 
-            if (CapturedPiece != null)
+            if (_capturedPiece != null)
             {
-                board.Pieces.Remove(CapturedPiece);
-                Sound = Sounds.Capture;
+                board.Pieces.Remove(_capturedPiece);
+                _sound = Sounds.Capture;
             }
-            MovedPiece.Position = To;
+
+            _movedPiece.Position = _to;
+
             if (!isSimulation)
             {
-                MovedPiece.HasMoved = true;
+                _movedPiece.HasMoved = true;
             }
         }
 
         public override void Undo(Board board, bool isSimulation)
         {
-            if (MovedPiece is not null)
+            if (_movedPiece is not null)
             {
-                MovedPiece.Position = From;
+                _movedPiece.Position = _from;
                 if (!isSimulation)
                 {
-                    MovedPiece.HasMoved = false;
+                    _movedPiece.HasMoved = false;
                 }
             }
-            if (CapturedPiece is not null)
+
+            if (_capturedPiece is not null)
             {
-                board.Pieces.Add(CapturedPiece);  // Restore captured piece
+                board.Pieces.Add(_capturedPiece);  // Restore captured piece
             }
         }
     }

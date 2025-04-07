@@ -4,20 +4,40 @@
     {
         private static MatchState _instance;
         private Board _board;
-        public Player CurrentPlayer { get; private set; }
-        public Stack<KeyValuePair<Move, string>> MoveHistory { get; }
-        public bool CanWhiteCastleKingside { get; private set; } = true;
-        public bool CanWhiteCastleQueenside { get; private set; } = true;
-        public bool CanBlackCastleKingside { get; private set; } = true;
-        public bool CanBlackCastleQueenside { get; private set; } = true;
-        public int HalfmoveClock { get; private set; } = 0;
-        public int FullmoveNumber { get; private set; } = 1;
+
+        private Player _currentPlayer;
+        private readonly Stack<KeyValuePair<Move, string>> _moveHistory;
+
+        private bool _canWhiteCastleKingside;
+        private bool _canWhiteCastleQueenside;
+        private bool _canBlackCastleKingside;
+        private bool _canBlackCastleQueenside;
+
+        private int _halfmoveClock;
+        private int _fullmoveNumber;
+
+        public Player CurrentPlayer => _currentPlayer;
+        public Stack<KeyValuePair<Move, string>> MoveHistory => _moveHistory;
+        public bool CanWhiteCastleKingside => _canWhiteCastleKingside;
+        public bool CanWhiteCastleQueenside => _canWhiteCastleQueenside;
+        public bool CanBlackCastleKingside => _canBlackCastleKingside;
+        public bool CanBlackCastleQueenside => _canBlackCastleQueenside;
+        public int HalfmoveClock => _halfmoveClock;
+        public int FullmoveNumber => _fullmoveNumber;
 
         private MatchState(Board board, Player startingPlayer)
         {
             _board = board;
-            CurrentPlayer = startingPlayer;
-            MoveHistory = new Stack<KeyValuePair<Move, string>>();
+            _currentPlayer = startingPlayer;
+            _moveHistory = new Stack<KeyValuePair<Move, string>>();
+
+            _canWhiteCastleKingside = true;
+            _canWhiteCastleQueenside = true;
+            _canBlackCastleKingside = true;
+            _canBlackCastleQueenside = true;
+
+            _halfmoveClock = 0;
+            _fullmoveNumber = 1;
         }
 
         public static MatchState GetInstance(Board board, Player startingPlayer)
@@ -28,127 +48,114 @@
             }
             return _instance;
         }
+
         public static MatchState GetInstance()
         {
             return _instance;
         }
+
         public void MakeMove(Move move, bool isSimulation = false)
         {
             if (!isSimulation)
             {
                 UpdateCastlingRights(move);
                 UpdateHalfmoveClock(move);
-                if (CurrentPlayer == Player.Black)
+                if (_currentPlayer == Player.Black)
                 {
-                    FullmoveNumber++;
+                    _fullmoveNumber++;
                 }
                 Console.WriteLine(move.Type);
                 move.Sound.Play();
             }
-            // Execute the move
-            move.Execute(_board, isSimulation);
-            MoveHistory.Push(new KeyValuePair<Move, string>(move, _board.GetFen()));
 
-            // Switch player
-            CurrentPlayer = CurrentPlayer.Opponent();
+            move.Execute(_board, isSimulation);
+            _moveHistory.Push(new KeyValuePair<Move, string>(move, _board.GetFen()));
+            _currentPlayer = _currentPlayer.Opponent();
         }
 
         private void UpdateCastlingRights(Move move)
         {
-            // Check if king is moving (lose all castling rights for that side)
             if (move.MovedPiece is King)
             {
                 if (move.MovedPiece.Color == Player.White)
                 {
-                    CanWhiteCastleKingside = false;
-                    CanWhiteCastleQueenside = false;
+                    _canWhiteCastleKingside = false;
+                    _canWhiteCastleQueenside = false;
                 }
                 else
                 {
-                    CanBlackCastleKingside = false;
-                    CanBlackCastleQueenside = false;
+                    _canBlackCastleKingside = false;
+                    _canBlackCastleQueenside = false;
                 }
             }
 
-            // Check if rook is moving (lose castling right for that side)
             if (move.MovedPiece is Rook)
             {
                 Position pos = move.From;
 
-                // White kingside rook
                 if (pos.Equals(new Position(7, 0)))
-                    CanWhiteCastleKingside = false;
+                    _canWhiteCastleKingside = false;
 
-                // White queenside rook
                 if (pos.Equals(new Position(0, 0)))
-                    CanWhiteCastleQueenside = false;
+                    _canWhiteCastleQueenside = false;
 
-                // Black kingside rook
                 if (pos.Equals(new Position(7, 7)))
-                    CanBlackCastleKingside = false;
+                    _canBlackCastleKingside = false;
 
-                // Black queenside rook
                 if (pos.Equals(new Position(0, 7)))
-                    CanBlackCastleQueenside = false;
+                    _canBlackCastleQueenside = false;
             }
 
-            // Check if rook is captured (lose castling right for that side)
             Piece capturedPiece = _board.GetPieceAt(move.To);
             if (capturedPiece is Rook)
             {
                 Position pos = move.To;
 
-                // White kingside rook
                 if (pos.Equals(new Position(7, 0)))
-                    CanWhiteCastleKingside = false;
+                    _canWhiteCastleKingside = false;
 
-                // White queenside rook
                 if (pos.Equals(new Position(0, 0)))
-                    CanWhiteCastleQueenside = false;
+                    _canWhiteCastleQueenside = false;
 
-                // Black kingside rook
                 if (pos.Equals(new Position(7, 7)))
-                    CanBlackCastleKingside = false;
+                    _canBlackCastleKingside = false;
 
-                // Black queenside rook
                 if (pos.Equals(new Position(0, 7)))
-                    CanBlackCastleQueenside = false;
+                    _canBlackCastleQueenside = false;
             }
         }
 
         private void UpdateHalfmoveClock(Move move)
         {
-            // Reset halfmove clock on pawn moves or captures
             if (move.MovedPiece?.Type == PieceType.Pawn || move.CapturedPiece is not null)
             {
-                HalfmoveClock = 0;
+                _halfmoveClock = 0;
             }
             else
             {
-                // Increment the clock for non-pawn, non-capture moves
-                HalfmoveClock++;
+                _halfmoveClock++;
             }
         }
 
-        // Update UnmakeMove to restore FEN-related properties
         public void UnmakeMove(bool isSimulation = false)
         {
-            if (MoveHistory.Count > 0)
+            if (_moveHistory.Count > 0)
             {
-                Move lastMove = MoveHistory.Pop().Key;
+                Move lastMove = _moveHistory.Pop().Key;
                 lastMove.Undo(_board, isSimulation);
-                CurrentPlayer = CurrentPlayer.Opponent();
+                _currentPlayer = _currentPlayer.Opponent();
 
                 if (!isSimulation)
                 {
-                    if (CurrentPlayer == Player.Black)
+                    if (_currentPlayer == Player.Black)
                     {
-                        FullmoveNumber--;
+                        _fullmoveNumber--;
                     }
-                    HalfmoveClock--;
+                    _halfmoveClock--;
                 }
             }
         }
+
         public bool MoveResolvesCheck(Move move, Player player)
         {
             MakeMove(move, true);
@@ -156,16 +163,24 @@
             UnmakeMove(true);
             return !stillInCheck;
         }
+
         public void Reset()
         {
             _board.ResetBoard();
-            CurrentPlayer = Player.White;
-            MoveHistory.Clear();
+            _currentPlayer = Player.White;
+            _moveHistory.Clear();
+
+            _canWhiteCastleKingside = true;
+            _canWhiteCastleQueenside = true;
+            _canBlackCastleKingside = true;
+            _canBlackCastleQueenside = true;
+            _halfmoveClock = 0;
+            _fullmoveNumber = 1;
         }
 
         public void SetCurrentPlayer(Player player)
         {
-            CurrentPlayer = player;
+            _currentPlayer = player;
         }
     }
 }

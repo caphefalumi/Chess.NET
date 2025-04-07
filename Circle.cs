@@ -5,7 +5,7 @@ namespace Chess
     public class Circle : Shape, IShape
     {
         int _radius;
-
+        
         public Circle(Color color, float x, float y, int radius) : base(color)
         {
             Color = color;
@@ -13,12 +13,7 @@ namespace Chess
             Y = y;
             _radius = radius;
         }
-
-        public int Radius
-        {
-            get { return _radius; }
-            set { _radius = value; }
-        }
+        
         public override bool IsAt(Point2D pt)
         {
             SplashKitSDK.Circle circle = SplashKit.CircleAt(X, Y, _radius);

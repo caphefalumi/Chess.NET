@@ -4,55 +4,72 @@ namespace Chess
 {
     public abstract class Piece : IDrawable
     {
-        public Player Color { get; }
+        private readonly Player _color;
+        private readonly char _pieceChar;
+        private readonly PieceType _type;
+        private readonly Bitmap _pieceImage;
+        private readonly Board _myBoard;
+
         public Position Position { get; set; }
         public bool HasMoved { get; set; }
-        public char PieceChar { get; }
-        public PieceType Type { get; }
-        public Bitmap PieceImage;
-        public Board MyBoard { get; }
         public bool IsSelected { get; set; }
+
+        public Player Color => _color;
+        public char PieceChar => _pieceChar;
+        public PieceType Type => _type;
+        public Bitmap PieceImage => _pieceImage;
+        public Board MyBoard => _myBoard;
 
         public Piece(char pieceChar, Board board)
         {
-            PieceChar = pieceChar;
-            Color = char.IsUpper(pieceChar) ? Player.White : Player.Black;
-            Type = PieceFactory.GetPieceType(PieceChar);
-            PieceImage = GetPieceBitmap(Type, Color);
+            _pieceChar = pieceChar;
+            _color = char.IsUpper(pieceChar) ? Player.White : Player.Black;
+            _type = PieceFactory.GetPieceType(_pieceChar);
+            _pieceImage = GetPieceBitmap(_type, _color);
+            _myBoard = board;
+
             HasMoved = false;
-            MyBoard = board;
             IsSelected = false;
         }
 
         public HashSet<Move> GetLegalMoves()
         {
             HashSet<Move> pseudoLegalMoves = GetMoves();
-
-            return pseudoLegalMoves.Where(move => MyBoard.MatchState.MoveResolvesCheck(move, Color)).ToHashSet(); ;
+            return pseudoLegalMoves
+                .Where(move => _myBoard.MatchState.MoveResolvesCheck(move, _color))
+                .ToHashSet();
         }
 
         public abstract HashSet<Move> GetMoves();
 
         protected bool CanMoveTo(Position pos)
         {
-            return Board.IsInside(pos) && (MyBoard.IsEmpty(pos) || MyBoard.GetPieceAt(pos).Color != Color);
+            return Board.IsInside(pos) &&
+                   (_myBoard.IsEmpty(pos) || _myBoard.GetPieceAt(pos).Color != _color);
         }
 
         public virtual IEnumerable<Move> GetAttackedSquares()
         {
             return GetMoves();
         }
+
         public void Draw()
         {
-            int x = Position.File * 80 -35;
+            int x = Position.File * 80 - 35;
             int y = Position.Rank * 80 - 35;
-            SplashKit.DrawBitmap(PieceImage, x, y, SplashKit.OptionScaleBmp(80.0f / PieceImage.Width, 80.0f / PieceImage.Height));
+            SplashKit.DrawBitmap(
+                _pieceImage,
+                x,
+                y,
+                SplashKit.OptionScaleBmp(80.0f / _pieceImage.Width, 80.0f / _pieceImage.Height)
+            );
         }
+
         public static Bitmap GetPieceBitmap(PieceType pieceType, Player color)
         {
             char pieceChar = PieceFactory.GetPieceChar(pieceType, color);
-            char pieceColor = (color == Player.White) ? 'w' : 'b';
-            string bitmapName = pieceColor.ToString() + pieceChar.ToString();
+            char pieceColor = color == Player.White ? 'w' : 'b';
+            string bitmapName = pieceColor + pieceChar.ToString();
             return SplashKit.LoadBitmap(bitmapName, $"Resources\\Pieces\\{bitmapName}.png");
         }
     }

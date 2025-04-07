@@ -2,26 +2,62 @@ namespace Chess
 {
     public class MatchConfiguration
     {
-        public Variant Mode { get; set; }
-        public TimeControl TimeControl { get; set; }
-        public bool UseIncrement { get; set; }
-        public int IncrementSeconds { get; set; }
-        public NetworkRole NetworkRole { get; set; }
-        public Player PlayerColor { get; set; }
-        
+        private Variant _mode;
+        private TimeControl _timeControl;
+        private bool _useIncrement;
+        private int _incrementSeconds;
+        private NetworkRole _networkRole;
+        private Player _playerColor;
+
+        public Variant Mode
+        {
+            get => _mode;
+            set => _mode = value;
+        }
+
+        public TimeControl TimeControl
+        {
+            get => _timeControl;
+            set => _timeControl = value;
+        }
+
+        public bool UseIncrement
+        {
+            get => _useIncrement;
+            set => _useIncrement = value;
+        }
+
+        public int IncrementSeconds
+        {
+            get => _incrementSeconds;
+            set => _incrementSeconds = value;
+        }
+
+        public NetworkRole NetworkRole
+        {
+            get => _networkRole;
+            set => _networkRole = value;
+        }
+
+        public Player PlayerColor
+        {
+            get => _playerColor;
+            set => _playerColor = value;
+        }
+
         public MatchConfiguration()
         {
-            Mode = Variant.TwoPlayer;
-            TimeControl = TimeControl.TenMinutes;
-            UseIncrement = false;
-            IncrementSeconds = 0;
-            NetworkRole = NetworkRole.None;
-            PlayerColor = Player.White;
+            _mode = Variant.TwoPlayer;
+            _timeControl = TimeControl.TenMinutes;
+            _useIncrement = false;
+            _incrementSeconds = 0;
+            _networkRole = NetworkRole.None;
+            _playerColor = Player.White;
         }
 
         public TimeSpan GetTimeSpan()
         {
-            return TimeControl switch
+            return _timeControl switch
             {
                 TimeControl.Bullet1 => TimeSpan.FromMinutes(1),
                 TimeControl.Bullet3 => TimeSpan.FromMinutes(3),
@@ -36,18 +72,7 @@ namespace Chess
 
         public TimeSpan GetIncrementSpan()
         {
-            return UseIncrement ? TimeSpan.FromSeconds(IncrementSeconds) : TimeSpan.Zero;
+            return _useIncrement ? TimeSpan.FromSeconds(_incrementSeconds) : TimeSpan.Zero;
         }
-    }
-
-    public enum TimeControl
-    {
-        Bullet1,
-        Bullet3,
-        Blitz5,
-        TenMinutes,
-        FifteenMinutes,
-        ThirtyMinutes,
-        Unlimited
     }
 }

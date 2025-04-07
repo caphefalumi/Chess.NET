@@ -5,6 +5,7 @@
         public Direction Dir { get; private set; }
         public bool CanBeEnpassant { get; set; }
         private Position _originalPosition;
+        
         public Pawn(char pieceChar, Position pos, Board board) : base(pieceChar, board)
         {
             Position = pos;

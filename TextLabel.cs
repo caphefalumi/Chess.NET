@@ -4,32 +4,63 @@ namespace Chess
 {
     public class TextLabel
     {
-        public string Text { get; set; }
-        public int X { get; set; }
-        public int Y { get; set; }
-        public Color Color { get; set; }
-        public int FontSize { get; set; }
+        private string _text;
+        private int _x;
+        private int _y;
+        private Color _color;
+        private int _fontSize;
 
         public TextLabel(string text, int x, int y)
         {
-            Text = text;
-            X = x;
-            Y = y;
-            Color = Color.DarkBlue;
-            FontSize = 15;
+            _text = text;
+            _x = x;
+            _y = y;
+            _color = Color.DarkBlue;
+            _fontSize = 15;
         }
+
         public TextLabel(string text, int x, int y, Color color, int fontSize)
         {
-            Text = text;
-            X = x;
-            Y = y;
-            Color = color;
-            FontSize = fontSize;
+            _text = text;
+            _x = x;
+            _y = y;
+            _color = color;
+            _fontSize = fontSize;
         }
-        
+
+        public string Text
+        {
+            get => _text;
+            set => _text = value;
+        }
+
+        public int X
+        {
+            get => _x;
+            set => _x = value;
+        }
+
+        public int Y
+        {
+            get => _y;
+            set => _y = value;
+        }
+
+        public Color Color
+        {
+            get => _color;
+            set => _color = value;
+        }
+
+        public int FontSize
+        {
+            get => _fontSize;
+            set => _fontSize = value;
+        }
+
         public void Draw()
         {
-            SplashKit.DrawText(Text, Color, Font.Arial, FontSize, X, Y);
+            SplashKit.DrawText(_text, _color, Font.Arial, _fontSize, _x, _y);
         }
     }
-} 
+}

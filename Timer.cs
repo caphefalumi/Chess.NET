@@ -69,10 +69,5 @@
             _clockRemaining = newTime;
             _isRunning = false;
         }
-
-        public string GetFormattedTime()
-        {
-            return $"{(int)_clockRemaining.TotalMinutes:D2}:{_clockRemaining.Seconds:D2}";
-        }
     }
 }

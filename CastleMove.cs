@@ -2,47 +2,64 @@
 {
     public class CastleMove : Move, IMove
     {
-        public override MoveType Type { get; }
-        public override Position From { get; }
-        public override Position To { get; }
-        public override Piece MovedPiece { get; }
-        public override Piece CapturedPiece { get; set; }
+        private MoveType _type;
+        private Position _from;
+        private Position _to;
+        private Piece _movedPiece;
+        private Piece _capturedPiece;
+        private Sound _sound;
+
         private Rook _rook;
         private Position _rookFrom;
         private Position _rookTo;
-        public override Sound Sound { get; protected set; }
+
+        public override MoveType Type => _type;
+        public override Position From => _from;
+        public override Position To => _to;
+        public override Piece MovedPiece => _movedPiece;
+
+        public override Piece CapturedPiece
+        {
+            get => _capturedPiece;
+            set => _capturedPiece = value;
+        }
+
+        public override Sound Sound
+        {
+            get => _sound;
+            protected set => _sound = value;
+        }
 
         public CastleMove(MoveType type, Position kingPos, King king)
         {
-            Type = type;
-            From = kingPos;
-            MovedPiece = king;
+            _type = type;
+            _from = kingPos;
+            _movedPiece = king;
 
             if (type == MoveType.CastleKS)
             {
-                To = new Position(6, kingPos.Rank);
+                _to = new Position(6, kingPos.Rank);
                 _rookFrom = new Position(7, kingPos.Rank);
                 _rookTo = new Position(5, kingPos.Rank);
             }
             else if (type == MoveType.CastleQS)
             {
-                To = new Position(2, kingPos.Rank);
+                _to = new Position(2, kingPos.Rank);
                 _rookFrom = new Position(0, kingPos.Rank);
                 _rookTo = new Position(3, kingPos.Rank);
             }
-            Sound = Sounds.Castle;
+
+            _sound = Sounds.Castle;
         }
 
         public override void Execute(Board board, bool isSimulation)
         {
-            King king = (King)MovedPiece;
+            King king = (King)_movedPiece;
             _rook = (Rook)board.GetPieceAt(_rookFrom);
-            
-            // Move the king
-            king.Position = To;
-            // Move the rook
+
+            king.Position = _to;
             _rook.Position = _rookTo;
-            
+
             if (!isSimulation)
             {
                 king.HasMoved = true;
@@ -53,19 +70,19 @@
 
         public override void Undo(Board board, bool isSimulation)
         {
-            King king = (King)MovedPiece;
-            
-            if (king is not null)
+            King king = (King)_movedPiece;
+
+            if (king != null)
             {
-                king.Position = From;
+                king.Position = _from;
                 if (!isSimulation)
                 {
                     king.HasMoved = false;
                     king.Castled = false;
                 }
             }
-            
-            if (_rook is not null)
+
+            if (_rook != null)
             {
                 _rook.Position = _rookFrom;
                 if (!isSimulation)

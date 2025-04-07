@@ -13,27 +13,54 @@ namespace Chess
         private int _squareSize;
         private King _whiteKing;
         private King _blackKing;
-        public bool IsGameOver { get; set; }
-        public bool IsFlipped { get; set; }
-        
+        private bool _isGameOver;
+        private bool _isFlipped;
+        private GameResult _gameResult;
+        private MatchState _matchState;
+
+        public int SquareSize => _squareSize;
+
+        public bool IsGameOver
+        {
+            get => _isGameOver;
+            set => _isGameOver = value;
+        }
+
+        public bool IsFlipped
+        {
+            get => _isFlipped;
+            set => _isFlipped = value;
+        }
+
+        public GameResult GameResult
+        {
+            get => _gameResult;
+            set => _gameResult = value;
+        }
+
+        public MatchState MatchState
+        {
+            get => _matchState;
+            set => _matchState = value;
+        }
+
         public HashSet<Piece> Pieces
         {
             get => _pieces;
             private set => _pieces = value;
         }
+
         public HashSet<Circle> BoardHighlights
         {
             get => _boardHighlights;
             set => _boardHighlights = value;
         }
+
         public Rectangle[] BackgroundOverlays
         {
             get => _backgroundOverlays;
             set => _backgroundOverlays = value;
         }
-        public int SquareSize => _squareSize;
-        public GameResult GameResult { get; set; }
-        public MatchState MatchState { get; set; }
 
         private Board(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
@@ -44,8 +71,9 @@ namespace Chess
             _boardDrawer = BoardRenderer.GetInstance(squareSize, startX, startY, lightColor, darkColor);
             _whiteKing = FindKing(Player.White);
             _blackKing = FindKing(Player.Black);
-            GameResult = GameResult.Ongoing;
+            _gameResult = GameResult.Ongoing;
         }
+
         public static Board GetInstance(int squareSize, int startX, int startY, Color lightColor, Color darkColor)
         {
             if (_instance is null)
@@ -65,7 +93,7 @@ namespace Chess
 
         public Piece GetPieceAt(int rank, int file)
         {
-            foreach (Piece piece in Pieces)
+            foreach (Piece piece in _pieces)
             {
                 if (piece.Position.Rank == rank && piece.Position.File == file)
                 {
@@ -74,9 +102,10 @@ namespace Chess
             }
             return null;
         }
+
         public Piece GetPieceAt(Position pos)
         {
-            foreach (Piece piece in Pieces)
+            foreach (Piece piece in _pieces)
             {
                 if (piece.Position.Equals(pos))
                 {
@@ -85,6 +114,7 @@ namespace Chess
             }
             return null;
         }
+
         public static bool IsInside(Position pos)
         {
             return pos.File >= 0 && pos.File < 8 && pos.Rank >= 0 && pos.Rank < 8;
@@ -109,8 +139,6 @@ namespace Chess
                 .Any(move => move.To == king.Position);
         }
 
-     
-
         public HashSet<Move> GetAllyMoves(Player player)
         {
             HashSet<Piece> piecesCopy = _pieces.ToHashSet();
@@ -119,7 +147,6 @@ namespace Chess
                 .SelectMany(piece => piece.GetLegalMoves())
                 .ToHashSet();
 
-
             return moves;
         }
 
@@ -127,13 +154,12 @@ namespace Chess
         {
             StringBuilder fen = new StringBuilder();
 
-            // 1. Board Representation (ranks 8 to 1, files a to h)
-            for (int rank = 0; rank < 8; rank++)  // Start from rank 0 (which corresponds to the bottom in FEN)
+            for (int rank = 0; rank < 8; rank++)
             {
                 int emptyCount = 0;
                 for (int file = 0; file < 8; file++)
                 {
-                    Position pos = new Position(file, rank);  // Use the rank as it is, no reverse needed here
+                    Position pos = new Position(file, rank);
                     Piece piece = GetPieceAt(pos);
 
                     if (piece is null)
@@ -151,51 +177,39 @@ namespace Chess
                     }
                 }
                 if (emptyCount > 0) fen.Append(emptyCount);
-                if (rank < 7) fen.Append('/');  // Append slash except for the last rank
+                if (rank < 7) fen.Append('/');
             }
 
-            // 2. Active Color
-            fen.Append(' ').Append(MatchState.CurrentPlayer == Player.White ? "w" : "b");
+            fen.Append(' ').Append(_matchState.CurrentPlayer == Player.White ? "w" : "b");
 
-            // 3. Castling Availability
             StringBuilder castling = new StringBuilder();
-            if (MatchState.CanWhiteCastleKingside) castling.Append('K');
-            if (MatchState.CanWhiteCastleQueenside) castling.Append('Q');
-            if (MatchState.CanBlackCastleKingside) castling.Append('k');
-            if (MatchState.CanBlackCastleQueenside) castling.Append('q');
+            if (_matchState.CanWhiteCastleKingside) castling.Append('K');
+            if (_matchState.CanWhiteCastleQueenside) castling.Append('Q');
+            if (_matchState.CanBlackCastleKingside) castling.Append('k');
+            if (_matchState.CanBlackCastleQueenside) castling.Append('q');
             fen.Append(' ').Append(castling.Length > 0 ? castling.ToString() : "-");
 
-            // 4. En Passant Target Square
             fen.Append(' ');
             fen.Append('-');
 
-            // 5. Halfmove Clock (moves since last capture or pawn advance)
-            fen.Append(' ').Append(MatchState.HalfmoveClock);
-
-            // 6. Fullmove Number
-            fen.Append(' ').Append(MatchState.FullmoveNumber);
+            fen.Append(' ').Append(_matchState.HalfmoveClock);
+            fen.Append(' ').Append(_matchState.FullmoveNumber);
 
             return fen.ToString();
         }
 
         public void Flip()
         {
-            // Flip all pieces' positions
             foreach (Piece piece in _pieces)
             {
-                // Calculate new position (flip vertically)
                 int newRank = 7 - piece.Position.Rank;
                 piece.Position = new Position(piece.Position.File, newRank);
             }
 
-            // Update kings' positions
             _whiteKing = FindKing(Player.White);
             _blackKing = FindKing(Player.Black);
+            _isFlipped = !_isFlipped;
 
-            // Toggle the flipped state
-            IsFlipped = !IsFlipped;
-
-            // Update pawn directions after flipping
             foreach (Piece piece in _pieces)
             {
                 if (piece is Pawn pawn)
@@ -204,28 +218,20 @@ namespace Chess
                 }
             }
         }
-        
+
         public void ResetBoard()
         {
-            // Reset pieces to initial position
             _pieces = PieceFactory.CreatePieces(this);
-            
-            // Clear highlights and overlays
             _boardHighlights.Clear();
             _backgroundOverlays = new Rectangle[3];
-            
-            // Reset kings reference
             _whiteKing = FindKing(Player.White);
             _blackKing = FindKing(Player.Black);
-            
-            // Reset game state
-            GameResult = GameResult.Ongoing;
-            IsGameOver = false;
-            
-            // Recreate MatchState with default settings
-            if (MatchState != null)
+            _gameResult = GameResult.Ongoing;
+            _isGameOver = false;
+
+            if (_matchState != null)
             {
-                MatchState = MatchState.GetInstance(this, Player.White);
+                _matchState = MatchState.GetInstance(this, Player.White);
             }
         }
 
@@ -233,7 +239,7 @@ namespace Chess
         {
             if (string.IsNullOrWhiteSpace(fen)) return;
 
-            _pieces.Clear(); // Clear current pieces
+            _pieces.Clear();
 
             string[] parts = fen.Split(' ');
             if (parts.Length < 2)
@@ -245,21 +251,21 @@ namespace Chess
             string position = parts[0];
             string activeColor = parts[1];
 
-            int rank = 0; // Start from rank 7 (top) for black pieces
+            int rank = 0;
             int file = 0;
 
             foreach (char c in position)
             {
                 if (c == '/')
                 {
-                    rank++; // Move to next row *up* (decreasing rank)
+                    rank++;
                     file = 0;
                     continue;
                 }
 
                 if (char.IsDigit(c))
                 {
-                    file += c - '0'; // Empty squares
+                    file += c - '0';
                     continue;
                 }
 
@@ -269,7 +275,7 @@ namespace Chess
                     continue;
                 }
 
-                Position pos = new Position(file, rank); // (x, y)
+                Position pos = new Position(file, rank);
                 Piece piece = PieceFactory.CreatePiece(c, pos, this);
 
                 if (piece != null)
@@ -293,7 +299,7 @@ namespace Chess
             }
 
             Player startingPlayer = activeColor == "w" ? Player.White : Player.Black;
-            MatchState.GetInstance(this, startingPlayer);
+            _matchState = MatchState.GetInstance(this, startingPlayer);
         }
     }
 }

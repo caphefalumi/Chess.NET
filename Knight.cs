@@ -2,7 +2,6 @@
 {
     public class Knight : Piece
     {
-
         private static readonly Direction[] dirs = 
         {
             Direction.Up + Direction.UpLeft, Direction.Up + Direction.UpRight,
@@ -14,7 +13,6 @@
         {
             Position = pos;
         }
-
 
         private HashSet<Move> GetLShapedMoves()
         {

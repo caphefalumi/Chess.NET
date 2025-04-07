@@ -17,10 +17,11 @@ namespace Chess
         private Thread _receiveThread;
         private bool _isConnected;
         private bool _isServer;
+        
+        private static NetworkManager _instance;
 
         public event Action<string> OnMoveReceived;
         public event Action<bool> OnConnectionStatusChanged;
-        private static NetworkManager _instance;
 
         public static NetworkManager GetInstance()
         {

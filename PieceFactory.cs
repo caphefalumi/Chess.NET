@@ -15,7 +15,7 @@ namespace Chess
             { 'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R' }
         };
 
-        public static HashSet<Piece> CreatePieces(Board board, bool isReversed = false)
+        public static HashSet<Piece> CreatePieces(Board board)
         {
             HashSet<Piece> pieces = new HashSet<Piece>();
             for (int rank = 0; rank < 8; rank++)
