@@ -1,5 +1,4 @@
-﻿﻿// VariantSelectionScreen.cs (Updated)
-using SplashKitSDK;
+﻿﻿using SplashKitSDK;
 
 namespace Chess
 {

@@ -8,8 +8,6 @@ namespace Chess
         private readonly Game _game;
         private readonly Board _board;
         private readonly MatchConfiguration _config;
-        private readonly Variant _selectedMode;
-        
         private List<Button> _timeButtons = new List<Button>();
         private List<Button> _incrementButtons = new List<Button>();
         private Button _startGameButton;
@@ -32,7 +30,6 @@ namespace Chess
         {
             _game = game;
             _board = board;
-            _selectedMode = selectedMode;
             _config = new MatchConfiguration { Mode = selectedMode };
             
             int centerX = SplashKit.ScreenWidth() / 2;

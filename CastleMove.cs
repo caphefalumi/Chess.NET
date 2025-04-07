@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Chess
+﻿namespace Chess
 {
     public class CastleMove : Move, IMove
     {
@@ -13,6 +11,7 @@ namespace Chess
         private Position _rookFrom;
         private Position _rookTo;
         public override Sound Sound { get; protected set; }
+
         public CastleMove(MoveType type, Position kingPos, King king)
         {
             Type = type;

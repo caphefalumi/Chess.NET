@@ -1,9 +1,4 @@
 ﻿using SplashKitSDK;
-using System;
-using System.Diagnostics;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Chess
 {
@@ -29,13 +24,10 @@ namespace Chess
         private NetworkManager _networkManager;
         private bool _botIsThinking = false;
         private bool _isMyTurn = true;
-        private const int MAX_FILENAME_LENGTH = 20;
         private GameEventManager _eventManager;
 
         // Properties to replace static access
         public bool PromotionFlag => _promotionFlag;
-        public bool GameOver => _gameOver;
-        public string GameOverMessage => _gameOverMessage;
 
         public GameplayScreen(Game game, Board board, MatchConfiguration config)
         {

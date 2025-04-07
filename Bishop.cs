@@ -1,5 +1,4 @@
-﻿
-namespace Chess
+﻿namespace Chess
 {
     public class Bishop : SlidingPiece
     {

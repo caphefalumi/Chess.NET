@@ -10,7 +10,6 @@ namespace Chess
         private Window _window;
         private MatchState _gameState;
         private string _windowName = "Chess";
-        private GameEventManager _eventManager;
 
         public Game(string title, int width, int height)
         {
@@ -20,12 +19,10 @@ namespace Chess
             int squareSize = 80;
             int startX = 0;
             int startY = 0;
+            
             Color lightColor = SplashKit.RGBColor(255, 206, 158);
             Color darkColor = SplashKit.RGBColor(209, 139, 71);
 
-            // Initialize the observer pattern first to ensure events are captured
-            _eventManager = GameEventManager.GetInstance();
-            
             // Initialize the game components
             _board = Board.GetInstance(squareSize, startX, startY, lightColor, darkColor);
             _gameState = MatchState.GetInstance(_board, Player.White);

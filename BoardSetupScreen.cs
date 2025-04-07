@@ -15,7 +15,7 @@ namespace Chess
         private Button _whitePieceButton;
         private Button _blackPieceButton;
         private Dictionary<PieceType, Button> _pieceTypeButtons = new Dictionary<PieceType, Button>();
-        private MatchConfiguration _config;  // Add configuration object
+        private MatchConfiguration _config;
 
         public BoardSetupScreen(Game game, Board board)
         {

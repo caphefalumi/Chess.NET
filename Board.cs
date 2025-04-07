@@ -1,7 +1,5 @@
 ﻿using SplashKitSDK;
-using System.Numerics;
 using System.Text;
-using System.Linq;
 
 namespace Chess
 {
@@ -15,9 +13,9 @@ namespace Chess
         private int _squareSize;
         private King _whiteKing;
         private King _blackKing;
-        
         public bool IsGameOver { get; set; }
         public bool IsFlipped { get; set; }
+        
         public HashSet<Piece> Pieces
         {
             get => _pieces;

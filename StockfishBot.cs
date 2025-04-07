@@ -1,14 +1,9 @@
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Chess
 {
-    /// <summary>
     /// Chess bot implementation using the Stockfish engine
-    /// </summary>
     public class StockfishBot : IBot
     {
         private Process _stockfishProcess;

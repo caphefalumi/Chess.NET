@@ -2,7 +2,6 @@
 {
     public class King : Piece
     {
-        private bool _isCheckingAttacks = false;
         public bool Castled { get; set; }
 
         private static readonly Direction[] dirs =
@@ -91,7 +90,7 @@
             }
 
             // Only check castling if king hasn't moved and isn't in check
-            if (!HasMoved && !Castled && !_isCheckingAttacks && !MyBoard.IsInCheck(Color))
+            if (!HasMoved && !Castled && !MyBoard.IsInCheck(Color))
             {
                 if (CanCastleKS())
                 {

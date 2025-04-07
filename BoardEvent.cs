@@ -1,5 +1,4 @@
 ﻿using SplashKitSDK;
-using System;
 
 namespace Chess
 {

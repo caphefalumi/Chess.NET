@@ -1,7 +1,4 @@
-﻿using SplashKitSDK;
-using System.Collections.Generic;
-
-namespace Chess
+﻿namespace Chess
 {
     public class MatchState
     {

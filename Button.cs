@@ -15,8 +15,8 @@ namespace Chess
 
         public int X => (int)_bounds.X;
         public int Y => (int)_bounds.Y;
-        public int Width => (int)_bounds.Width;
-        public int Height => (int)_bounds.Height;
+        public int Width => _bounds.Width;
+        public int Height =>_bounds.Height;
         public string Text => _text;
 
         public Button(string text, int x, int y, int width, int height)
@@ -86,9 +86,9 @@ namespace Chess
                 float bitmapY = _bounds.Y - 35 + (_bounds.Height - bitmapHeight) / 2;
                 
                 SplashKit.DrawBitmap(
-                    _bitmap, 
-                    bitmapX, 
-                    bitmapY, 
+                    _bitmap,
+                    bitmapX,
+                    bitmapY,
                     SplashKit.OptionScaleBmp(_bitmapScale, _bitmapScale)
                 );
             }

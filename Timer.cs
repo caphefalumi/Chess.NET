@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Chess
+﻿namespace Chess
 {
     public class Timer
     {

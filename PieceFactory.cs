@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-
+﻿
 namespace Chess
 {
     public static class PieceFactory

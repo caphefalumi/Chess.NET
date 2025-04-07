@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using SplashKitSDK;
-
-namespace Chess
+﻿namespace Chess
 {
     public enum SoundType
     {

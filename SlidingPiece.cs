@@ -1,6 +1,4 @@
-﻿using System.Numerics;
-
-namespace Chess
+﻿namespace Chess
 {
     public abstract class SlidingPiece : Piece
     {

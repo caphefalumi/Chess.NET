@@ -1,8 +1,4 @@
-﻿using SplashKitSDK;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Chess
+﻿namespace Chess
 {
     public class Knight : Piece
     {
