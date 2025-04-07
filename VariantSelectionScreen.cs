@@ -63,8 +63,7 @@ namespace Chess
         {
             SplashKit.ClearScreen(Color.White);
 
-            SplashKit.DrawText("Select Game Mode", Color.Black, Font.Arial, 28,
-                SplashKit.ScreenWidth() / 2 - 120, 100);
+            SplashKit.DrawText("Select Game Mode", Color.Black, Font.Arial, 28, SplashKit.ScreenWidth() / 2 - 120, 100);
 
             _twoPlayerButton.Draw();
             _computerButton.Draw();
