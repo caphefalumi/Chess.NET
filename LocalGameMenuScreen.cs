@@ -97,7 +97,7 @@ namespace Chess
             else if (_backButton.IsClicked())
             {
                 // Return to main menu
-                _game.ChangeState(new MainMenuState(_game, _board));
+                _game.ChangeState(new MainMenuScreen(_game, _board));
             }
         }
 
@@ -136,7 +136,5 @@ namespace Chess
 
             SplashKit.RefreshScreen();
         }
-
-        public override string GetStateName() => "LocalGameMenu";
     }
 }

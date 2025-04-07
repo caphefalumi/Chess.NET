@@ -2,7 +2,7 @@
 {
     public class Rook : SlidingPiece
     {
-        private static readonly Direction[] dirs = new Direction[]
+        private static readonly Direction[] dirs =
         {
             Direction.Up, Direction.Right, Direction.Left, Direction.Down
         };

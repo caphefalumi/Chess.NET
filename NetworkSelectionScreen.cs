@@ -78,7 +78,7 @@ namespace Chess
             else if (_backButton.IsClicked())
             {
                 _networkManager.Cleanup();
-                _game.ChangeState(new MainMenuState(_game, _board));
+                _game.ChangeState(new MainMenuScreen(_game, _board));
             }
         }
 
@@ -146,7 +146,5 @@ namespace Chess
                 }
             }
         }
-
-        public override string GetStateName() => "NetworkSelection";
     }
 }

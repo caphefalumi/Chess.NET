@@ -2,7 +2,7 @@
 
 namespace Chess
 {
-    public class MainMenuState : ScreenState
+    public class MainMenuScreen : ScreenState
     {
         private readonly Game _game;
         private readonly Board _board;
@@ -11,7 +11,7 @@ namespace Chess
         private Button _exitButton;
         private Bitmap _logo;
 
-        public MainMenuState(Game game, Board board)
+        public MainMenuScreen(Game game, Board board)
         {
             _game = game;
             _board = board;
@@ -67,6 +67,5 @@ namespace Chess
             SplashKit.RefreshScreen();
         }
 
-        public override string GetStateName() => "MainMenu";
     }
 }

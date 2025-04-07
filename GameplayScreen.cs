@@ -230,7 +230,7 @@ namespace Chess
             {
                 _networkManager?.Cleanup();
                 ResetBoard();
-                _game.ChangeState(new MainMenuState(_game, _board));
+                _game.ChangeState(new MainMenuScreen(_game, _board));
                 return;
             }
 
@@ -448,8 +448,6 @@ namespace Chess
                 _ => "Chess"
             };
         }
-
-        public override string GetStateName() => "GamePlay";
 
         private void ResetBoard()
         {

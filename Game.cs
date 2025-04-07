@@ -11,7 +11,6 @@ namespace Chess
         private MatchState _gameState;
         private string _windowName = "Chess";
         private GameEventManager _eventManager;
-        private ConsoleDebugObserver _debugObserver;
 
         public Game(string title, int width, int height)
         {
@@ -27,17 +26,11 @@ namespace Chess
             // Initialize the observer pattern first to ensure events are captured
             _eventManager = GameEventManager.GetInstance();
             
-            // Register the debug observer in debug mode
-            #if DEBUG
-            _debugObserver = new ConsoleDebugObserver();
-            _eventManager.RegisterObserver(_debugObserver);
-            #endif
-
             // Initialize the game components
             _board = Board.GetInstance(squareSize, startX, startY, lightColor, darkColor);
             _gameState = MatchState.GetInstance(_board, Player.White);
 
-            _currentState = new MainMenuState(this, _board);
+            _currentState = new MainMenuScreen(this, _board);
         }
 
         public MatchState GetGameState()

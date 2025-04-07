@@ -186,7 +186,5 @@ namespace Chess
             _config = config;
             _config.Mode = Variant.Custom; // Ensure we're in custom mode
         }
-
-        public override string GetStateName() => "GameSetup";
     }
 }

@@ -164,7 +164,5 @@ namespace Chess
                 button.X - 4, button.Y - 4, 
                 button.Width + 8, button.Height + 8);
         }
-        
-        public override string GetStateName() => "TimeSelection";
     }
 }
