@@ -3,13 +3,10 @@ using Newtonsoft.Json;
 
 namespace Chess
 {
-    /// <summary>
-    /// Chess bot implementation using the chess-api.com web service
-    /// </summary>
     public class ChessApiBot : IBot
     {
         private static readonly HttpClient _httpClient = new HttpClient();
-        private const int DEFAULT_INTERNET_CHECK_TIMEOUT = 3000; // milliseconds
+        private const int DEFAULT_INTERNET_CHECK_TIMEOUT = 3000;
         private const string API_URL = "https://chess-api.com/v1";
 
         private async Task<Dictionary<string, object>> PostApiRequestAsync(Dictionary<string, object> requestBody)

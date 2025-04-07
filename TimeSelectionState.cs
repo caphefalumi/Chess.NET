@@ -122,12 +122,12 @@ namespace Chess
             SplashKit.ClearScreen(Color.White);
             
             // Draw header
-            SplashKit.DrawText("Select Time Control", Color.Black, Font.Get, 28, 
+            SplashKit.DrawText("Select Time Control", Color.Black, Font.Arial, 28, 
                 SplashKit.ScreenWidth() / 2 - 140, 80);
             
             // Draw time options section
             SplashKit.DrawLine(Color.LightGray, 100, 140, 600, 140);
-            SplashKit.DrawText("Time per player:", Color.Black, Font.Get, 18, 100, 150);
+            SplashKit.DrawText("Time per player:", Color.Black, Font.Arial, 18, 100, 150);
             
             // Draw all time buttons
             for (int i = 0; i < _timeButtons.Count; i++)
@@ -141,7 +141,7 @@ namespace Chess
             
             // Draw increment section
             SplashKit.DrawLine(Color.LightGray, 100, 320, 600, 320);
-            SplashKit.DrawText("Increment per move:", Color.Black, Font.Get, 18, 100, 330);
+            SplashKit.DrawText("Increment per move:", Color.Black, Font.Arial, 18, 100, 330);
             
             // Draw all increment buttons
             for (int i = 0; i < _incrementButtons.Count; i++)

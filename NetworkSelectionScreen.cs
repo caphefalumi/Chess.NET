@@ -10,9 +10,10 @@ namespace Chess
         private Button _joinButton;
         private Button _backButton;
         private TextLabel _statusLabel;
+        private List<string> _serverIPs;
+        private List<Button> _serverIPButtons;
         private NetworkManager _networkManager;
         private bool _isSearching;
-        private string _serverIP;
         private MatchConfiguration _config;
 
         public NetworkSelectionScreen(Game game, Board board)
@@ -20,22 +21,8 @@ namespace Chess
             _game = game;
             _board = board;
             _config = new MatchConfiguration { Mode = Variant.Network };
-            InitializeComponents();
-        }
-        
-        public NetworkSelectionScreen(Game game, Board board, MatchConfiguration config)
-        {
-            _game = game;
-            _board = board;
-            _config = config;
-            _config.Mode = Variant.Network;
-            InitializeComponents();
-        }
-        
-        private void InitializeComponents()
-        {
-            _networkManager = new NetworkManager();
-
+            _networkManager = NetworkManager.GetInstance();
+            _serverIPs = new List<string>();
             int centerX = SplashKit.ScreenWidth() / 2;
 
             _hostButton = new Button("Host Game", centerX - 100, 200, 200, 50);
@@ -43,6 +30,8 @@ namespace Chess
             _backButton = new Button("Back", centerX - 100, 340, 200, 50);
             _statusLabel = new TextLabel("", centerX - 150, 400, 300, 30);
         }
+        
+
 
         public override void HandleInput()
         {
@@ -72,8 +61,8 @@ namespace Chess
                 {
                     _isSearching = true;
                     _statusLabel.Text = "Searching for server...";
-                    
-                    _networkManager.StartClientWithDiscovery();
+                    _serverIPs = _networkManager.GetServerIPs();
+                    GetChosenIP(_serverIPButtons);
                     _config.NetworkRole = NetworkRole.Client;
                     
                     // If we get here, connection attempt started
@@ -111,20 +100,27 @@ namespace Chess
             SplashKit.ClearScreen(Color.White);
             
             // Draw title
-            SplashKit.DrawText("Network Chess", Color.Black, Font.Get, 36, SplashKit.ScreenWidth() / 2 - 150, 100);
+            SplashKit.DrawText("Network Chess", Color.Black, Font.Arial, 36, SplashKit.ScreenWidth() / 2 - 150, 100);
 
             _hostButton.Draw();
             _joinButton.Draw();
             _backButton.Draw();
             _statusLabel.Draw();
+            _serverIPButtons.ForEach(button => button.Draw());
             SplashKit.RefreshScreen();
         }
 
-        private void OnFenReceived(string fen)
+        public void GetChosenIP(List<Button> serverIPButtons)
         {
-            _board.LoadFen(fen);
+            foreach (Button button in serverIPButtons)
+            {
+                if (button.IsClicked())
+                {
+                    _networkManager.StartClientWithDiscovery(button.Text);
+                    break;
+                }
+            }
         }
-
         public override string GetStateName() => "NetworkSelection";
     }
 } 

@@ -124,7 +124,7 @@ namespace Chess
         {
             SplashKit.ClearScreen(Color.White);
 
-            SplashKit.DrawText("Custom Game Setup", Color.Black, Font.Get, 24, SplashKit.ScreenWidth() / 2 - 120, 20);
+            SplashKit.DrawText("Custom Game Setup", Color.Black, Font.Arial, 24, SplashKit.ScreenWidth() / 2 - 120, 20);
 
             _board.Draw();
             _startButton.Draw();
@@ -134,21 +134,21 @@ namespace Chess
 
             // Display the current time settings
             string timeText = GetTimeControlText();
-            SplashKit.DrawText($"Time: {timeText}", Color.Black, Font.Get, 14, 360, 15);
+            SplashKit.DrawText($"Time: {timeText}", Color.Black, Font.Arial, 14, 360, 15);
 
-            SplashKit.DrawText("Piece Color:", Color.Black, Font.Get, 16, 650, 70);
+            SplashKit.DrawText("Piece Color:", Color.Black, Font.Arial, 16, 650, 70);
             _whitePieceButton.Draw();
             _blackPieceButton.Draw();
             HighlightButton(_selectedPlayerColor == Player.White ? _whitePieceButton : _blackPieceButton);
 
-            SplashKit.DrawText("Piece Type:", Color.Black, Font.Get, 16, 650, 180);
+            SplashKit.DrawText("Piece Type:", Color.Black, Font.Arial, 16, 650, 180);
             foreach (KeyValuePair<PieceType, Button> entry in _pieceTypeButtons)
             {
                 entry.Value.Draw();
                 if (entry.Key == _selectedPieceType) HighlightButton(entry.Value);
             }
 
-            SplashKit.DrawText("Click on board to place pieces", Color.Black, Font.Get, 16, 10, 650);
+            SplashKit.DrawText("Click on board to place pieces", Color.Black, Font.Arial, 16, 10, 650);
             SplashKit.RefreshScreen();
         }
 

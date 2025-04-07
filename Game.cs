@@ -5,7 +5,6 @@ namespace Chess
 {
     public class Game
     {
-        private static Game _instance;
         private ScreenState _currentState;
         private Board _board;
         private Window _window;
@@ -14,7 +13,7 @@ namespace Chess
         private GameEventManager _eventManager;
         private ConsoleDebugObserver _debugObserver;
 
-        private Game(string title, int width, int height)
+        public Game(string title, int width, int height)
         {
             _windowName = title;
             _window = SplashKit.OpenWindow(title, width, height);
@@ -39,24 +38,6 @@ namespace Chess
             _gameState = MatchState.GetInstance(_board, Player.White);
 
             _currentState = new MainMenuState(this, _board);
-        }
-
-        public static Game GetInstance(string title, int width, int height)
-        {
-            if (_instance == null)
-            {
-                _instance = new Game(title, width, height);
-            }
-            return _instance;
-        }
-
-        public static Game GetInstance()
-        {
-            if (_instance == null)
-            {
-                _instance = new Game("Chess", 800, 600);
-            }
-            return _instance;
         }
 
         public MatchState GetGameState()

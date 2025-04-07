@@ -17,6 +17,7 @@ namespace Chess
         public int Y => (int)_bounds.Y;
         public int Width => (int)_bounds.Width;
         public int Height => (int)_bounds.Height;
+        public string Text => _text;
 
         public Button(string text, int x, int y, int width, int height)
         {
@@ -84,13 +85,13 @@ namespace Chess
             else if (!string.IsNullOrEmpty(_text))
             {
                 // Draw the text centered in the button
-                float textWidth = SplashKit.TextWidth(_text, Font.Get, 16);
-                float textHeight = SplashKit.TextHeight(_text, Font.Get, 16);
+                float textWidth = SplashKit.TextWidth(_text, Font.Arial, 16);
+                float textHeight = SplashKit.TextHeight(_text, Font.Arial, 16);
 
                 float textX = _bounds.X + (_bounds.Width - textWidth) / 2;
                 float textY = _bounds.Y + (_bounds.Height - textHeight) / 2;
 
-                SplashKit.DrawText(_text, _textColor, Font.Get, 16, textX, textY);
+                SplashKit.DrawText(_text, _textColor, Font.Arial, 16, textX, textY);
             }
         }
     }

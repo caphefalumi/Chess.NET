@@ -10,13 +10,11 @@ namespace Chess
         private Button _playOnlineButton;
         private Button _exitButton;
         private Bitmap _logo;
-        private NetworkManager _networkManager;
 
         public MainMenuState(Game game, Board board)
         {
             _game = game;
             _board = board;
-            _networkManager = new NetworkManager();
 
             // Initialize UI elements
             _logo = SplashKit.LoadBitmap("ChessLogo", "Resources/chess_logo.png");

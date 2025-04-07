@@ -118,7 +118,7 @@ namespace Chess
             SplashKit.ClearScreen(Color.White);
             SplashKit.DrawBitmap(_logo, SplashKit.ScreenWidth() / 2 - _logo.Width / 2, 100);
 
-            SplashKit.DrawText("Local Game Options", Color.Black, Font.Get, 24, 
+            SplashKit.DrawText("Local Game Options", Color.Black, Font.Arial, 24, 
                 SplashKit.ScreenWidth() / 2 - 120, 350);
 
             _newGameButton.Draw();

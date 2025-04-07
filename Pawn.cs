@@ -23,6 +23,7 @@
                 if (MyBoard.IsFlipped)
                 {
                     Dir = Direction.Down;
+                    _originalPosition = new Position(_originalPosition.File, 7 - _originalPosition.Rank);
                 }
             }
             else
@@ -31,6 +32,7 @@
                 if (MyBoard.IsFlipped)
                 {
                     Dir = Direction.Up;
+                    _originalPosition = new Position(_originalPosition.File, 7 - _originalPosition.Rank);
                 }
             }
         }
@@ -63,7 +65,7 @@
                 }
 
                 Position doubleMovePos = singleMovePos + Dir;
-                if (MyBoard.IsEmpty(doubleMovePos) && Position == _originalPosition && (Position.Rank == 6 && Color == Player.White || Position.Rank == 1 && Color == Player.Black) && HasMoved == false)
+                if (MyBoard.IsEmpty(doubleMovePos) && HasMoved == false)
                 {
                     moves.Add(new DoublePawnMove(Position, doubleMovePos, this));
                 }

@@ -24,7 +24,7 @@
             return moveStr;
         }
 
-        public static Move ConvertNotation(string moveNotation, Board board)
+        public static Move ConvertNotation(string moveNotation, Board board, bool isFlip = false)
         {
             if (string.IsNullOrEmpty(moveNotation))
             {
@@ -39,7 +39,13 @@
                 
                 Position source = new Position(sourceStr);
                 Position destination = new Position(destStr);
-
+                if (isFlip)
+                {
+                    int newRankSource = 7 - source.Rank;
+                    int newRankDestination = 7 - destination.Rank;
+                    source = new Position(source.File, newRankSource);
+                    destination = new Position(destination.File, newRankDestination);
+                }
                 // Get the piece at the source position
                 Piece piece = board.GetPieceAt(source);
                 if (piece == null)

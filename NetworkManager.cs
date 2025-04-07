@@ -1,9 +1,6 @@
-using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
-using System.Collections.Generic;
 
 namespace Chess
 {
@@ -23,7 +20,21 @@ namespace Chess
         // Events for network communication
         public event Action<string> OnMoveReceived;
         public event Action<bool> OnConnectionStatusChanged;
+        private static NetworkManager _instance;
 
+        public static NetworkManager GetInstance()
+        {
+            if (_instance == null)
+            {
+                _instance = new NetworkManager();
+            }
+            return _instance;
+        }
+        private NetworkManager()
+        {
+            _isConnected = false;
+            _isServer = false;
+        }
         public bool IsConnected 
         { 
             get => _isConnected;
@@ -77,11 +88,13 @@ namespace Chess
             serverLoop.IsBackground = true;
             serverLoop.Start();
         }
-
-        public void StartClientWithDiscovery()
+        public List<string> GetServerIPs()
         {
-            List<string> servers = DiscoverAllServerIPs();
-            string chosen = SelectServerFromList(servers);
+            return DiscoverAllServerIPs();
+        } 
+
+        public void StartClientWithDiscovery(string chosen)
+        {
 
             if (string.IsNullOrEmpty(chosen))
             {
@@ -129,22 +142,18 @@ namespace Chess
             UdpClient udpClient = new UdpClient(UDP_PORT);
             udpClient.Client.ReceiveTimeout = timeoutSeconds * 1000;
             IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, UDP_PORT);
-            List<string> foundIPs = new List<string>();
+            HashSet<string> foundIPs = new HashSet<string>();
             DateTime start = DateTime.Now;
 
-            try
+            while ((DateTime.Now - start).TotalSeconds < timeoutSeconds)
             {
-                while ((DateTime.Now - start).TotalSeconds < timeoutSeconds)
-                {
-                    byte[] data = udpClient.Receive(ref remoteEndPoint);
-                    string ip = Encoding.UTF8.GetString(data);
-                    foundIPs.Add(ip);
-                    Console.WriteLine($"Discovered: {ip}");
-                }
+                byte[] data = udpClient.Receive(ref remoteEndPoint);
+                string ip = Encoding.UTF8.GetString(data);
+                foundIPs.Add(ip);
+                Console.WriteLine($"Discovered: {ip}");
             }
-            catch (SocketException) { }
 
-            return foundIPs;
+            return foundIPs.ToList();
         }
 
         private string SelectServerFromList(List<string> servers)
@@ -186,7 +195,6 @@ namespace Chess
                 Console.WriteLine($"[NetworkManager] Sending move: {moveNotation}");
                 byte[] data = Encoding.UTF8.GetBytes(moveNotation);
                 _stream.Write(data, 0, data.Length);
-                _stream.Flush(); // Ensure data is sent immediately
                 Console.WriteLine("[NetworkManager] Move sent successfully");
             }
             catch (Exception ex)

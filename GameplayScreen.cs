@@ -23,7 +23,6 @@ namespace Chess
         private bool _promotionFlag;
         private bool _showPromotionMenu;
         private Move _promotionMove;
-        private Dictionary<PieceType, Bitmap> _promotionPieces;
         private Dictionary<PieceType, Button> _promotionButtons;
         private TextLabel _statusLabel;
         private ChessBot _chessBot;
@@ -106,7 +105,7 @@ namespace Chess
             // Initialize network manager if in network mode
             if (config.NetworkRole != NetworkRole.None)
             {
-                _networkManager = new NetworkManager();
+                _networkManager = NetworkManager.GetInstance();
                 // Set initial turn based on network role
                 _isMyTurn = config.NetworkRole == NetworkRole.Host;
                 UpdateStatusLabel(_isMyTurn ? "Your turn" : "Opponent's turn");
@@ -142,7 +141,6 @@ namespace Chess
                 UpdateStatusLabel("Computer is thinking...");
             }
             
-            // Handle network move sending (previously done via event subscription)
             HandleLocalMove(move);
             
             // Switch the clock
@@ -166,16 +164,13 @@ namespace Chess
         {
             // Update the clock to match the current player
             _clock.CurrentTurn = newPlayer;
-            
-            // Additional UI updates can be added here if needed
-            // For example, highlighting the active player's information
         }
 
         private void HandleNetworkMove(string moveData)
         {
             Console.WriteLine($"[GameplayScreen] Received network move: {moveData}");
             // Parse the move data and apply it to the board
-            Move move = Move.ConvertNotation(moveData, _board);
+            Move move = Move.ConvertNotation(moveData, _board, true);
             if (move != null)
             {
                 Console.WriteLine($"[GameplayScreen] Applying move from {move.From} to {move.To}");
@@ -331,11 +326,6 @@ namespace Chess
             }
         }
 
-        // Method to handle time expiry
-        private void HandleTimeExpired(Player player)
-        {
-            DeclareGameOver($"{player.Opponent()} wins on time!");
-        }
 
         // Method to switch turns
         public void SwitchTurn()
@@ -405,7 +395,7 @@ namespace Chess
                 overlay.Draw();
                 
                 // Draw game over text
-                SplashKit.DrawText(_gameOverMessage, Color.White, Font.Get, 36, SplashKit.ScreenWidth() / 2 - 150, SplashKit.ScreenHeight() / 2 - 50);
+                SplashKit.DrawText(_gameOverMessage, Color.White, Font.Arial, 36, SplashKit.ScreenWidth() / 2 - 150, SplashKit.ScreenHeight() / 2 - 50);
                 
                 _gameOverNewGameButton.Draw();
             }
@@ -486,8 +476,7 @@ namespace Chess
             // Clear UI selections and highlights
             _board.BoardHighlights.Clear();
             
-            // Update status message
-            UpdateStatusLabel("Game Reset");
+            UpdateStatusLabel("");
         }
 
         private void HandlePromotionSelection()
