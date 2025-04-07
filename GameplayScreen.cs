@@ -41,9 +41,9 @@ namespace Chess
             _clock = Clock.GetInstance(config.GetTimeSpan(), config.GetIncrementSpan());
             
             // Setup UI buttons
-            _menuButton = new Button("Menu", 610, 10, 80, 30);
-            _undoButton = new Button("Undo", 610, 50, 80, 30);
-            _resetButton = new Button("Reset", 610, 90, 80, 30);
+            _menuButton = new Button("Menu", 650, 10, 80, 30);
+            _undoButton = new Button("Undo", 650, 50, 80, 30);
+            _resetButton = new Button("Reset", 650, 90, 80, 30);
             _gameOverNewGameButton = new Button("New Game", 250, 470, 200, 50);
             
             // Setup status label
@@ -393,12 +393,12 @@ namespace Chess
             }
 
             // Draw time display
-            DrawTimeDisplay(Player.White, _clock.WhiteTime.ToString(@"mm\:ss"), 630, 250);
-            DrawTimeDisplay(Player.Black, _clock.BlackTime.ToString(@"mm\:ss"), 630, 300);
+            DrawTimeDisplay(Player.White, _clock.WhiteTime.ToString(@"mm\:ss"), 650, 250);
+            DrawTimeDisplay(Player.Black, _clock.BlackTime.ToString(@"mm\:ss"), 650, 300);
 
             // Draw current mode text
             string modeText = GetModeDisplayText();
-            SplashKit.DrawText(modeText, Color.Black, 630, 350);
+            SplashKit.DrawText(modeText, Color.Black, Font.Arial, 18, 650, 350);
 
             // Draw status label
             if (!string.IsNullOrEmpty(_statusLabel.Text))
@@ -418,7 +418,7 @@ namespace Chess
             // Draw player background
             SplashKit.FillRectangle(playerBoxColor, x - 5, y - 5, 90, 30);
             SplashKit.DrawRectangle(Color.Gray, x - 5, y - 5, 90, 30);
-            SplashKit.DrawText(playerName, textColor, x, y);
+            SplashKit.DrawText(playerName, textColor, Font.Arial, 14, x, y);
             
         }
 
@@ -426,7 +426,7 @@ namespace Chess
         {
             string playerText = player == Player.White ? "White: " : "Black: ";
             Color textColor = player == _gameState.CurrentPlayer ? Color.Blue : Color.Black;
-            SplashKit.DrawText(playerText + timeStr, textColor, x, y);
+            SplashKit.DrawText(playerText + timeStr, textColor, Font.Arial, 20, x, y);
         }
 
         private string GetModeDisplayText()

@@ -30,7 +30,7 @@ namespace Chess
             };
 
             int centerX = SplashKit.ScreenWidth() / 2;
-            _startButton = new Button("Start Game", centerX - 100, 600, 200, 50);
+            _startButton = new Button("Start Game", centerX - 100, 640, 200, 50);
             _backButton = new Button("Back", 10, 10, 80, 30);
             _clearButton = new Button("Clear Board", 100, 10, 120, 30);
             _timeSettingsButton = new Button("Time Settings", 230, 10, 120, 30);
@@ -136,17 +136,31 @@ namespace Chess
             string timeText = GetTimeControlText();
             SplashKit.DrawText($"Time: {timeText}", Color.Black, Font.Arial, 14, 360, 15);
 
+            // Draw piece color buttons
             SplashKit.DrawText("Piece Color:", Color.Black, Font.Arial, 16, 650, 70);
+            if (_selectedPlayerColor == Player.White)
+            {
+                HighlightButton(_whitePieceButton);
+            }
+            else
+            {
+                HighlightButton(_blackPieceButton);
+            }
+
             _whitePieceButton.Draw();
             _blackPieceButton.Draw();
-            HighlightButton(_selectedPlayerColor == Player.White ? _whitePieceButton : _blackPieceButton);
 
+            // Draw piece type buttons
             SplashKit.DrawText("Piece Type:", Color.Black, Font.Arial, 16, 650, 180);
             foreach (KeyValuePair<PieceType, Button> entry in _pieceTypeButtons)
             {
+                if (entry.Key == _selectedPieceType)
+                {
+                    HighlightButton(entry.Value);
+                }
                 entry.Value.Draw();
-                if (entry.Key == _selectedPieceType) HighlightButton(entry.Value);
             }
+
 
             SplashKit.DrawText("Click on board to place pieces", Color.Black, Font.Arial, 16, 10, 650);
             SplashKit.RefreshScreen();
