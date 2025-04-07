@@ -1,4 +1,5 @@
 using SplashKitSDK;
+using System.Collections.Generic;
 
 namespace Chess
 {
@@ -10,7 +11,8 @@ namespace Chess
         private Button _joinButton;
         private Button _backButton;
         private TextLabel _statusLabel;
-        private List<string> _serverIPs;
+        private TextLabel _screenLabel;
+        private List<NetworkManager.ServerInfo> _serverInfos;
         private List<Button> _serverIPButtons;
         private NetworkManager _networkManager;
         private bool _isSearching;
@@ -22,17 +24,15 @@ namespace Chess
             _board = board;
             _config = new MatchConfiguration { Mode = Variant.Network };
             _networkManager = NetworkManager.GetInstance();
-            _serverIPs = new List<string>();
+            _serverInfos = new List<NetworkManager.ServerInfo>();
             _serverIPButtons = new List<Button>();
             int centerX = SplashKit.ScreenWidth() / 2;
-
+            _screenLabel = new TextLabel("Network Selection", centerX - 90, 150, Color.Black, 24);
             _hostButton = new Button("Host Game", centerX - 100, 200, 200, 50);
             _joinButton = new Button("Join Game", centerX - 100, 270, 200, 50);
             _backButton = new Button("Back", centerX - 100, 340, 200, 50);
-            _statusLabel = new TextLabel("", centerX - 150, 400, 300, 30);
+            _statusLabel = new TextLabel("", centerX - 150, 400);
         }
-        
-
 
         public override void HandleInput()
         {
@@ -42,11 +42,10 @@ namespace Chess
                 {
                     _isSearching = true;
                     _statusLabel.Text = "Starting server...";
-                    
+
                     _networkManager.StartServer();
                     _config.NetworkRole = NetworkRole.Host;
-                    
-                    // If we get here, server started successfully
+
                     _statusLabel.Text = "Server started. Waiting for player...";
                 }
                 catch (Exception ex)
@@ -62,13 +61,12 @@ namespace Chess
                 {
                     _isSearching = true;
                     _statusLabel.Text = "Searching for server...";
-                    _serverIPs = _networkManager.GetServerIPs();
-                    CreateButton(_serverIPs);
+                    _serverInfos = _networkManager.GetServerInfos();
+                    CreateButton(_serverInfos);
                     GetChosenIP(_serverIPButtons);
                     _config.NetworkRole = NetworkRole.Client;
-                    
-                    // If we get here, connection attempt started
-                    _statusLabel.Text = "Attempting to connect...";
+
+                    _statusLabel.Text = "Discorvering...";
                 }
                 catch (Exception ex)
                 {
@@ -102,7 +100,7 @@ namespace Chess
                     button.Update();
                 }
             }
-            if (_isSearching && _serverIPs.Count > 0)
+            if (_isSearching && _serverInfos.Count > 0)
             {
                 GetChosenIP(_serverIPButtons);
             }
@@ -111,31 +109,29 @@ namespace Chess
         public override void Render()
         {
             SplashKit.ClearScreen(Color.White);
-            
-            // Draw title
-            SplashKit.DrawText("Network Chess", Color.Black, Font.Arial, 36, SplashKit.ScreenWidth() / 2 - 150, 100);
-
+            _screenLabel.Draw();
             _hostButton.Draw();
             _joinButton.Draw();
             _backButton.Draw();
             _statusLabel.Draw();
             if (_serverIPButtons.Count > 0)
             {
-                SplashKit.DrawText("Available Servers:", Color.Black, Font.Arial, 20, SplashKit.ScreenWidth() / 2 - 100, 350);
                 _serverIPButtons.ForEach(button => button.Draw());
             }
             SplashKit.RefreshScreen();
         }
-        public void CreateButton(List<string> serverIPs)
+
+        public void CreateButton(List<NetworkManager.ServerInfo> serverInfos)
         {
+            _serverIPButtons.Clear();
             int index = 0;
-            foreach (string ip in serverIPs)
+            foreach (NetworkManager.ServerInfo info in serverInfos)
             {
-                Button button = new Button(ip, 100, 400 + index * 50, 200, 50);
+                string label = $"{info.name} ({info.ip})";
+                Button button = new Button(label, 100, 400 + index * 50, 300, 50, Color.BrightGreen, Color.DarkGreen, Color.Black);
                 _serverIPButtons.Add(button);
                 index++;
             }
-
         }
 
         public void GetChosenIP(List<Button> serverIPButtons)
@@ -144,11 +140,13 @@ namespace Chess
             {
                 if (button.IsClicked())
                 {
-                    _networkManager.StartClientWithDiscovery(button.Text);
+                    string ip = button.Text.Split('(')[1].Trim(')', ' ');
+                    _networkManager.StartClientWithDiscovery(ip);
                     break;
                 }
             }
         }
+
         public override string GetStateName() => "NetworkSelection";
     }
-} 
+}

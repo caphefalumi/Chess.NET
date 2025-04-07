@@ -73,9 +73,7 @@ namespace Chess
             
             if (_startGameButton.IsClicked())
             {
-                // For other game modes, start the game directly
-                IVariantStrategy gameMode = VariantFactory.CreateGameMode(_config);
-                gameMode.StartGame(_game, _board, _config);
+                _game.ChangeState(new GameplayScreen(_game, _board, _config));
                 return;
             }
             

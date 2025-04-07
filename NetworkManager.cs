@@ -1,6 +1,11 @@
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
+using Newtonsoft.Json;
 
 namespace Chess
 {
@@ -17,7 +22,6 @@ namespace Chess
         private bool _isConnected;
         private bool _isServer;
 
-        // Events for network communication
         public event Action<string> OnMoveReceived;
         public event Action<bool> OnConnectionStatusChanged;
         private static NetworkManager _instance;
@@ -30,11 +34,13 @@ namespace Chess
             }
             return _instance;
         }
+
         private NetworkManager()
         {
             _isConnected = false;
             _isServer = false;
         }
+
         public bool IsConnected 
         { 
             get => _isConnected;
@@ -51,7 +57,7 @@ namespace Chess
         public void StartServer()
         {
             _isServer = true;
-            Thread udpThread = new Thread(BroadcastServerIP) { IsBackground = true };
+            Thread udpThread = new Thread(BroadcastServerInfo) { IsBackground = true };
             udpThread.Start();
 
             Thread serverLoop = new Thread(() =>
@@ -88,15 +94,15 @@ namespace Chess
             serverLoop.IsBackground = true;
             serverLoop.Start();
         }
-        public List<string> GetServerIPs()
+
+        public List<ServerInfo> GetServerInfos()
         {
-            return DiscoverAllServerIPs();
+            return DiscoverAllServerInfos();
         } 
 
-        public void StartClientWithDiscovery(string chosen)
+        public void StartClientWithDiscovery(string chosenIP)
         {
-
-            if (string.IsNullOrEmpty(chosen))
+            if (string.IsNullOrEmpty(chosenIP))
             {
                 Console.WriteLine("No server selected.");
                 return;
@@ -104,7 +110,7 @@ namespace Chess
 
             try
             {
-                _client = new TcpClient(chosen, TCP_PORT);
+                _client = new TcpClient(chosenIP, TCP_PORT);
                 _stream = _client.GetStream();
                 IsConnected = true;
 
@@ -118,13 +124,17 @@ namespace Chess
             }
         }
 
-        private void BroadcastServerIP()
+        private void BroadcastServerInfo()
         {
             UdpClient udpServer = new UdpClient();
             udpServer.EnableBroadcast = true;
             IPEndPoint broadcast = new IPEndPoint(IPAddress.Broadcast, UDP_PORT);
             string ip = GetLocalIPAddress();
-            byte[] data = Encoding.UTF8.GetBytes(ip);
+            string name = Environment.UserName;
+
+            var info = new ServerInfo { ip = ip, name = name };
+            string json = JsonConvert.SerializeObject(info);
+            byte[] data = Encoding.UTF8.GetBytes(json);
 
             while (_isServer)
             {
@@ -137,49 +147,40 @@ namespace Chess
             }
         }
 
-        private List<string> DiscoverAllServerIPs(int timeoutSeconds = 5)
+        public class ServerInfo
+        {
+            public string ip;
+            public string name;
+        }
+
+        private List<ServerInfo> DiscoverAllServerInfos(int timeoutSeconds = 5)
         {
             UdpClient udpClient = new UdpClient(UDP_PORT);
             udpClient.Client.ReceiveTimeout = timeoutSeconds * 1000;
             IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, UDP_PORT);
-            HashSet<string> foundIPs = new HashSet<string>();
+            HashSet<string> seenIps = new HashSet<string>();
+            List<ServerInfo> servers = new List<ServerInfo>();
             DateTime start = DateTime.Now;
 
-            while ((DateTime.Now - start).TotalSeconds < timeoutSeconds)
+            try
             {
-                byte[] data = udpClient.Receive(ref remoteEndPoint);
-                string ip = Encoding.UTF8.GetString(data);
-                foundIPs.Add(ip);
-                Console.WriteLine($"Discovered: {ip}");
-            }
-
-            return foundIPs.ToList();
-        }
-
-        private string SelectServerFromList(List<string> servers)
-        {
-            if (servers.Count == 0)
-            {
-                Console.WriteLine("No servers found.");
-                return null;
-            }
-
-            Console.WriteLine("Choose a server:");
-            for (int i = 0; i < servers.Count; i++)
-            {
-                Console.WriteLine($"{i + 1}. {servers[i]}");
-            }
-
-            while (true)
-            {
-                Console.Write("Enter number: ");
-                string input = Console.ReadLine();
-                if (int.TryParse(input, out int index) && index > 0 && index <= servers.Count)
+                while ((DateTime.Now - start).TotalSeconds < timeoutSeconds)
                 {
-                    return servers[index - 1];
+                    byte[] data = udpClient.Receive(ref remoteEndPoint);
+                    string json = Encoding.UTF8.GetString(data);
+                    ServerInfo info = JsonConvert.DeserializeObject<ServerInfo>(json);
+
+                    if (!seenIps.Contains(info.ip))
+                    {
+                        seenIps.Add(info.ip);
+                        servers.Add(info);
+                        Console.WriteLine($"Discovered: {info.name} ({info.ip})");
+                    }
                 }
-                Console.WriteLine("Invalid selection.");
             }
+            catch (SocketException) { }
+
+            return servers;
         }
 
         public void SendMove(string moveNotation)
@@ -208,14 +209,14 @@ namespace Chess
         {
             byte[] buffer = new byte[1024];
             Console.WriteLine("[NetworkManager] Started receiving messages");
-            
+
             while (IsConnected)
             {
                 try
                 {
                     Console.WriteLine("[NetworkManager] Waiting for data...");
                     int count = _stream.Read(buffer, 0, buffer.Length);
-                    
+
                     if (count == 0)
                     {
                         Console.WriteLine("[NetworkManager] Connection closed by remote host");
@@ -255,4 +256,4 @@ namespace Chess
             return "127.0.0.1";
         }
     }
-} 
+}

@@ -11,6 +11,7 @@ namespace Chess
         private Button _computerButton;
         private Button _customButton;
         private Button _backButton;
+        private TextLabel _screenLabel;
         private Bitmap _logo;
 
         public LocalGameMenuState(Game game, Board board)
@@ -23,7 +24,8 @@ namespace Chess
 
             int centerX = SplashKit.ScreenWidth() / 2;
             int currentY = 400;
-            
+
+            _screenLabel = new TextLabel("Local Game Options", centerX - 120, 350, Color.Black, 24);
             // Create buttons for local game options
             _newGameButton = new Button("New Game", centerX - 100, currentY, 200, 50);
             currentY += 60;
@@ -117,7 +119,7 @@ namespace Chess
         {
             SplashKit.ClearScreen(Color.White);
             SplashKit.DrawBitmap(_logo, SplashKit.ScreenWidth() / 2 - _logo.Width / 2, 100);
-
+            _screenLabel.Draw();
             SplashKit.DrawText("Local Game Options", Color.Black, Font.Arial, 24, 
                 SplashKit.ScreenWidth() / 2 - 120, 350);
 

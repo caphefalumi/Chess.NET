@@ -30,6 +30,16 @@ namespace Chess
             _isHovered = false;
         }
 
+        public Button(string text, int x, int y, int width, int height, Color normalColor, Color hoverColor, Color textColor)
+        {
+            _text = text;
+            _bitmap = null;
+            _normalColor = normalColor;
+            _hoverColor = hoverColor;
+            _textColor = textColor;
+            _bounds = new Rectangle(_normalColor, x, y, width, height);
+            _isHovered = false;
+        }
 
         public Button(Bitmap bitmap, int x, int y, int width, int height)
         {
