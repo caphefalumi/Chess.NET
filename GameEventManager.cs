@@ -17,10 +17,6 @@ namespace Chess
             _observers = new List<IGameObserver>();
         }
 
-        /// <summary>
-        /// Gets the singleton instance of the GameEventManager
-        /// </summary>
-        /// <returns>The singleton instance</returns>
         public static GameEventManager GetInstance()
         {
             if (_instance == null)
@@ -30,10 +26,6 @@ namespace Chess
             return _instance;
         }
 
-        /// <summary>
-        /// Registers an observer to receive game event notifications
-        /// </summary>
-        /// <param name="observer">The observer to register</param>
         public void RegisterObserver(IGameObserver observer)
         {
             if (!_observers.Contains(observer))
@@ -42,19 +34,6 @@ namespace Chess
             }
         }
 
-        /// <summary>
-        /// Removes an observer so it no longer receives notifications
-        /// </summary>
-        /// <param name="observer">The observer to remove</param>
-        public void RemoveObserver(IGameObserver observer)
-        {
-            _observers.Remove(observer);
-        }
-
-        /// <summary>
-        /// Notifies all registered observers that a move was made
-        /// </summary>
-        /// <param name="move">The move that was executed</param>
         public void NotifyMoveMade(Move move)
         {
             foreach (IGameObserver observer in _observers)

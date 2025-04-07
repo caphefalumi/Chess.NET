@@ -55,7 +55,7 @@ namespace Chess
             _gameOverNewGameButton = new Button("New Game", 250, 470, 200, 50);
             
             // Setup status label
-            _statusLabel = new TextLabel("", 610, 220, 120, 60);
+            _statusLabel = new TextLabel("", 610, 220);
 
             _gameOver = false;
             _gameOverMessage = "";

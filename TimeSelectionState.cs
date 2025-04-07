@@ -67,7 +67,7 @@ namespace Chess
         {
             if (_backButton.IsClicked())
             {
-                _game.ChangeState(new LocalGameMenuState(_game, _board));
+                _game.ChangeState(new LocalGameMenuScreen(_game, _board));
                 return;
             }
             

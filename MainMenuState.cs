@@ -35,12 +35,12 @@ namespace Chess
             if (_playLocalButton.IsClicked())
             {
                 // Go to local game menu (new game, continue, computer, custom)
-                _game.ChangeState(new LocalGameMenuState(_game, _board));
+                _game.ChangeState(new LocalGameMenuScreen(_game, _board));
             }
             else if (_playOnlineButton.IsClicked())
             {
                 // Go directly to network selection screen
-                _game.ChangeState(new NetworkSelectionScreen(_game, _board));
+                _game.ChangeState(new NetworkGameMenuScreen(_game, _board));
             }
             else if (_exitButton.IsClicked())
             {

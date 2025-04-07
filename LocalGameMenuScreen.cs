@@ -2,7 +2,7 @@ using SplashKitSDK;
 
 namespace Chess
 {
-    public class LocalGameMenuState : ScreenState
+    public class LocalGameMenuScreen : ScreenState
     {
         private readonly Game _game;
         private readonly Board _board;
@@ -14,7 +14,7 @@ namespace Chess
         private TextLabel _screenLabel;
         private Bitmap _logo;
 
-        public LocalGameMenuState(Game game, Board board)
+        public LocalGameMenuScreen(Game game, Board board)
         {
             _game = game;
             _board = board;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Chess
 {
-    public class NetworkSelectionScreen : ScreenState
+    public class NetworkGameMenuScreen : ScreenState
     {
         private readonly Game _game;
         private readonly Board _board;
@@ -18,7 +18,7 @@ namespace Chess
         private bool _isSearching;
         private MatchConfiguration _config;
 
-        public NetworkSelectionScreen(Game game, Board board)
+        public NetworkGameMenuScreen(Game game, Board board)
         {
             _game = game;
             _board = board;
