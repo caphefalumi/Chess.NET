@@ -23,6 +23,7 @@ namespace Chess
             _config = new MatchConfiguration { Mode = Variant.Network };
             _networkManager = NetworkManager.GetInstance();
             _serverIPs = new List<string>();
+            _serverIPButtons = new List<Button>();
             int centerX = SplashKit.ScreenWidth() / 2;
 
             _hostButton = new Button("Host Game", centerX - 100, 200, 200, 50);
@@ -62,6 +63,7 @@ namespace Chess
                     _isSearching = true;
                     _statusLabel.Text = "Searching for server...";
                     _serverIPs = _networkManager.GetServerIPs();
+                    CreateButton(_serverIPs);
                     GetChosenIP(_serverIPButtons);
                     _config.NetworkRole = NetworkRole.Client;
                     
@@ -93,6 +95,17 @@ namespace Chess
                 _isSearching = false;
                 _game.ChangeState(new GameplayScreen(_game, _board, _config));
             }
+            if (_serverIPButtons.Count > 0)
+            {
+                foreach (Button button in _serverIPButtons)
+                {
+                    button.Update();
+                }
+            }
+            if (_isSearching && _serverIPs.Count > 0)
+            {
+                GetChosenIP(_serverIPButtons);
+            }
         }
 
         public override void Render()
@@ -106,8 +119,23 @@ namespace Chess
             _joinButton.Draw();
             _backButton.Draw();
             _statusLabel.Draw();
-            _serverIPButtons.ForEach(button => button.Draw());
+            if (_serverIPButtons.Count > 0)
+            {
+                SplashKit.DrawText("Available Servers:", Color.Black, Font.Arial, 20, SplashKit.ScreenWidth() / 2 - 100, 350);
+                _serverIPButtons.ForEach(button => button.Draw());
+            }
             SplashKit.RefreshScreen();
+        }
+        public void CreateButton(List<string> serverIPs)
+        {
+            int index = 0;
+            foreach (string ip in serverIPs)
+            {
+                Button button = new Button(ip, 100, 400 + index * 50, 200, 50);
+                _serverIPButtons.Add(button);
+                index++;
+            }
+
         }
 
         public void GetChosenIP(List<Button> serverIPButtons)
