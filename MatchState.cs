@@ -49,10 +49,6 @@
             return _instance;
         }
 
-        public static MatchState GetInstance()
-        {
-            return _instance;
-        }
 
         public void MakeMove(Move move, bool isSimulation = false)
         {
@@ -178,9 +174,5 @@
             _fullmoveNumber = 1;
         }
 
-        public void SetCurrentPlayer(Player player)
-        {
-            _currentPlayer = player;
-        }
     }
 }
