@@ -18,7 +18,7 @@
 
         private static bool IsRookHasMoved(Piece rook, Board board)
         {
-            return rook is not null && rook is Rook && rook.HasMoved;
+            return rook is Rook && rook.HasMoved;
         }
         private static bool NoPiecesBetween(Position[] positions, Board board)
         {
@@ -37,7 +37,7 @@
             if (HasMoved) return false;
 
             Piece rook = MyBoard.GetPieceAt(rookFile, Position.Rank);
-            if (IsRookHasMoved(rook, MyBoard)) return false;
+            if (rook is null || IsRookHasMoved(rook, MyBoard)) return false;
 
             if (!NoPiecesBetween(betweenPositions, MyBoard)) return false;
 

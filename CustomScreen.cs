@@ -14,6 +14,7 @@ namespace Chess
         private Player _selectedPlayerColor;
         private Button _whitePieceButton;
         private Button _blackPieceButton;
+        private TextLabel _guideText;
         private Dictionary<PieceType, Button> _pieceTypeButtons;
         private MatchConfiguration _config;
 
@@ -23,6 +24,7 @@ namespace Chess
             _board = board;
             _selectedPieceType = PieceType.Pawn; // Default piece type
             _selectedPlayerColor = Player.White; // Default player color
+            _guideText = new TextLabel("Click on board to place pieces", 10, 650, Color.Black, 16);
             _pieceTypeButtons = new Dictionary<PieceType, Button>();
             // Initialize configuration with Custom game mode
             _config = new MatchConfiguration
@@ -73,6 +75,18 @@ namespace Chess
 
             if (_startButton.IsClicked())
             {
+                // Check if there are at least two kings on the board
+                int whiteKingCount = _board.Pieces.Count(p => p.Type == PieceType.King && p.Color == Player.White);
+                int blackKingCount = _board.Pieces.Count(p => p.Type == PieceType.King && p.Color == Player.Black);
+
+                if (whiteKingCount < 1 || blackKingCount < 1)
+                {
+                    // Update guide text with error message
+                    _guideText.Text = "Need at least one king for each player!";
+                    _guideText.Color = Color.Red;
+                    return;
+                }
+
                 // Use MatchConfiguration instead of Variant
                 _game.ChangeState(new GameplayScreen(_game, _board, _config));
             }
@@ -163,8 +177,7 @@ namespace Chess
                 entry.Value.Draw();
             }
 
-
-            SplashKit.DrawText("Click on board to place pieces", Color.Black, Font.Arial, 16, 10, 650);
+            _guideText.Draw();
             SplashKit.RefreshScreen();
         }
 

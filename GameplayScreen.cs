@@ -10,6 +10,7 @@ namespace Chess
         private Button _menuButton;
         private Button _undoButton;
         private Button _resetButton;
+        private Button _flipButton;
         private Button _gameOverNewGameButton;
         private Clock _clock;
         private MatchState _gameState;
@@ -48,6 +49,7 @@ namespace Chess
             _menuButton = new Button("Menu", 650, 10, 80, 30);
             _undoButton = new Button("Undo", 650, 50, 80, 30);
             _resetButton = new Button("Reset", 650, 90, 80, 30);
+            _flipButton = new Button("Flip", 650, 130, 80, 30);
             _gameOverNewGameButton = new Button("New Game", 250, 470, 200, 50);
             
             // Setup status label
@@ -219,10 +221,12 @@ namespace Chess
                 }
                 return;
             }
-            if (SplashKit.KeyTyped(KeyCode.FKey))
+            if (SplashKit.KeyTyped(KeyCode.FKey)|| _flipButton.IsClicked())
             {
+                // Flip the board
                 _board.Flip();
             }
+
             // Handle human input - only if it's the player's turn
             bool canMove = _config.NetworkRole == NetworkRole.None || 
                           (_config.NetworkRole != NetworkRole.None && _isMyTurn);
@@ -251,6 +255,7 @@ namespace Chess
             _menuButton.Update();
             _undoButton.Update();
             _resetButton.Update();
+            _flipButton.Update();
             
             // Update clock
             _clock.CurrentTurn = _gameState.CurrentPlayer;
@@ -347,6 +352,7 @@ namespace Chess
             _menuButton.Draw();
             _undoButton.Draw();
             _resetButton.Draw();
+            _flipButton.Draw();
 
             // Draw game over message if applicable
             if (_gameOver)

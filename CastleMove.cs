@@ -58,7 +58,10 @@
             _rook = (Rook)board.GetPieceAt(_rookFrom);
 
             king.Position = _to;
-            _rook.Position = _rookTo;
+            if (_rook != null)
+            {
+                _rook.Position = _rookTo;
+            }
 
             if (!isSimulation)
             {
