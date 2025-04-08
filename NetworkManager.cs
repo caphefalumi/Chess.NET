@@ -17,7 +17,6 @@ namespace Chess
         private Thread _receiveThread;
         private bool _isConnected;
         private bool _isServer;
-        
         private static NetworkManager _instance;
 
         public event Action<string> OnMoveReceived;
@@ -129,7 +128,7 @@ namespace Chess
             string ip = GetLocalIPAddress();
             string name = Environment.UserName;
 
-            var info = new ServerInfo { ip = ip, name = name };
+            ServerInfo info = new ServerInfo { ip = ip, name = name };
             string json = JsonConvert.SerializeObject(info);
             byte[] data = Encoding.UTF8.GetBytes(json);
 

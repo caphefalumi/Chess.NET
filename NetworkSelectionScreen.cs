@@ -30,7 +30,7 @@ namespace Chess
             _hostButton = new Button("Host Game", centerX - 100, 200, 200, 50);
             _joinButton = new Button("Join Game", centerX - 100, 270, 200, 50);
             _backButton = new Button("Back", centerX - 100, 340, 200, 50);
-            _statusLabel = new TextLabel("", centerX - 150, 400);
+            _statusLabel = new TextLabel("", centerX, 400, Color.Black, 18);
         }
 
         public override void HandleInput()
@@ -59,12 +59,13 @@ namespace Chess
                 try
                 {
                     _isSearching = true;
-                    _statusLabel.Text = "Searching for server...";
+                    _statusLabel.Text = "Discorvering...";
+                    _statusLabel.Draw();
+                    SplashKit.RefreshScreen();
                     _serverInfos = _networkManager.GetServerInfos();
-                    CreateButton(_serverInfos);
+                    _serverIPButtons = CreateButton(_serverInfos);
                     GetChosenIP(_serverIPButtons);
                     _config.NetworkRole = NetworkRole.Client;
-
                     _statusLabel.Text = "Discorvering...";
                 }
                 catch (Exception ex)
@@ -72,6 +73,7 @@ namespace Chess
                     _statusLabel.Text = $"Connection failed: {ex.Message}";
                     _isSearching = false;
                     _networkManager.Cleanup();
+
                 }
             }
             else if (_backButton.IsClicked())
@@ -120,17 +122,18 @@ namespace Chess
             SplashKit.RefreshScreen();
         }
 
-        public void CreateButton(List<NetworkManager.ServerInfo> serverInfos)
+        public List<Button> CreateButton(List<NetworkManager.ServerInfo> serverInfos)
         {
-            _serverIPButtons.Clear();
+            List<Button> serverIPButtons = new List<Button>();
             int index = 0;
             foreach (NetworkManager.ServerInfo info in serverInfos)
             {
                 string label = $"{info.name} ({info.ip})";
                 Button button = new Button(label, 100, 400 + index * 50, 300, 50, Color.BrightGreen, Color.DarkGreen, Color.Black);
-                _serverIPButtons.Add(button);
+                serverIPButtons.Add(button);
                 index++;
             }
+            return serverIPButtons;
         }
 
         public void GetChosenIP(List<Button> serverIPButtons)

@@ -54,45 +54,6 @@ namespace Chess
             _promotionFlag = false;
             _showPromotionMenu = false;
 
-            // Initialize AI if in computer mode
-            if (config.Mode == Variant.Computer)
-            {
-                // Initialize the AI to play as the opposite color of the player's choice
-                Player computerPlayer = config.PlayerColor.Opponent();
-                _chessBot = ChessBot.GetInstance(_board, computerPlayer);
-                
-                // If player chose Black and it's White's turn, make the computer move immediately
-                if (config.PlayerColor == Player.Black && _gameState.CurrentPlayer == Player.White)
-                {
-                    _botIsThinking = true;
-                    UpdateStatusLabel("Computer is thinking...");
-                    
-                    // Make the computer move
-                    Task.Run(async () =>
-                    {
-                        try
-                        {
-                            // Wait a moment for UI to be fully set up
-                            await Task.Delay(500);
-                            
-                            // Get computer move
-                            Move bestMove = await _chessBot.GetBestMove();
-                            
-                            if (bestMove != null)
-                            {
-                                // Execute the move on the board
-                                _gameState.MakeMove(bestMove);
-                                _clock.SwitchTurn();
-                                BoardEvent.CheckGameResult();
-                            }
-                        }
-                        finally
-                        {
-                            _botIsThinking = false;
-                        }
-                    });
-                }
-            }
 
             // Initialize network manager if in network mode
             if (config.NetworkRole != NetworkRole.None)
@@ -105,6 +66,10 @@ namespace Chess
                 // Subscribe to network events
                 _networkManager.OnMoveReceived += HandleNetworkMove;
                 _networkManager.OnConnectionStatusChanged += HandleConnectionStatus;
+            }
+            if (config.NetworkRole == NetworkRole.Client)
+            {
+                _board.Flip();
             }
 
             // Initialize BoardEvent
