@@ -42,7 +42,7 @@ namespace Chess
             }
             else if (_customModeButton.IsClicked())
             {
-                _game.ChangeState(new BoardSetupScreen(_game, _board));
+                _game.ChangeState(new CustomScreen(_game, _board));
             }
             else if (_backButton.IsClicked())
             {

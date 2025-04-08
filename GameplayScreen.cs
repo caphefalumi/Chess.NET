@@ -36,6 +36,10 @@ namespace Chess
             _config = config;
             _gameState = game.GetGameState();
             _board.MatchState = _gameState;
+            if (_config.Mode == Variant.Computer)
+            {
+                _chessBot = ChessBot.GetInstance(_board, Player.Black);
+            }
 
             // Create the clock with the configured time settings using singleton pattern
             _clock = Clock.GetInstance(config.GetTimeSpan(), config.GetIncrementSpan());
@@ -47,7 +51,7 @@ namespace Chess
             _gameOverNewGameButton = new Button("New Game", 250, 470, 200, 50);
             
             // Setup status label
-            _statusLabel = new TextLabel("", 610, 220);
+            _statusLabel = new TextLabel("", 650, 220);
 
             _gameOver = false;
             _gameOverMessage = "";
@@ -352,10 +356,11 @@ namespace Chess
                 overlay.Draw();
                 
                 // Draw game over text
-                SplashKit.DrawText(_gameOverMessage, Color.White, Font.Arial, 36, SplashKit.ScreenWidth() / 2 - 150, SplashKit.ScreenHeight() / 2 - 50);
+                SplashKit.DrawText(_gameOverMessage, Color.White, Font.Arial, 36, SplashKit.ScreenWidth() / 2 - 200, SplashKit.ScreenHeight() / 2 - 50);
                 
                 _gameOverNewGameButton.Draw();
             }
+
 
             // Draw time display
             DrawTimeDisplay(Player.White, _clock.WhiteTime.ToString(@"mm\:ss"), 650, 250);

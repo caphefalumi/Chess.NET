@@ -92,7 +92,7 @@ namespace Chess
             else if (_customButton.IsClicked())
             {
                 // Go to custom board setup screen
-                _game.ChangeState(new BoardSetupScreen(_game, _board));
+                _game.ChangeState(new CustomScreen(_game, _board));
             }
             else if (_backButton.IsClicked())
             {

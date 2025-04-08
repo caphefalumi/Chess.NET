@@ -2,7 +2,7 @@
 
 namespace Chess
 {
-    public class BoardSetupScreen : ScreenState
+    public class CustomScreen : ScreenState
     {
         private Game _game;
         private Board _board;
@@ -10,18 +10,20 @@ namespace Chess
         private Button _backButton;
         private Button _clearButton;
         private Button _timeSettingsButton;
-        private PieceType _selectedPieceType = PieceType.Pawn;
-        private Player _selectedPlayerColor = Player.White;
+        private PieceType _selectedPieceType;
+        private Player _selectedPlayerColor;
         private Button _whitePieceButton;
         private Button _blackPieceButton;
-        private Dictionary<PieceType, Button> _pieceTypeButtons = new Dictionary<PieceType, Button>();
+        private Dictionary<PieceType, Button> _pieceTypeButtons;
         private MatchConfiguration _config;
 
-        public BoardSetupScreen(Game game, Board board)
+        public CustomScreen(Game game, Board board)
         {
             _game = game;
             _board = board;
-
+            _selectedPieceType = PieceType.Pawn; // Default piece type
+            _selectedPlayerColor = Player.White; // Default player color
+            _pieceTypeButtons = new Dictionary<PieceType, Button>();
             // Initialize configuration with Custom game mode
             _config = new MatchConfiguration
             {
