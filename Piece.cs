@@ -70,7 +70,7 @@ namespace Chess
             char pieceChar = PieceFactory.GetPieceChar(pieceType, color);
             char pieceColor = color == Player.White ? 'w' : 'b';
             string bitmapName = pieceColor + pieceChar.ToString();
-            return SplashKit.LoadBitmap(bitmapName, $"Resources\\Pieces\\{bitmapName}.png");
+            return SplashKit.LoadBitmap(bitmapName, $"Resources/Pieces/{bitmapName}.png");
         }
     }
 }
