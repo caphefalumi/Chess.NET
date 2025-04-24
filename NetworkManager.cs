@@ -247,7 +247,9 @@ namespace Chess
             foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
             {
                 if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
                     return ip.ToString();
+                }
             }
             return "127.0.0.1";
         }
