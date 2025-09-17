@@ -114,6 +114,7 @@ Saves are managed by `GameSaver.cs`. By default save files are written to a loca
 ## Contributing
 
 All contributions are welcome.
+
 ## Contact
 
 For questions about running the project locally, open an issue in the repository or inspect `Documentation.docx` in the project root for additional author notes.
