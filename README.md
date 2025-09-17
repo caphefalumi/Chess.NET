@@ -119,10 +119,6 @@ This project is provided as an educational assignment. If you intend to modify o
 - Keep UI and game logic decoupled
 - Add unit tests for move generation and rule enforcement
 
-## License
-
-Provided for educational purposes. No license file is included — treat the code as example material for learning and interviews unless the project author states otherwise.
-
 ## Contact
 
 For questions about running the project locally, open an issue in the repository or inspect `Documentation.docx` in the project root for additional author notes.
