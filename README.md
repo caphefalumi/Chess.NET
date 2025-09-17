@@ -113,12 +113,7 @@ Saves are managed by `GameSaver.cs`. By default save files are written to a loca
 
 ## Contributing
 
-This project is provided as an educational assignment. If you intend to modify or extend it:
-
-- Follow the existing naming and organization conventions
-- Keep UI and game logic decoupled
-- Add unit tests for move generation and rule enforcement
-
+All contributions are welcome.
 ## Contact
 
 For questions about running the project locally, open an issue in the repository or inspect `Documentation.docx` in the project root for additional author notes.
