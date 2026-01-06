@@ -1,4 +1,6 @@
-﻿namespace Chess
+using Chess.Core;
+
+namespace Chess
 { 
     internal class Program
     {
