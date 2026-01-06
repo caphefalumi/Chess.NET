@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    
+    <!-- Main Application Components (EXE and DLLs) -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      
+      <!-- Main Chess.exe executable -->
+      <Component Id="ChessExe" Guid="A1234567-1234-1234-1234-123456789012">
+        <File Id="ChessExeFile" 
+              Source="$(var.BinDir)\Chess.exe" 
+              KeyPath="yes"
+              Checksum="yes" />
+      </Component>
+
+      <!-- Chess.dll - Application library -->
+      <Component Id="ChessDLL" Guid="A1234567-1234-1234-1234-123456789015">
+        <File Id="ChessDLLFile" 
+              Source="$(var.BinDir)\Chess.dll" 
+              KeyPath="yes" />
+      </Component>
+
+      <!-- SplashKit SDK DLL - Main graphics/game library -->
+      <Component Id="SplashKitDLL" Guid="A1234567-1234-1234-1234-123456789013">
+        <File Id="SplashKitDLLFile" 
+              Source="$(var.BinDir)\SplashKitSDK.dll" 
+              KeyPath="yes" />
+      </Component>
+
+
+      <!-- Newtonsoft.Json DLL - JSON serialization library -->
+      <Component Id="NewtonsoftJsonDLL" Guid="A1234567-1234-1234-1234-123456789014">
+        <File Id="NewtonsoftJsonDLLFile" 
+              Source="$(var.BinDir)\Newtonsoft.Json.dll" 
+              KeyPath="yes" />
+      </Component>
+
+      <!-- Chess.deps.json - .NET dependency manifest -->
+      <Component Id="ChessDeps" Guid="A1234567-1234-1234-1234-123456789016">
+        <File Id="ChessDepsFile" 
+              Source="$(var.BinDir)\Chess.deps.json" 
+              KeyPath="yes" />
+      </Component>
+
+      <!-- Chess.runtimeconfig.json - .NET runtime configuration -->
+      <Component Id="ChessRuntimeConfig" Guid="A1234567-1234-1234-1234-123456789017">
+        <File Id="ChessRuntimeConfigFile" 
+              Source="$(var.BinDir)\Chess.runtimeconfig.json" 
+              KeyPath="yes" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Resource Files Components -->
+    <ComponentGroup Id="ResourceComponents">
+      
+      <!-- Chess Piece Images -->
+      <Component Id="PieceImages" Directory="PiecesFolder" Guid="A1234567-1234-1234-1234-123456789018">
+        <File Id="bb_png" Source="$(var.BinDir)\Resources\Pieces\bb.png" />
+        <File Id="bk_png" Source="$(var.BinDir)\Resources\Pieces\bk.png" />
+        <File Id="bn_png" Source="$(var.BinDir)\Resources\Pieces\bn.png" />
+        <File Id="bp_png" Source="$(var.BinDir)\Resources\Pieces\bp.png" />
+        <File Id="bq_png" Source="$(var.BinDir)\Resources\Pieces\bq.png" />
+        <File Id="br_png" Source="$(var.BinDir)\Resources\Pieces\br.png" />
+        <File Id="wb_png" Source="$(var.BinDir)\Resources\Pieces\wb.png" />
+        <File Id="wk_png" Source="$(var.BinDir)\Resources\Pieces\wk.png" />
+        <File Id="wn_png" Source="$(var.BinDir)\Resources\Pieces\wn.png" />
+        <File Id="wp_png" Source="$(var.BinDir)\Resources\Pieces\wp.png" />
+        <File Id="wq_png" Source="$(var.BinDir)\Resources\Pieces\wq.png" />
+        <File Id="wr_png" Source="$(var.BinDir)\Resources\Pieces\wr.png" />
+      </Component>
+
+      <!-- Sound Files -->
+      <Component Id="SoundFiles" Directory="SoundsFolder" Guid="A1234567-1234-1234-1234-123456789019">
+        <File Id="capture_mp3" Source="$(var.BinDir)\Resources\Sounds\capture.mp3" />
+        <File Id="castle_mp3" Source="$(var.BinDir)\Resources\Sounds\castle.mp3" />
+        <File Id="game_end_mp3" Source="$(var.BinDir)\Resources\Sounds\game_end.mp3" />
+        <File Id="game_start_mp3" Source="$(var.BinDir)\Resources\Sounds\game_start.mp3" />
+        <File Id="illegal_mp3" Source="$(var.BinDir)\Resources\Sounds\illegal.mp3" />
+        <File Id="move_check_mp3" Source="$(var.BinDir)\Resources\Sounds\move_check.mp3" />
+        <File Id="move_self_mp3" Source="$(var.BinDir)\Resources\Sounds\move_self.mp3" />
+        <File Id="promote_mp3" Source="$(var.BinDir)\Resources\Sounds\promote.mp3" />
+      </Component>
+
+      <!-- Script Files and Images -->
+      <Component Id="ScriptFiles" Directory="ScriptsFolder" Guid="A1234567-1234-1234-1234-123456789020">
+        <File Id="stockfish_exe" Source="$(var.BinDir)\Resources\Scripts\stockfish-windows-x86-64-avx2.exe" />
+      </Component>
+
+      <!-- Root Resource Images -->
+      <Component Id="ResourceImages" Directory="ResourcesFolder" Guid="A1234567-1234-1234-1234-123456789025">
+        <File Id="ai_thinking_png" Source="$(var.BinDir)\Resources\AI Thinking.png" />
+        <File Id="chess_logo_png" Source="$(var.BinDir)\Resources\chess_logo.png" />
+        <File Id="lan_discovery_png" Source="$(var.BinDir)\Resources\LAN Discovery.png" />
+        <File Id="main_menu_png" Source="$(var.BinDir)\Resources\Main Menu.png" />
+      </Component>
+
+    </ComponentGroup>
+
+    <!-- Start Menu Shortcut -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="A1234567-1234-1234-1234-123456789021">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="Chess.NET"
+                  Description="Play Chess with AI and Multiplayer"
+                  Target="[#ChessExeFile]"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="CleanUpShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\Chess.NET" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+  </Fragment>
+
+  <!-- Desktop Shortcut in separate fragment -->
+  <Fragment>
+    <StandardDirectory Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Directory="DesktopFolder" Guid="A1234567-1234-1234-1234-123456789022">
+        <Shortcut Id="ApplicationDesktopShortcut"
+                  Name="Chess.NET"
+                  Description="Play Chess with AI and Multiplayer"
+                  Target="[#ChessExeFile]"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\Chess.NET" 
+                       Name="desktopShortcut" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+  </Fragment>
+
+</Wix>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  
+  <!-- Product Definition -->
+  <Package 
+    Name="Chess.NET" 
+    Manufacturer="caphefalumi" 
+    Version="1.0.8.0"
+    UpgradeCode="12345678-1234-1234-1234-123456789012"
+    Language="1033"
+    Codepage="1252">
+    
+    <SummaryInformation 
+      Description="Chess.NET - A C# Chess Application with SplashKit"
+      Comments="Chess game with AI, multiplayer, and custom board setup"
+      Manufacturer="caphefalumi"
+      Keywords="Chess, Game, .NET, SplashKit" />
+
+    <!-- Set minimum Windows version (Windows 10) -->
+    <Launch 
+      Condition="VersionNT &gt;= 603" 
+      Message="This application requires Windows 10 or later." />
+
+    <!-- Media definition -->
+    <Media Id="1" Cabinet="Chess.cab" EmbedCab="yes" />
+
+    <!-- Installation directory structure -->
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="INSTALLFOLDER" Name="Chess.NET">
+        <Directory Id="ResourcesFolder" Name="Resources">
+          <Directory Id="PiecesFolder" Name="Pieces" />
+          <Directory Id="SoundsFolder" Name="Sounds" />
+          <Directory Id="ScriptsFolder" Name="Scripts" />
+        </Directory>
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Desktop shortcuts -->
+    <StandardDirectory Id="DesktopFolder" />
+    
+    <!-- Start Menu shortcuts -->
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="Chess.NET" />
+    </StandardDirectory>
+
+    <!-- Feature reference -->
+    <Feature Id="ProductFeature" Title="Chess.NET" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="ResourceComponents" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+  </Package>
+</Wix>
