@@ -2,7 +2,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Fragment>
     
-    <!-- Main Application Components (EXE and DLLs) -->
+    <!-- Main Application Components -->
     <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
       
       <!-- Main Chess.exe executable -->
@@ -13,40 +13,20 @@
               Checksum="yes" />
       </Component>
 
-      <!-- Chess.dll - Application library -->
-      <Component Id="ChessDLL" Guid="A1234567-1234-1234-1234-123456789015">
-        <File Id="ChessDLLFile" 
-              Source="$(var.BinDir)\Chess.dll" 
+      <!-- Chess.pdb - Debug symbols -->
+      <Component Id="ChessPDB" Guid="A1234567-1234-1234-1234-123456789023">
+        <File Id="ChessPDBFile" 
+              Source="$(var.BinDir)\Chess.pdb" 
               KeyPath="yes" />
       </Component>
 
-      <!-- SplashKit SDK DLL - Main graphics/game library -->
-      <Component Id="SplashKitDLL" Guid="A1234567-1234-1234-1234-123456789013">
-        <File Id="SplashKitDLLFile" 
-              Source="$(var.BinDir)\SplashKitSDK.dll" 
-              KeyPath="yes" />
-      </Component>
-
-
-      <!-- Newtonsoft.Json DLL - JSON serialization library -->
-      <Component Id="NewtonsoftJsonDLL" Guid="A1234567-1234-1234-1234-123456789014">
-        <File Id="NewtonsoftJsonDLLFile" 
-              Source="$(var.BinDir)\Newtonsoft.Json.dll" 
-              KeyPath="yes" />
-      </Component>
-
-      <!-- Chess.deps.json - .NET dependency manifest -->
-      <Component Id="ChessDeps" Guid="A1234567-1234-1234-1234-123456789016">
-        <File Id="ChessDepsFile" 
-              Source="$(var.BinDir)\Chess.deps.json" 
-              KeyPath="yes" />
-      </Component>
-
-      <!-- Chess.runtimeconfig.json - .NET runtime configuration -->
-      <Component Id="ChessRuntimeConfig" Guid="A1234567-1234-1234-1234-123456789017">
-        <File Id="ChessRuntimeConfigFile" 
-              Source="$(var.BinDir)\Chess.runtimeconfig.json" 
-              KeyPath="yes" />
+      <!-- Application DLLs -->
+      <Component Id="AppDlls" Guid="A1234567-1234-1234-1234-123456789026">
+        <File Id="ChessDll" Source="$(var.BinDir)\Chess.dll" />
+        <File Id="SplashKitDll" Source="$(var.BinDir)\SplashKitSDK.dll" />
+        <File Id="NewtonsoftDll" Source="$(var.BinDir)\Newtonsoft.Json.dll" />
+        <File Id="ChessDeps" Source="$(var.BinDir)\Chess.deps.json" />
+        <File Id="ChessRuntime" Source="$(var.BinDir)\Chess.runtimeconfig.json" />
       </Component>
 
     </ComponentGroup>
@@ -93,6 +73,14 @@
         <File Id="chess_logo_png" Source="$(var.BinDir)\Resources\chess_logo.png" />
         <File Id="lan_discovery_png" Source="$(var.BinDir)\Resources\LAN Discovery.png" />
         <File Id="main_menu_png" Source="$(var.BinDir)\Resources\Main Menu.png" />
+      </Component>
+
+      <!-- Assets Folder (for MSIX packaging) -->
+      <Component Id="AssetImages" Directory="AssetsFolder" Guid="A1234567-1234-1234-1234-123456789031">
+        <File Id="asset_chess_logo" Source="$(var.BinDir)\..\Assets\chess_logo.png" />
+        <File Id="asset_ai_thinking" Source="$(var.BinDir)\..\Assets\AI Thinking.png" />
+        <File Id="asset_lan_discovery" Source="$(var.BinDir)\..\Assets\LAN Discovery.png" />
+        <File Id="asset_main_menu" Source="$(var.BinDir)\..\Assets\Main Menu.png" />
       </Component>
 
     </ComponentGroup>

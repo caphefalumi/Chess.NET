@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   
   <!-- Product Definition -->
   <Package 
@@ -24,9 +25,17 @@
     <!-- Media definition -->
     <Media Id="1" Cabinet="Chess.cab" EmbedCab="yes" />
 
+    <!-- UI Configuration - Full Installation Wizard -->
+    <ui:WixUI Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <WixVariable
+      Id="WixUILicenseRtf"
+      Value="License.rtf"
+    />
     <!-- Installation directory structure -->
     <StandardDirectory Id="ProgramFiles6432Folder">
       <Directory Id="INSTALLFOLDER" Name="Chess.NET">
+        <Directory Id="AssetsFolder" Name="Assets" />
         <Directory Id="ResourcesFolder" Name="Resources">
           <Directory Id="PiecesFolder" Name="Pieces" />
           <Directory Id="SoundsFolder" Name="Sounds" />
@@ -46,6 +55,7 @@
     <!-- Feature reference -->
     <Feature Id="ProductFeature" Title="Chess.NET" Level="1">
       <ComponentGroupRef Id="ProductComponents" />
+      <ComponentGroupRef Id="RuntimeDllComponents" />
       <ComponentGroupRef Id="ResourceComponents" />
       <ComponentRef Id="ApplicationShortcut" />
       <ComponentRef Id="DesktopShortcut" />
